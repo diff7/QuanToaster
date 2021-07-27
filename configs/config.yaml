@@ -1,0 +1,46 @@
+search:
+  run_name: 'baseline'
+  debug_mode: false # run on a small porion of data
+  gpu: 0
+  log_dir: '/home/dev/data_main/LOGS/DARTS'
+  im_dir: 'arch_images'
+  dataset: CIFAR10  # CIFAR10 / MNIST / FashionMNIST
+  data_path: 'data'
+  batch_size: 64 # batch size
+  w_lr: 0.025 # lr for weights
+  w_lr_min: 0.001 # minimum lr for weights
+  w_momentum: 0.9 # momentum for weights
+  w_weight_decay: 3e-4 # weight decay for weights
+  w_grad_clip: 5 # gradient clipping for weights
+  print_freq: 50 # print frequency
+  epochs: 50 # n of training epochs
+  init_channels: 16
+  layers: 4 # of layers 8 is default
+  seed: 2 #random seed
+  workers: 4 ## of workers
+  alpha_lr: 3e-4 #lr for alpha
+  alpha_weight_decay: 1e-3 #weight decay for alpha
+  train_portion: 0.5  # portion of training data
+
+
+train:
+  run_name: 'test'
+  log_dir: '/home/dev/data_main/LOGS/DARTS'
+  dataset: 'CIFAR10'  # CIFAR10 / MNIST / FashionMNIST
+  gpu: 1
+  batch_size : 128 # batch size
+  lr : 0.025 # lr for weights
+  momentum : 0.9 # momentum
+  weight_decay : 3e-4 # weight decay
+  grad_clip : 5 # gradient clipping for weights
+  print_freq : 200 # print frequency
+  epochs : 70 # # of training epochs
+  init_channels : 36
+  layers : 8 # n of layers
+  seed : 2 # random seed
+  workers : 4 # of workers
+  aux_weight : 0.4 # auxiliary loss weight
+  cutout_length : 16 # cutout length
+  drop_path_prob : 0.2 # drop path prob
+  genotype_path:  '/home/dev/data_main/LOGS/DARTS/best_arch_CIFAR10.gen'
+  data_path: 'data'

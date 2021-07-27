@@ -6,36 +6,57 @@ import torch
 import torchvision.datasets as dset
 import numpy as np
 import preproc
+import time
+
+
+def get_run_path(base_dir, run_name):
+    run_dir = "{}-{}".format(run_name, time.strftime("%Y-%m-%d-%H_%M_%S"))
+    run_dir = os.path.join(base_dir, run_dir)
+    os.makedirs(run_dir, exist_ok=True)
+    return run_dir
 
 
 def get_data(dataset, data_path, cutout_length, validation):
     """ Get torchvision dataset """
     dataset = dataset.lower()
 
-    if dataset == 'cifar10':
+    if dataset == "cifar10":
         dset_cls = dset.CIFAR10
         n_classes = 10
-    elif dataset == 'mnist':
+        input_size = 32
+        input_channels = 3
+    elif dataset == "mnist":
         dset_cls = dset.MNIST
         n_classes = 10
-    elif dataset == 'fashionmnist':
+        input_size = 28
+        input_channels = 1
+    elif dataset == "fashionmnist":
         dset_cls = dset.FashionMNIST
         n_classes = 10
+        input_size = 28
+        input_channels = 1
     else:
         raise ValueError(dataset)
 
-    trn_transform, val_transform = preproc.data_transforms(dataset, cutout_length)
-    trn_data = dset_cls(root=data_path, train=True, download=True, transform=trn_transform)
+    trn_transform, val_transform = preproc.data_transforms(
+        dataset, cutout_length
+    )
+    trn_data = dset_cls(
+        root=data_path, train=True, download=True, transform=trn_transform
+    )
 
     # assuming shape is NHW or NHWC
-    shape = trn_data.train_data.shape
-    input_channels = 3 if len(shape) == 4 else 1
-    assert shape[1] == shape[2], "not expected shape = {}".format(shape)
-    input_size = shape[1]
 
     ret = [input_size, input_channels, n_classes, trn_data]
-    if validation: # append validation data
-        ret.append(dset_cls(root=data_path, train=False, download=True, transform=val_transform))
+    if validation:  # append validation data
+        ret.append(
+            dset_cls(
+                root=data_path,
+                train=False,
+                download=True,
+                transform=val_transform,
+            )
+        )
 
     return ret
 
@@ -43,9 +64,9 @@ def get_data(dataset, data_path, cutout_length, validation):
 def get_logger(file_path):
     """ Make python logger """
     # [!] Since tensorboardX use default logger (e.g. logging.info()), we should use custom logger
-    logger = logging.getLogger('darts')
-    log_format = '%(asctime)s | %(message)s'
-    formatter = logging.Formatter(log_format, datefmt='%m/%d %I:%M:%S %p')
+    logger = logging.getLogger("darts")
+    log_format = "%(asctime)s | %(message)s"
+    formatter = logging.Formatter(log_format, datefmt="%m/%d %I:%M:%S %p")
     file_handler = logging.FileHandler(file_path)
     file_handler.setFormatter(formatter)
     stream_handler = logging.StreamHandler()
@@ -61,12 +82,16 @@ def get_logger(file_path):
 def param_size(model):
     """ Compute parameter size in MB """
     n_params = sum(
-        np.prod(v.size()) for k, v in model.named_parameters() if not k.startswith('aux_head'))
-    return n_params / 1024. / 1024.
+        np.prod(v.size())
+        for k, v in model.named_parameters()
+        if not k.startswith("aux_head")
+    )
+    return n_params / 1024.0 / 1024.0
 
 
-class AverageMeter():
+class AverageMeter:
     """ Computes and stores the average and current value """
+
     def __init__(self):
         self.reset()
 
@@ -96,19 +121,19 @@ def accuracy(output, target, topk=(1,)):
     if target.ndimension() > 1:
         target = target.max(1)[1]
 
-    correct = pred.eq(target.view(1, -1).expand_as(pred))
+    correct = pred.eq(target.reshape(1, -1).expand_as(pred))
 
     res = []
     for k in topk:
-        correct_k = correct[:k].view(-1).float().sum(0)
+        correct_k = correct[:k].reshape(-1).float().sum(0)
         res.append(correct_k.mul_(1.0 / batch_size))
 
     return res
 
 
 def save_checkpoint(state, ckpt_dir, is_best=False):
-    filename = os.path.join(ckpt_dir, 'checkpoint.pth.tar')
+    filename = os.path.join(ckpt_dir, "checkpoint.pth.tar")
     torch.save(state, filename)
     if is_best:
-        best_filename = os.path.join(ckpt_dir, 'best.pth.tar')
+        best_filename = os.path.join(ckpt_dir, "best.pth.tar")
         shutil.copyfile(filename, best_filename)
