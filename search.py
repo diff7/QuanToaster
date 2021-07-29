@@ -88,6 +88,7 @@ def main():
 
     # training loop
     best_top1 = 0.0
+    cur_step = 0
     for epoch in range(cfg.epochs):
         lr_scheduler.step()
         lr = lr_scheduler.get_lr()[0]
@@ -108,6 +109,7 @@ def main():
             logger,
             cfg,
             device,
+            cur_step,
         )
 
         # validation
@@ -168,7 +170,7 @@ def log_genotype(genotype, cfg, epoch, cur_step, writer, best=False):
 
 def train(
     train_loader,
-    valid_loader,
+    train_alpha_loader,
     model,
     architect,
     w_optim,
@@ -179,18 +181,18 @@ def train(
     logger,
     cfg,
     device,
+    cur_step,
 ):
     top1 = utils.AverageMeter()
     top5 = utils.AverageMeter()
     losses = utils.AverageMeter()
 
-    cur_step = epoch * len(train_loader)
     writer.add_scalar("search/train/lr", lr, cur_step)
 
     model.train()
 
     for step, ((trn_X, trn_y), (val_X, val_y)) in enumerate(
-        zip(train_loader, valid_loader)
+        zip(train_loader, train_alpha_loader)
     ):
         trn_X, trn_y = trn_X.to(device, non_blocking=True), trn_y.to(
             device, non_blocking=True
@@ -233,7 +235,17 @@ def train(
                 )
             )
 
+        (
+            weighted_flops,
+            weighted_memory,
+        ) = model.fetch_weighted_flops_and_memory()
         writer.add_scalar("search/train/loss", loss.item(), cur_step)
+        writer.add_scalar(
+            "search/train/weighted_flops", weighted_flops.item(), cur_step
+        )
+        writer.add_scalar(
+            "search/train/weighted_memory", weighted_memory.item(), cur_step
+        )
 
         cur_step += 1
 

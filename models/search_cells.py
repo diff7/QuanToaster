@@ -1,7 +1,7 @@
 """ CNN cell for architecture search """
 import torch
 import torch.nn as nn
-from models import ops
+from models import ops_flops as ops
 
 
 class SearchCell(nn.Module):
@@ -54,3 +54,17 @@ class SearchCell(nn.Module):
 
         s_out = torch.cat(states[2:], dim=1)
         return s_out
+
+    def fetch_weighted_flops_and_memory(self, w_dag):
+        total_flops = 0
+        total_memory = 0
+
+        for edges, w_list in zip(self.dag, w_dag):
+            total_flops = sum(
+                edges[i].fetch_weighted_flops(w) for i, w in enumerate(w_list)
+            )
+            total_memory = sum(
+                edges[i].fetch_weighted_memory(w) for i, w in enumerate(w_list)
+            )
+
+        return total_flops, total_memory

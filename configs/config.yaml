@@ -1,7 +1,7 @@
 search:
-  run_name: 'baseline_FashionMNIST'
+  run_name: 'FLOPS_FashionMNIST'
   debug_mode: false # run on a small porion of data
-  gpu: 0
+  gpu: 2
   log_dir: '/home/dev/data_main/LOGS/DARTS'
   im_dir: 'arch_images'
   dataset: FashionMNIST  # CIFAR10 / MNIST / FashionMNIST

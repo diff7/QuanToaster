@@ -68,6 +68,18 @@ class SearchCNN(nn.Module):
         logits = self.linear(out)
         return logits
 
+    def fetch_weighted_flops_and_memory(self, weights_normal, weights_reduce):
+        total_flops = 0
+        total_memory = 0
+
+        for cell in self.cells:
+            weights = weights_reduce if cell.reduction else weights_normal
+            flops, memory = cell.fetch_weighted_flops_and_memory(weights)
+            total_flops += flops
+            total_memory += memory
+
+        return total_flops, total_memory
+
 
 class SearchCNNController(nn.Module):
     """ SearchCNN controller supporting multi-gpu """
@@ -174,3 +186,18 @@ class SearchCNNController(nn.Module):
     def named_alphas(self):
         for n, p in self._alphas:
             yield n, p
+
+    def fetch_weighted_flops_and_memory(
+        self,
+    ):
+
+        weights_normal = [
+            F.softmax(alpha, dim=-1) for alpha in self.alpha_normal
+        ]
+        weights_reduce = [
+            F.softmax(alpha, dim=-1) for alpha in self.alpha_reduce
+        ]
+
+        return self.net.fetch_weighted_flops_and_memory(
+            weights_normal, weights_reduce
+        )
