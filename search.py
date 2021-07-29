@@ -1,5 +1,6 @@
 """ Search cell """
 import os
+from types import new_class
 import torch
 import torch.nn as nn
 import numpy as np
@@ -52,12 +53,8 @@ def main():
     torch.cuda.set_device(device)
 
     # set seed
-
-    # get data with meta info
-    input_size, input_channels, n_classes, train_data = utils.get_data(
-        cfg.dataset, cfg.data_path, cutout_length=0, validation=False
-    )
-
+    loaders, input_channels, n_classes = get_data_loaders(cfg)
+    train_loader, train_loader_alpha, val_loader = loaders
     net_crit = nn.CrossEntropyLoss().to(device)
     model = SearchCNNController(
         input_channels,
@@ -84,38 +81,6 @@ def main():
         weight_decay=cfg.alpha_weight_decay,
     )
 
-    # split data to train/validation
-    n_train = len(train_data)
-    if cfg.debug_mode:
-        cfg.train_portion = 0.001
-    split = int(np.floor(cfg.train_portion * n_train))
-    indices = list(range(n_train))
-    train_sampler = torch.utils.data.sampler.SubsetRandomSampler(
-        indices[:split]
-    )
-    if cfg.debug_mode:
-        valid_sampler = torch.utils.data.sampler.SubsetRandomSampler(
-            indices[:split]
-        )
-    else:
-        valid_sampler = torch.utils.data.sampler.SubsetRandomSampler(
-            indices[split:]
-        )
-
-    train_loader = torch.utils.data.DataLoader(
-        train_data,
-        batch_size=cfg.batch_size,
-        sampler=train_sampler,
-        num_workers=cfg.workers,
-        pin_memory=True,
-    )
-    valid_loader = torch.utils.data.DataLoader(
-        train_data,
-        batch_size=cfg.batch_size,
-        sampler=valid_sampler,
-        num_workers=cfg.workers,
-        pin_memory=True,
-    )
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         w_optim, cfg.epochs, eta_min=cfg.w_lr_min
     )
@@ -130,9 +95,9 @@ def main():
         model.print_alphas(logger)
 
         # training
-        top1_train, top5_train = train(
+        top1_train, top5_train, cur_step = train(
             train_loader,
-            valid_loader,
+            train_loader_alpha,
             model,
             architect,
             w_optim,
@@ -146,9 +111,8 @@ def main():
         )
 
         # validation
-        cur_step = (epoch + 1) * len(train_loader)
         top1_val, top5_val = validate(
-            valid_loader, model, epoch, cur_step, logger, cfg, device
+            val_loader, model, epoch, cur_step, logger, cfg, device
         )
 
         # log
@@ -279,7 +243,7 @@ def train(
         )
     )
 
-    return top1.avg, top5.avg
+    return top1.avg, top5.avg, cur_step
 
 
 def validate(valid_loader, model, epoch, cur_step, logger, cfg, device):
@@ -325,6 +289,58 @@ def validate(valid_loader, model, epoch, cur_step, logger, cfg, device):
     )
 
     return top1.avg, top5.avg
+
+
+def get_data_loaders(cfg):
+    # get data with meta info
+    input_size, input_channels, n_classes, train_data = utils.get_data(
+        cfg.dataset, cfg.data_path, cutout_length=0, validation=False
+    )
+
+    # split data to train/validation
+    n_train = len(train_data)
+    if cfg.debug_mode:
+        cfg.train_portion = 0.001
+
+    split = int(np.floor(cfg.train_portion * n_train))
+    leftover = int(np.floor((1 - cfg.train_portion) * n_train)) // 2
+    indices = list(range(n_train))
+    train_sampler = torch.utils.data.sampler.SubsetRandomSampler(
+        indices[:split]
+    )
+    if cfg.debug_mode:
+        train_sampler_alpha = torch.utils.data.sampler.SubsetRandomSampler(
+            indices[:split]
+        )
+        valid_sampler_selection = torch.utils.data.sampler.SubsetRandomSampler(
+            indices[:split]
+        )
+    else:
+        train_sampler_alpha = torch.utils.data.sampler.SubsetRandomSampler(
+            indices[split : split + leftover]
+        )
+        valid_sampler_selection = torch.utils.data.sampler.SubsetRandomSampler(
+            indices[split + leftover : split + leftover * 2]
+        )
+
+    loaders = []
+    for sampler in [
+        train_sampler,
+        train_sampler_alpha,
+        valid_sampler_selection,
+    ]:
+        print("SET SIZE:", len(sampler))
+        loaders.append(
+            torch.utils.data.DataLoader(
+                train_data,
+                batch_size=cfg.batch_size,
+                sampler=sampler,
+                num_workers=cfg.workers,
+                pin_memory=True,
+            )
+        )
+
+    return loaders, input_channels, n_classes
 
 
 if __name__ == "__main__":

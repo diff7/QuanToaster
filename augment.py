@@ -66,7 +66,10 @@ def main():
 
     with open(cfg.genotype_path, "r") as f:
         genotype = from_str(f.read())
+
+    writer.add_text(tag="tune/arch/", text_string=str(genotype))
     print(genotype)
+
     model = AugmentCNN(
         input_size,
         input_channels,
