@@ -60,10 +60,10 @@ class SearchCell(nn.Module):
         total_memory = 0
 
         for edges, w_list in zip(self.dag, w_dag):
-            total_flops = sum(
+            total_flops += sum(
                 edges[i].fetch_weighted_flops(w) for i, w in enumerate(w_list)
             )
-            total_memory = sum(
+            total_memory += sum(
                 edges[i].fetch_weighted_memory(w) for i, w in enumerate(w_list)
             )
 

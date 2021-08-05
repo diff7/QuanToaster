@@ -14,7 +14,7 @@ from visualize import plot
 
 from omegaconf import OmegaConf as omg
 
-CFG_PATH = "./configs/config.yaml"
+CFG_PATH = "./configs/mnist_debug.yaml"
 
 
 def train_setup():
@@ -66,6 +66,8 @@ def main():
     )
     model = model.to(device)
 
+    flops_loss = FlopsLoss(model.n_ops)
+
     # weights optimizer
     w_optim = torch.optim.SGD(
         model.weights(),
@@ -110,11 +112,16 @@ def main():
             cfg,
             device,
             cur_step,
+            flops_loss,
         )
 
         # validation
         top1_val, top5_val = validate(
-            val_loader, model, epoch, cur_step, logger, cfg, device
+            val_loader, model, epoch, logger, cfg, device, best=False
+        )
+
+        top1_val_unsummed, top5_val = validate(
+            val_loader, model, epoch, logger, cfg, device, best=True
         )
 
         # log
@@ -140,6 +147,9 @@ def main():
 
         writer.add_scalars(
             "top1/search", {"val": top1_val, "train": top1_train}, epoch
+        )
+        writer.add_scalars(
+            "top1_val_unsummed/search", {"val": top1_val_unsummed}, epoch
         )
 
         logger.info("Final best Prec@1 = {:.4%}".format(best_top1))
@@ -182,6 +192,7 @@ def train(
     cfg,
     device,
     cur_step,
+    flops_loss,
 ):
     top1 = utils.AverageMeter()
     top5 = utils.AverageMeter()
@@ -194,6 +205,7 @@ def train(
     for step, ((trn_X, trn_y), (val_X, val_y)) in enumerate(
         zip(train_loader, train_alpha_loader)
     ):
+
         trn_X, trn_y = trn_X.to(device, non_blocking=True), trn_y.to(
             device, non_blocking=True
         )
@@ -202,14 +214,35 @@ def train(
         )
         N = trn_X.size(0)
 
+        if flops_loss.norm == 0:
+            model(val_X)
+            flops_norm, _ = model.fetch_weighted_flops_and_memory()
+            flops_loss.set_norm(flops_norm)
+            flops_loss.set_penalty(cfg.penalty)
+
         # phase 2. architect step (alpha)
         alpha_optim.zero_grad()
-        architect.unrolled_backward(trn_X, trn_y, val_X, val_y, lr, w_optim)
+        (
+            weighted_flops,
+            weighted_memory,
+        ) = model.fetch_weighted_flops_and_memory()
+
+        f_loss = flops_loss(weighted_flops)
+        if cfg.unrolled:
+            architect.backward(
+                trn_X, trn_y, val_X, val_y, lr, w_optim, flops_loss
+            )
+        else:
+
+            logits = model(val_X)
+            loss = model.criterion(logits, val_y) + f_loss
+            loss.backward()
         alpha_optim.step()
 
         # phase 1. child network step (w)
         w_optim.zero_grad()
         logits = model(trn_X)
+
         loss = model.criterion(logits, trn_y)
         loss.backward()
         # gradient clipping
@@ -236,10 +269,18 @@ def train(
             )
 
         (
-            weighted_flops,
-            weighted_memory,
-        ) = model.fetch_weighted_flops_and_memory()
-        writer.add_scalar("search/train/loss", loss.item(), cur_step)
+            best_current_flops,
+            best_current_memory,
+        ) = model.fetch_current_best_flops_and_memory()
+        writer.add_scalar(
+            "search/train/best_current_flops", best_current_flops, cur_step
+        )
+        writer.add_scalar(
+            "search/train/best_current_memory", best_current_memory, cur_step
+        )
+
+        writer.add_scalar("search/train/flops_loss", f_loss, cur_step)
+        # writer.add_scalar("search/train/loss", loss.item(), cur_step)
         writer.add_scalar(
             "search/train/weighted_flops", weighted_flops.item(), cur_step
         )
@@ -258,7 +299,7 @@ def train(
     return top1.avg, top5.avg, cur_step
 
 
-def validate(valid_loader, model, epoch, cur_step, logger, cfg, device):
+def validate(valid_loader, model, epoch, logger, cfg, device, best=False):
     top1 = utils.AverageMeter()
     top5 = utils.AverageMeter()
     losses = utils.AverageMeter()
@@ -272,7 +313,11 @@ def validate(valid_loader, model, epoch, cur_step, logger, cfg, device):
             )
             N = X.size(0)
 
-            logits = model(X)
+            if best:
+                logits = model.forward_current_best(X)
+            else:
+                logits = model(X)
+
             loss = model.criterion(logits, y)
 
             prec1, prec5 = utils.accuracy(logits, y, topk=(1, 5))
@@ -280,6 +325,8 @@ def validate(valid_loader, model, epoch, cur_step, logger, cfg, device):
             top1.update(prec1.item(), N)
             top5.update(prec5.item(), N)
 
+            if best:
+                logger.info("UN-SUMMED")
             if step % cfg.print_freq == 0 or step == len(valid_loader) - 1:
                 logger.info(
                     "Valid: [{:2d}/{}] Step {:03d}/{:03d} Loss {losses.avg:.3f} "
@@ -353,6 +400,23 @@ def get_data_loaders(cfg):
         )
 
     return loaders, input_channels, n_classes
+
+
+class FlopsLoss:
+    def __init__(self, n_ops, reduce=4):
+        self.n_ops = n_ops / reduce
+        self.norm = 0
+
+    def set_norm(self, norm):
+        self.norm = norm.detach() * self.n_ops
+        self.min = norm.detach() / self.n_ops
+
+    def set_penalty(self, penalty):
+        self.penalty = penalty
+
+    def __call__(self, weighted_flops):
+        l = (weighted_flops - self.min) / (self.norm - self.min)
+        return l * self.penalty
 
 
 if __name__ == "__main__":

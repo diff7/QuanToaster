@@ -103,17 +103,17 @@ class SearchCNNController(nn.Module):
         self.device_ids = device_ids
 
         # initialize architect parameters: alphas
-        n_ops = len(gt.PRIMITIVES)
+        self.n_ops = len(gt.PRIMITIVES)
 
         self.alpha_normal = nn.ParameterList()
         self.alpha_reduce = nn.ParameterList()
 
         for i in range(n_nodes):
             self.alpha_normal.append(
-                nn.Parameter(1e-3 * torch.randn(i + 2, n_ops))
+                nn.Parameter(1e-3 * torch.randn(i + 2, self.n_ops))
             )
             self.alpha_reduce.append(
-                nn.Parameter(1e-3 * torch.randn(i + 2, n_ops))
+                nn.Parameter(1e-3 * torch.randn(i + 2, self.n_ops))
             )
 
         # setup alphas list
@@ -134,6 +134,17 @@ class SearchCNNController(nn.Module):
             F.softmax(alpha, dim=-1) for alpha in self.alpha_reduce
         ]
 
+        return self.net(x, weights_normal, weights_reduce)
+
+    def forward_current_best(self, x):
+        weights_normal = [
+            self.get_max(F.softmax(alpha, dim=-1))
+            for alpha in self.alpha_normal
+        ]
+        weights_reduce = [
+            self.get_max(F.softmax(alpha, dim=-1))
+            for alpha in self.alpha_reduce
+        ]
         return self.net(x, weights_normal, weights_reduce)
 
     def loss(self, X, y):
@@ -196,6 +207,32 @@ class SearchCNNController(nn.Module):
         ]
         weights_reduce = [
             F.softmax(alpha, dim=-1) for alpha in self.alpha_reduce
+        ]
+
+        return self.net.fetch_weighted_flops_and_memory(
+            weights_normal, weights_reduce
+        )
+
+    def get_max(self, alpha, k=2):
+        values, indices = alpha[:, :-1].max(1)
+        ones = (values.unsqueeze(1) == alpha).type(torch.int)
+        zero_rows = [
+            i for i in range(alpha.shape[0]) if not i in values.topk(k).indices
+        ]
+        ones[zero_rows] = 0
+        return ones.detach()
+
+    def fetch_current_best_flops_and_memory(
+        self,
+    ):
+
+        weights_normal = [
+            self.get_max(F.softmax(alpha, dim=-1))
+            for alpha in self.alpha_normal
+        ]
+        weights_reduce = [
+            self.get_max(F.softmax(alpha, dim=-1))
+            for alpha in self.alpha_reduce
         ]
 
         return self.net.fetch_weighted_flops_and_memory(

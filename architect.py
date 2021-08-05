@@ -3,8 +3,9 @@ import copy
 import torch
 
 
-class Architect():
+class Architect:
     """ Compute gradients of alphas """
+
     def __init__(self, net, w_momentum, w_weight_decay):
         """
         Args:
@@ -31,7 +32,7 @@ class Architect():
             w_optim: weights optimizer
         """
         # forward & calc loss
-        loss = self.net.loss(trn_X, trn_y) # L_trn(w)
+        loss = self.net.loss(trn_X, trn_y)  # L_trn(w)
 
         # compute gradient
         gradients = torch.autograd.grad(loss, self.net.weights())
@@ -41,39 +42,53 @@ class Architect():
         with torch.no_grad():
             # dict key is not the value, but the pointer. So original network weight have to
             # be iterated also.
-            for w, vw, g in zip(self.net.weights(), self.v_net.weights(), gradients):
-                m = w_optim.state[w].get('momentum_buffer', 0.) * self.w_momentum
-                vw.copy_(w - xi * (m + g + self.w_weight_decay*w))
+            for w, vw, g in zip(
+                self.net.weights(), self.v_net.weights(), gradients
+            ):
+                m = (
+                    w_optim.state[w].get("momentum_buffer", 0.0)
+                    * self.w_momentum
+                )
+                vw.copy_(w - xi * (m + g + self.w_weight_decay * w))
 
             # synchronize alphas
             for a, va in zip(self.net.alphas(), self.v_net.alphas()):
                 va.copy_(a)
 
-    def unrolled_backward(self, trn_X, trn_y, val_X, val_y, xi, w_optim):
-        """ Compute unrolled loss and backward its gradients
+    def backward(self, trn_X, trn_y, val_X, val_y, xi, w_optim, f_loss_func):
+        """Compute unrolled loss and backward its gradients
         Args:
             xi: learning rate for virtual gradient step (same as net lr)
             w_optim: weights optimizer - for virtual step
+
+            w* - best weights
+            w' = w - e*grad L train(w,alpha)
+            grad/alpha_val Lval(w*,alphaa) =  grad/alpha L(w',alpha) - e*grad^2_alpha_w Ltrain(w, alpha)*grad w Lval(w', alpha)
         """
         # do virtual step (calc w`)
         self.virtual_step(trn_X, trn_y, xi, w_optim)
 
         # calc unrolled loss
-        loss = self.v_net.loss(val_X, val_y) # L_val(w`)
+
+        weighted_flops, _ = self.v_net.fetch_weighted_flops_and_memory()
+        f_loss = f_loss_func(weighted_flops)
+        loss = self.v_net.loss(val_X, val_y) + f_loss  # L_val(w`)
 
         # compute gradient
         v_alphas = tuple(self.v_net.alphas())
         v_weights = tuple(self.v_net.weights())
         v_grads = torch.autograd.grad(loss, v_alphas + v_weights)
-        dalpha = v_grads[:len(v_alphas)]
-        dw = v_grads[len(v_alphas):]
+        dalpha = v_grads[: len(v_alphas)]
+        dw = v_grads[len(v_alphas) :]
 
         hessian = self.compute_hessian(dw, trn_X, trn_y)
-
         # update final gradient = dalpha - xi*hessian
         with torch.no_grad():
             for alpha, da, h in zip(self.net.alphas(), dalpha, hessian):
-                alpha.grad = da - xi*h
+                alpha.grad = da - xi * h
+        with torch.no_grad():
+            for alpha, da in zip(self.net.alphas(), dalpha):
+                alpha.grad = da
 
     def compute_hessian(self, dw, trn_X, trn_y):
         """
@@ -91,19 +106,23 @@ class Architect():
             for p, d in zip(self.net.weights(), dw):
                 p += eps * d
         loss = self.net.loss(trn_X, trn_y)
-        dalpha_pos = torch.autograd.grad(loss, self.net.alphas()) # dalpha { L_trn(w+) }
+        dalpha_pos = torch.autograd.grad(
+            loss, self.net.alphas()
+        )  # dalpha { L_trn(w+) }
 
         # w- = w - eps*dw`
         with torch.no_grad():
             for p, d in zip(self.net.weights(), dw):
-                p -= 2. * eps * d
+                p -= 2.0 * eps * d
         loss = self.net.loss(trn_X, trn_y)
-        dalpha_neg = torch.autograd.grad(loss, self.net.alphas()) # dalpha { L_trn(w-) }
+        dalpha_neg = torch.autograd.grad(
+            loss, self.net.alphas()
+        )  # dalpha { L_trn(w-) }
 
         # recover w
         with torch.no_grad():
             for p, d in zip(self.net.weights(), dw):
                 p += eps * d
 
-        hessian = [(p-n) / 2.*eps for p, n in zip(dalpha_pos, dalpha_neg)]
+        hessian = [(p - n) / 2.0 * eps for p, n in zip(dalpha_pos, dalpha_neg)]
         return hessian
