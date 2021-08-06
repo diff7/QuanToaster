@@ -324,9 +324,6 @@ def validate(valid_loader, model, epoch, logger, cfg, device, best=False):
             losses.update(loss.item(), N)
             top1.update(prec1.item(), N)
             top5.update(prec5.item(), N)
-
-            if best:
-                logger.info("UN-SUMMED")
             if step % cfg.print_freq == 0 or step == len(valid_loader) - 1:
                 logger.info(
                     "Valid: [{:2d}/{}] Step {:03d}/{:03d} Loss {losses.avg:.3f} "

@@ -213,25 +213,28 @@ class SearchCNNController(nn.Module):
             weights_normal, weights_reduce
         )
 
-    def get_max(self, alpha, k=2):
+    def get_max(self, alpha, k=2, keep_weight=True):
         values, indices = alpha[:, :-1].max(1)
         ones = (values.unsqueeze(1) == alpha).type(torch.int)
         zero_rows = [
             i for i in range(alpha.shape[0]) if not i in values.topk(k).indices
         ]
         ones[zero_rows] = 0
-        return ones.detach()
+        if keep_weight:
+            return alpha * ones.detach()
+        else:
+            return ones.detach()
 
     def fetch_current_best_flops_and_memory(
         self,
     ):
 
         weights_normal = [
-            self.get_max(F.softmax(alpha, dim=-1))
+            self.get_max(F.softmax(alpha, dim=-1), keep_weight=False)
             for alpha in self.alpha_normal
         ]
         weights_reduce = [
-            self.get_max(F.softmax(alpha, dim=-1))
+            self.get_max(F.softmax(alpha, dim=-1), keep_weight=False)
             for alpha in self.alpha_reduce
         ]
 

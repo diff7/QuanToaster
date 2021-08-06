@@ -1,9 +1,9 @@
 search:
-  run_name: 'TEST_CIFAR10_orig'
-  penalty: 0
+  run_name: 'CIFAR10_pen_1_unrolled_true'
+  penalty: 1
   unrolled: true
   debug_mode: false # run on a small porion of data
-  gpu: 2
+  gpu: 0
   log_dir: '/home/dev/data_main/LOGS/DARTS'
   im_dir: 'arch_images'
   dataset: CIFAR10  # CIFAR10 / MNIST / FashionMNIST
