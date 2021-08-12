@@ -41,7 +41,7 @@ def train_setup():
         metric_dict={"search/train/loss": 0},
     )
 
-    with open(os.path.join(cfg, save, "config.txt"), "w") as f:
+    with open(os.path.join(cfg.save, "config.txt"), "w") as f:
         for k, v in cfg.items():
             f.write(f"{str(k)}:{str(v)}\n")
 

@@ -1,9 +1,9 @@
 search:
-  run_name: 'TEST_CIFAR_gumbel_FIXED_warm15_pen_1'
+  run_name: 'TEST_CIFAR_gumbel_FIXED_warm15_pen_0.3_alpha_LR_0.01'
   penalty: 1
   unrolled: true
   debug_mode: false # run on a small porion of data
-  gpu: 0
+  gpu: 1
   log_dir: '/home/dev/data_main/LOGS/DARTS'
   im_dir: 'arch_images'
   dataset: CIFAR10  # CIFAR10 / MNIST / FashionMNIST
@@ -23,7 +23,7 @@ search:
   layers: 4 # of layers 8 is default
   seed: 2 #random seed
   workers: 4 ## of workers
-  alpha_lr: 3e-4 #lr for alpha
+  alpha_lr:  1e-3 #3e-4 #lr for alpha
   alpha_weight_decay: 1e-3 #weight decay for alpha
   train_portion: 0.5  # portion of training data
   
