@@ -27,7 +27,6 @@ class SearchCNN(nn.Module):
         self.C = C
         self.n_classes = n_classes
         self.n_layers = n_layers
-
         C_cur = stem_multiplier * C
         self.stem = nn.Sequential(
             nn.Conv2d(C_in, C_cur, 3, 1, 1, bias=False), nn.BatchNorm2d(C_cur)
@@ -108,12 +107,15 @@ class SearchCNNController(nn.Module):
         self.alpha_normal = nn.ParameterList()
         self.alpha_reduce = nn.ParameterList()
 
+        self.alphaselector = AlphaSelector(name="gumbel")
+        self.softmax = AlphaSelector(name="softmax")
+
         for i in range(n_nodes):
             self.alpha_normal.append(
-                nn.Parameter(1e-3 * torch.randn(i + 2, self.n_ops))
+                nn.Parameter(torch.ones(i + 2, self.n_ops) / self.n_ops)
             )
             self.alpha_reduce.append(
-                nn.Parameter(1e-3 * torch.randn(i + 2, self.n_ops))
+                nn.Parameter(torch.ones(i + 2, self.n_ops) / self.n_ops)
             )
 
         # setup alphas list
@@ -126,15 +128,25 @@ class SearchCNNController(nn.Module):
             C_in, C, n_classes, n_layers, n_nodes, stem_multiplier
         )
 
-    def forward(self, x):
+    def forward(self, x, temperature=100, stable=False):
+
+        if stable:
+            func = self.softmax
+        else:
+            func = self.alphaselector
+
         weights_normal = [
-            F.softmax(alpha, dim=-1) for alpha in self.alpha_normal
+            func(alpha, temperature, dim=-1) for alpha in self.alpha_normal
         ]
         weights_reduce = [
-            F.softmax(alpha, dim=-1) for alpha in self.alpha_reduce
+            func(alpha, temperature, dim=-1) for alpha in self.alpha_reduce
         ]
 
-        return self.net(x, weights_normal, weights_reduce)
+        out = self.net(x, weights_normal, weights_reduce)
+        (flops, mem) = self.net.fetch_weighted_flops_and_memory(
+            weights_normal, weights_reduce
+        )
+        return out, (flops, mem)
 
     def forward_current_best(self, x):
         weights_normal = [
@@ -146,10 +158,6 @@ class SearchCNNController(nn.Module):
             for alpha in self.alpha_reduce
         ]
         return self.net(x, weights_normal, weights_reduce)
-
-    def loss(self, X, y):
-        logits = self.forward(X)
-        return self.criterion(logits, y)
 
     def print_alphas(self, logger):
         # remove formats
@@ -230,14 +238,29 @@ class SearchCNNController(nn.Module):
     ):
 
         weights_normal = [
-            self.get_max(F.softmax(alpha, dim=-1), keep_weight=False)
+            self.get_max(alpha, keep_weight=False)
             for alpha in self.alpha_normal
         ]
         weights_reduce = [
-            self.get_max(F.softmax(alpha, dim=-1), keep_weight=False)
+            self.get_max(alpha, keep_weight=False)
             for alpha in self.alpha_reduce
         ]
 
         return self.net.fetch_weighted_flops_and_memory(
             weights_normal, weights_reduce
         )
+
+
+class AlphaSelector:
+    def __init__(self, name="softmax"):
+        assert name in ["softmax", "gumbel"]
+        if name == "gumbel":
+            self.gumbel = True
+        else:
+            self.gumbel = False
+
+    def __call__(self, vector, temperature=1, dim=-1):
+        if self.gumbel:
+            return F.gumbel_softmax(vector, temperature, dim)
+        else:
+            return F.softmax(vector, dim)

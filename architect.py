@@ -32,7 +32,8 @@ class Architect:
             w_optim: weights optimizer
         """
         # forward & calc loss
-        loss = self.net.loss(trn_X, trn_y)  # L_trn(w)
+        logists, (_, _) = self.net(trn_X)  # L_trn(w)
+        loss = self.net.criterion(logists, trn_y)
 
         # compute gradient
         gradients = torch.autograd.grad(loss, self.net.weights())
@@ -70,9 +71,8 @@ class Architect:
 
         # calc unrolled loss
 
-        weighted_flops, _ = self.v_net.fetch_weighted_flops_and_memory()
-        f_loss = f_loss_func(weighted_flops)
-        loss = self.v_net.loss(val_X, val_y) + f_loss  # L_val(w`)
+        logists, (flops, mem) = self.v_net(trn_X)  # L_trn(w)
+        loss = self.v_net.criterion(logists, trn_y) + f_loss_func(flops)
 
         # compute gradient
         v_alphas = tuple(self.v_net.alphas())
@@ -105,7 +105,10 @@ class Architect:
         with torch.no_grad():
             for p, d in zip(self.net.weights(), dw):
                 p += eps * d
-        loss = self.net.loss(trn_X, trn_y)
+
+        logists, (_, _) = self.net(trn_X)  # L_trn(w)
+        loss = self.net.criterion(logists, trn_y)
+
         dalpha_pos = torch.autograd.grad(
             loss, self.net.alphas()
         )  # dalpha { L_trn(w+) }
@@ -114,7 +117,10 @@ class Architect:
         with torch.no_grad():
             for p, d in zip(self.net.weights(), dw):
                 p -= 2.0 * eps * d
-        loss = self.net.loss(trn_X, trn_y)
+
+        logists, (_, _) = self.net(trn_X)  # L_trn(w)
+        loss = self.net.criterion(logists, trn_y)
+
         dalpha_neg = torch.autograd.grad(
             loss, self.net.alphas()
         )  # dalpha { L_trn(w-) }

@@ -14,7 +14,7 @@ from visualize import plot
 
 from omegaconf import OmegaConf as omg
 
-CFG_PATH = "./configs/mnist_debug.yaml"
+CFG_PATH = "./configs/config.yaml"
 
 
 def train_setup():
@@ -40,6 +40,10 @@ def train_setup():
         hparam_dict={str(k): str(cfg[k]) for k in cfg},
         metric_dict={"search/train/loss": 0},
     )
+
+    with open(os.path.join(cfg, save, "config.txt"), "w") as f:
+        for k, v in cfg.items():
+            f.write(f"{str(k)}:{str(v)}\n")
 
     return cfg, writer, logger
 
@@ -97,6 +101,12 @@ def main():
 
         model.print_alphas(logger)
 
+        if epoch > cfg.warm_up:
+            cfg.temperature_start *= cfg.temp_red
+            temperature = cfg.temperature_start
+        else:
+            temperature = cfg.temperature_start
+
         # training
         top1_train, top5_train, cur_step = train(
             train_loader,
@@ -113,15 +123,30 @@ def main():
             device,
             cur_step,
             flops_loss,
+            temperature,
         )
 
         # validation
         top1_val, top5_val = validate(
-            val_loader, model, epoch, logger, cfg, device, best=False
+            val_loader,
+            model,
+            epoch,
+            logger,
+            cfg,
+            device,
+            best=False,
+            temperature=temperature,
         )
 
         top1_val_unsummed, top5_val = validate(
-            val_loader, model, epoch, logger, cfg, device, best=True
+            val_loader,
+            model,
+            epoch,
+            logger,
+            cfg,
+            device,
+            best=True,
+            temperature=temperature,
         )
 
         # log
@@ -151,6 +176,7 @@ def main():
         writer.add_scalars(
             "top1_val_unsummed/search", {"val": top1_val_unsummed}, epoch
         )
+        writer.add_scalar("search/train/temperature", temperature, epoch)
 
         logger.info("Final best Prec@1 = {:.4%}".format(best_top1))
         logger.info("Best Genotype = {}".format(best_genotype))
@@ -193,11 +219,12 @@ def train(
     device,
     cur_step,
     flops_loss,
+    temperature,
 ):
     top1 = utils.AverageMeter()
     top5 = utils.AverageMeter()
     losses = utils.AverageMeter()
-
+    stable = True
     writer.add_scalar("search/train/lr", lr, cur_step)
 
     model.train()
@@ -221,36 +248,35 @@ def train(
             flops_loss.set_penalty(cfg.penalty)
 
         # phase 2. architect step (alpha)
+
         alpha_optim.zero_grad()
-        (
-            weighted_flops,
-            weighted_memory,
-        ) = model.fetch_weighted_flops_and_memory()
 
-        f_loss = flops_loss(weighted_flops)
-        if cfg.unrolled:
-            architect.backward(
-                trn_X, trn_y, val_X, val_y, lr, w_optim, flops_loss
-            )
-        else:
+        if epoch > cfg.warm_up:
+            stable = False
 
-            logits = model(val_X)
-            loss = model.criterion(logits, val_y) + f_loss
-            loss.backward()
-        alpha_optim.step()
+            if cfg.unrolled:
+                architect.backward(
+                    trn_X, trn_y, val_X, val_y, lr, w_optim, flops_loss
+                )
+            else:
+
+                logits, (flops, mem) = model(val_X, temperature)
+                loss = model.criterion(logits, val_y) + flops_loss(flops)
+                loss.backward()
+            alpha_optim.step()
 
         # phase 1. child network step (w)
         w_optim.zero_grad()
-        logits = model(trn_X)
+        logits_w, (flops, mem) = model(trn_X, temperature, stable=stable)
 
-        loss = model.criterion(logits, trn_y)
-        loss.backward()
+        loss_w = model.criterion(logits_w, trn_y)
+        loss_w.backward()
         # gradient clipping
         nn.utils.clip_grad_norm_(model.weights(), cfg.w_grad_clip)
         w_optim.step()
 
-        prec1, prec5 = utils.accuracy(logits, trn_y, topk=(1, 5))
-        losses.update(loss.item(), N)
+        prec1, prec5 = utils.accuracy(logits_w, trn_y, topk=(1, 5))
+        losses.update(loss_w.item(), N)
         top1.update(prec1.item(), N)
         top5.update(prec5.item(), N)
 
@@ -272,21 +298,20 @@ def train(
             best_current_flops,
             best_current_memory,
         ) = model.fetch_current_best_flops_and_memory()
+        writer.add_scalar("search/train/loss", loss_w, cur_step)
+
         writer.add_scalar(
             "search/train/best_current_flops", best_current_flops, cur_step
         )
+
         writer.add_scalar(
             "search/train/best_current_memory", best_current_memory, cur_step
         )
 
-        writer.add_scalar("search/train/flops_loss", f_loss, cur_step)
+        writer.add_scalar("search/train/flops_loss", flops, cur_step)
         # writer.add_scalar("search/train/loss", loss.item(), cur_step)
-        writer.add_scalar(
-            "search/train/weighted_flops", weighted_flops.item(), cur_step
-        )
-        writer.add_scalar(
-            "search/train/weighted_memory", weighted_memory.item(), cur_step
-        )
+        writer.add_scalar("search/train/weighted_flops", flops.item(), cur_step)
+        writer.add_scalar("search/train/weighted_memory", mem.item(), cur_step)
 
         cur_step += 1
 
@@ -299,7 +324,9 @@ def train(
     return top1.avg, top5.avg, cur_step
 
 
-def validate(valid_loader, model, epoch, logger, cfg, device, best=False):
+def validate(
+    valid_loader, model, epoch, logger, cfg, device, best=False, temperature=1
+):
     top1 = utils.AverageMeter()
     top5 = utils.AverageMeter()
     losses = utils.AverageMeter()
@@ -316,7 +343,7 @@ def validate(valid_loader, model, epoch, logger, cfg, device, best=False):
             if best:
                 logits = model.forward_current_best(X)
             else:
-                logits = model(X)
+                logits, (flops, mem) = model(X, temperature)
 
             loss = model.criterion(logits, y)
 
