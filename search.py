@@ -17,11 +17,11 @@ from omegaconf import OmegaConf as omg
 CFG_PATH = "./configs/config.yaml"
 
 
-def train_setup():
+def train_setup(cfg):
 
     # INIT FOLDERS & cfg
 
-    cfg = omg.load(CFG_PATH).search
+    cfg = cfg.search
     cfg.save = utils.get_run_path(cfg.log_dir, "SEARCH_" + cfg.run_name)
 
     logger = utils.get_logger(cfg.save + "/log.txt")
@@ -48,8 +48,8 @@ def train_setup():
     return cfg, writer, logger
 
 
-def main():
-    cfg, writer, logger = train_setup()
+def run_search(cfg):
+    cfg, writer, logger = train_setup(cfg)
     logger.info("Logger is set - training start")
 
     # set default gpu device id
@@ -108,7 +108,7 @@ def main():
             temperature = cfg.temperature_start
 
         # training
-        top1_train, top5_train, cur_step = train(
+        top1_train, top5_train, cur_step, best_current_flops = train(
             train_loader,
             train_loader_alpha,
             model,
@@ -153,22 +153,38 @@ def main():
         # genotype
         genotype = model.genotype()
         logger.info("genotype = {}".format(genotype))
-        log_genotype(genotype, cfg, epoch, cur_step, writer, best=False)
+        log_genotype(
+            genotype,
+            cfg,
+            epoch,
+            cur_step,
+            writer,
+            best_current_flops,
+            best=False,
+        )
 
         # save
         if best_top1 < top1_val:
             best_top1 = top1_val
+            best_flops = best_current_flops
             best_genotype = genotype
             with open(os.path.join(cfg.save, "best_arch.gen"), "w") as f:
                 f.write(str(genotype))
 
             is_best = True
-        else:
-            is_best = False
 
-        log_genotype(best_genotype, cfg, epoch, cur_step, writer, best=True)
-        utils.save_checkpoint(model, cfg.save, is_best)
-        print("")
+            log_genotype(
+                best_genotype,
+                cfg,
+                epoch,
+                cur_step,
+                writer,
+                best_flops,
+                best=True,
+            )
+
+            utils.save_checkpoint(model, cfg.save, is_best)
+            print("")
 
         writer.add_scalars(
             "top1/search", {"val": top1_val, "train": top1_train}, epoch
@@ -182,10 +198,12 @@ def main():
         logger.info("Best Genotype = {}".format(best_genotype))
 
 
-def log_genotype(genotype, cfg, epoch, cur_step, writer, best=False):
+def log_genotype(
+    genotype, cfg, epoch, cur_step, writer, best_current_flops, best=False
+):
     # genotype as a image
     plot_path = os.path.join(cfg.save, cfg.im_dir, "EP{:02d}".format(epoch + 1))
-    caption = "Epoch {}".format(epoch + 1)
+    caption = "Epoch {}   FLOPS {:.02E}".format(epoch + 1, best_current_flops)
 
     im_normal = plot(genotype.normal, plot_path + "-normal", caption)
     im_reduce = plot(genotype.reduce, plot_path + "-reduce", caption)
@@ -321,7 +339,7 @@ def train(
         )
     )
 
-    return top1.avg, top5.avg, cur_step
+    return top1.avg, top5.avg, cur_step, best_current_flops
 
 
 def validate(
@@ -436,7 +454,7 @@ class FlopsLoss:
         self.min = norm.detach() / self.n_ops
 
     def set_penalty(self, penalty):
-        self.penalty = penalty
+        self.penalty = float(penalty)
 
     def __call__(self, weighted_flops):
         l = (weighted_flops - self.min) / (self.norm - self.min)
@@ -444,4 +462,5 @@ class FlopsLoss:
 
 
 if __name__ == "__main__":
-    main()
+    cfg = omg.load(CFG_PATH)
+    run_search()

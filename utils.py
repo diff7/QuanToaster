@@ -10,7 +10,7 @@ import time
 
 
 def get_run_path(base_dir, run_name):
-    run_dir = "{}-{}".format(run_name, time.strftime("%Y-%m-%d-%H_%M_%S"))
+    run_dir = "{}-{}".format(run_name, time.strftime("%Y-%m-%d-%H"))
     run_dir = os.path.join(base_dir, run_dir)
     os.makedirs(run_dir, exist_ok=True)
     return run_dir

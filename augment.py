@@ -13,11 +13,11 @@ from genotypes import from_str
 CFG_PATH = "./configs/config.yaml"
 
 
-def train_setup():
+def train_setup(cfg):
 
     # INIT FOLDERS & cfg
 
-    cfg = omg.load(CFG_PATH).train
+    cfg = cfg.train
     cfg.save = utils.get_run_path(cfg.log_dir, "TUNE_" + cfg.run_name)
 
     logger = utils.get_logger(cfg.save + "/log.txt")
@@ -37,15 +37,15 @@ def train_setup():
         metric_dict={"tune/train/loss": 0},
     )
 
-    with open(os.path.join(cfg, save, "config.txt"), "w") as f:
+    with open(os.path.join(cfg.save, "config.txt"), "w") as f:
         for k, v in cfg.items():
             f.write(f"{str(k)}:{str(v)}\n")
 
     return cfg, writer, logger
 
 
-def main():
-    cfg, writer, logger = train_setup()
+def run_train(cfg):
+    cfg, writer, logger = train_setup(cfg)
 
     logger.info("Logger is set - training start")
 
@@ -283,4 +283,5 @@ def validate(
 
 
 if __name__ == "__main__":
-    main()
+    cfg = omg.load(CFG_PATH)
+    run_train(cfg)
