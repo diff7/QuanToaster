@@ -7,6 +7,9 @@ import genotypes as gt
 import logging
 
 
+from gumbel_top2 import gumbel_top2k
+
+
 class SearchCNN(nn.Module):
     """ Search CNN model """
 
@@ -107,8 +110,10 @@ class SearchCNNController(nn.Module):
         self.alpha_normal = nn.ParameterList()
         self.alpha_reduce = nn.ParameterList()
 
-        self.alphaselector = AlphaSelector(name="gumbel")
+        self.alphaselector = AlphaSelector(name="gumbel2k")
         self.softmax = AlphaSelector(name="softmax")
+        self.edge_weights_n = nn.ParameterList()
+        self.edge_weights_r = nn.ParameterList()
 
         for i in range(n_nodes):
             self.alpha_normal.append(
@@ -117,11 +122,17 @@ class SearchCNNController(nn.Module):
             self.alpha_reduce.append(
                 nn.Parameter(torch.ones(i + 2, self.n_ops) / self.n_ops)
             )
+            self.edge_weights_n.append(nn.Parameter(torch.ones(i + 2)))
+            self.edge_weights_r.append(nn.Parameter(torch.ones(i + 2)))
 
         # setup alphas list
         self._alphas = []
         for n, p in self.named_parameters():
             if "alpha" in n:
+                self._alphas.append((n, p))
+
+        for n, p in self.named_parameters():
+            if "edge" in n:
                 self._alphas.append((n, p))
 
         self.net = SearchCNN(
@@ -136,10 +147,12 @@ class SearchCNNController(nn.Module):
             func = self.alphaselector
 
         weights_normal = [
-            func(alpha, temperature, dim=-1) for alpha in self.alpha_normal
+            func(alpha, edge_w, temperature, dim=-1)
+            for alpha, edge_w in zip(self.alpha_normal, self.edge_weights)
         ]
         weights_reduce = [
-            func(alpha, temperature, dim=-1) for alpha in self.alpha_reduce
+            func(alpha, edge_w, temperature, dim=-1)
+            for alpha, edge_w in zip(self.alpha_normal, self.edge_weights)
         ]
 
         out = self.net(x, weights_normal, weights_reduce)
@@ -149,17 +162,19 @@ class SearchCNNController(nn.Module):
         return out, (flops, mem)
 
     def forward_current_best(self, x):
+
         weights_normal = [
-            self.get_max(F.softmax(alpha, dim=-1))
-            for alpha in self.alpha_normal
+            self.get_max(alpha, edge_w, dim=-1)
+            for alpha, edge_w in zip(self.alpha_normal, self.edge_weights_n)
         ]
         weights_reduce = [
-            self.get_max(F.softmax(alpha, dim=-1))
-            for alpha in self.alpha_reduce
+            self.get_max(alpha, edge_w, dim=-1)
+            for alpha, edge_w in zip(self.alpha_normal, self.edge_weights_r)
         ]
         return self.net(x, weights_normal, weights_reduce)
 
     def print_alphas(self, logger):
+
         # remove formats
         org_formatters = []
         for handler in logger.handlers:
@@ -168,12 +183,12 @@ class SearchCNNController(nn.Module):
 
         logger.info("####### ALPHA #######")
         logger.info("# Alpha - normal")
-        for alpha in self.alpha_normal:
-            logger.info(F.softmax(alpha, dim=-1))
+        for alpha, edge in zip(self.alpha_normal, self.edge_weights_n):
+            logger.info(self.alphaselector(alpha, edge, dim=-1))
 
         logger.info("\n# Alpha - reduce")
-        for alpha in self.alpha_reduce:
-            logger.info(F.softmax(alpha, dim=-1))
+        for alpha, edge in zip(self.alpha_normal, self.edge_weights_r):
+            logger.info(self.alphaselector(alpha, edge, dim=-1))
         logger.info("#####################")
 
         # restore formats
@@ -181,8 +196,17 @@ class SearchCNNController(nn.Module):
             handler.setFormatter(formatter)
 
     def genotype(self):
-        gene_normal = gt.parse(self.alpha_normal, k=2)
-        gene_reduce = gt.parse(self.alpha_reduce, k=2)
+        alpa_normal = [
+            (a.T * F.Softmax(self.edge_weights_n[i])).T
+            for i, a in enumerate(self.alpha_normal)
+        ]
+        alpa_reduce = [
+            (a.T * F.Softmax(self.edge_weights_r[i])).T
+            for i, a in enumerate(self.alpa_reduce)
+        ]
+
+        gene_normal = gt.parse(alpa_normal, k=2)
+        gene_reduce = gt.parse(alpa_reduce, k=2)
         concat = range(2, 2 + self.n_nodes)  # concat all intermediate nodes
 
         return gt.Genotype(
@@ -211,10 +235,12 @@ class SearchCNNController(nn.Module):
     ):
 
         weights_normal = [
-            F.softmax(alpha, dim=-1) for alpha in self.alpha_normal
+            self.get_max((a.T * F.Softmax(self.edge_weights_n[i])).T)
+            for i, a in enumerate(self.alpha_normal)
         ]
         weights_reduce = [
-            F.softmax(alpha, dim=-1) for alpha in self.alpha_reduce
+            self.get_max((a.T * F.Softmax(self.edge_weights_r[i])).T)
+            for i, a in enumerate(self.alpha_reduce)
         ]
 
         return self.net.fetch_weighted_flops_and_memory(
@@ -253,14 +279,15 @@ class SearchCNNController(nn.Module):
 
 class AlphaSelector:
     def __init__(self, name="softmax"):
-        assert name in ["softmax", "gumbel"]
-        if name == "gumbel":
-            self.gumbel = True
-        else:
-            self.gumbel = False
+        assert name in ["softmax", "gumbel", "gumbel2k"]
+        self.name = name
 
-    def __call__(self, vector, temperature=1, dim=-1):
-        if self.gumbel:
+    def __call__(self, vector, edge, temperature=1, dim=-1):
+        vector = [(v.T * F.Softmax(e)).T for e, v in zip(edge, vector)]
+        if self.name == "gumbel":
             return F.gumbel_softmax(vector, temperature, dim)
-        else:
+        if self.name == "softmax":
             return F.softmax(vector, dim)
+
+        if self.name == "gumbel2k":
+            return gumbel_top2k(vector, temperature, dim=-1)
