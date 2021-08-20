@@ -9,7 +9,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 import utils
 from models.search_cnn import SearchCNNController
-from architect import Architect
+from architect import Architect, ArchConstrains
 from visualize import plot
 
 from omegaconf import OmegaConf as omg
@@ -101,7 +101,7 @@ def run_search(cfg):
         lr_scheduler.step()
         lr = lr_scheduler.get_lr()[0]
 
-        model.print_alphas(logger)
+        model.print_alphas(logger, cfg.temperature_start)
         model.print_edges(logger)
 
         if epoch > cfg.warm_up:

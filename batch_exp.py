@@ -47,8 +47,8 @@ parser.add_argument("-g", "--gpu", type=int, default=0, help="gpu to use")
 args = parser.parse_args()
 
 
-def run_batch(CFG_PATH):
-    cfg = omg.load(CFG_PATH)
+def run_batch(cfg):
+
     key = args.key
     values = args.values
     base_run_name = args.name
@@ -100,4 +100,5 @@ def run_batch(CFG_PATH):
 
 if __name__ == "__main__":
     CFG_PATH = "./configs/config.yaml"
-    run_batch(CFG_PATH)
+    cfg = omg.load(CFG_PATH)
+    run_batch(cfg)

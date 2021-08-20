@@ -142,7 +142,7 @@ class SearchCNNController(nn.Module):
             C_in, C, n_classes, n_layers, n_nodes, stem_multiplier
         )
 
-    def forward(self, x, temperature=100, stable=False):
+    def forward(self, x, temperature=1, stable=False):
 
         if stable:
             func = self.softmax
@@ -178,7 +178,7 @@ class SearchCNNController(nn.Module):
 
         return self.net(x, weights_normal, weights_reduce)
 
-    def print_alphas(self, logger):
+    def print_alphas(self, logger, temperature):
 
         # remove formats
         org_formatters = []
@@ -189,11 +189,11 @@ class SearchCNNController(nn.Module):
         logger.info("####### ALPHA #######")
         logger.info("# Alpha - normal")
         for alpha, edge in zip(self.alpha_normal, self.net.edge_n):
-            logger.info(self.alphaselector(alpha, edge, dim=-1))
+            logger.info(self.alphaselector(alpha, edge, temperature, dim=-1))
 
         logger.info("\n# Alpha - reduce")
         for alpha, edge in zip(self.alpha_reduce, self.net.edge_r):
-            logger.info(self.alphaselector(alpha, edge, dim=-1))
+            logger.info(self.alphaselector(alpha, edge, temperature, dim=-1))
         logger.info("#####################")
 
         # restore formats
@@ -261,18 +261,21 @@ class SearchCNNController(nn.Module):
         self,
     ):
 
-        weights_normal = [
-            self.get_max(self.prod(a, self.net.edge_n[i]))
+        return self.net.fetch_weighted_flops_and_memory(
+            self.get_weights_normal(), self.get_weights_reduce()
+        )
+
+    def get_weights_normal(self):
+        return [
+            F.softmax(self.prod(a, self.net.edge_n[i]))
             for i, a in enumerate(self.alpha_normal)
         ]
-        weights_reduce = [
-            self.get_max(self.prod(a, self.net.edge_r[i]))
+
+    def get_weights_reduce(self):
+        return [
+            F.softmax(self.prod(a, self.net.edge_n[i]))
             for i, a in enumerate(self.alpha_reduce)
         ]
-
-        return self.net.fetch_weighted_flops_and_memory(
-            weights_normal, weights_reduce
-        )
 
     def prod(self, vector, edge):
         if self.use_soft_edge:
@@ -328,4 +331,4 @@ class AlphaSelector:
             return self.prod(F.softmax(vector, dim), edge)
 
         if self.name == "gumbel2k":
-            return self.prod(gumbel_top2k(vector, temperature, dim=-1), edge)
+            return self.prod(gumbel_top2k(vector, temperature, dim), edge)

@@ -5,7 +5,7 @@ search:
   debug_mode: false # run on a small porion of data
   gpu: 3
   use_soft_edge: true
-  alpha_selector:  gumbel #softmax
+  alpha_selector:  gumbel2k #softmax
   log_dir: '/home/dev/data_main/LOGS/DARTS'
   im_dir: 'arch_images'
   dataset: CIFAR10  # CIFAR10 / MNIST / FashionMNIST
@@ -20,7 +20,7 @@ search:
   epochs: 30 # n of training epochs
   warm_up: 15
   temperature_start: 1
-  temp_red: 0.8
+  temp_red: 0.85
   init_channels: 16
   layers: 4 # of layers 8 is default
   seed: 2 #random seed

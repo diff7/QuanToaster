@@ -134,3 +134,67 @@ class Architect:
             (p - n) / (2.0 * eps) for p, n in zip(dalpha_pos, dalpha_neg)
         ]
         return hessian
+
+
+class ArchConstrains:
+    def __init__(
+        self, lr=0.001, CL=0, CH=0, max_iter=1000, t=0.01, verbose=True
+    ):
+        self.CL = CL
+        self.CH = CH
+        self.verbose = verbose
+        self.max_iter = max_iter
+        self.t = t
+        self.zero = torch.tensor([0.0])
+
+    def soft_temp(self, vec):
+        # get top2 k items
+        v_one = torch.nn.functional.softmax(vec / self.t)
+        v_two = torch.nn.functional.softmax(v_one * vec / self.t)
+        return v_one + v_two
+
+    def loss(self, alphas, alphas_fixed, total_weights):
+        mse_loss = 0
+        for a, a_f in zip(alphas, alphas_fixed):
+            mse_loss += torch.sum((a - a_f) ** 2)
+
+        high = torch.cat([total_weights - self.CH, self.zero])
+        low = torch.cat([self.CL - total_weights, self.zero])
+        h = torch.max(high)
+        l = torch.max(low)
+
+        return mse_loss + (h + l)
+
+    def adjust(self, model):
+        alphas = model.alphas()
+        alphas_fixed = torch.randn_like(alphas, requers_grad=False).detach()
+
+        opt = torch.optim.SGD([{"params": alphas}], lr=self.lr)
+
+        weights_normal = model.get_weights_normal()
+        weights_reduce = model.get_weights_reduce()
+
+        weights_normal = [self.soft_temp(w) for w in weights_normal]
+        weights_reduce = [self.soft_temp(w) for w in weights_reduce]
+
+        total_weights_initial, _ = model.net.fetch_weighted_flops_and_memory(
+            weights_normal, weights_reduce
+        )
+
+        for _ in range(self.max_iter):
+            weights_normal = model.get_weights_normal()
+            weights_reduce = model.get_weights_reduce()
+
+            weights_normal = [self.soft_temp(w) for w in weights_normal]
+            weights_reduce = [self.soft_temp(w) for w in weights_reduce]
+
+            total_weights, _ = model.net.fetch_weighted_flops_and_memory(
+                weights_normal, weights_reduce
+            )
+
+            L, _ = self.loss(alphas, alphas_fixed, total_weights)
+            L.backward()
+            opt.step()
+            opt.zero_grad()
+
+        return total_weights_initial, total_weights
