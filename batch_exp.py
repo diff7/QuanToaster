@@ -7,6 +7,9 @@ from augment import run_train
 from utils import get_run_path
 from omegaconf import OmegaConf as omg
 
+"""
+EXAMPLE: python batch_exp.py -k penalty -v 0.01 0.05 0.1 0.5 0.7 -d gumbel_plus -r 3 -g 3
+"""
 parser = argparse.ArgumentParser()
 
 parser.add_argument(
@@ -44,10 +47,12 @@ parser.add_argument("-g", "--gpu", type=int, default=0, help="gpu to use")
 args = parser.parse_args()
 
 
-def run_batch(cfg):
+def run_batch(CFG_PATH):
+    cfg = omg.load(CFG_PATH)
     key = args.key
     values = args.values
     base_run_name = args.name
+    log_dir = {"search": cfg.search.log_dir, "train": cfg.search.log_dir}
 
     assert (key in cfg.train) or (
         key in cfg.search
@@ -56,10 +61,10 @@ def run_batch(cfg):
     for mode in ["train", "search"]:
         cfg[mode].gpu = args.gpu
 
-    for r in range(args.repeat):
+    for r in range(1, args.repeat + 1):
         for mode in ["train", "search"]:
             cfg[mode].log_dir = os.path.join(
-                cfg[mode].log_dir,
+                log_dir[mode],
                 args.dir,
                 f"trail_{r}",
             )
@@ -95,5 +100,4 @@ def run_batch(cfg):
 
 if __name__ == "__main__":
     CFG_PATH = "./configs/config.yaml"
-    cfg = omg.load(CFG_PATH)
-    run_batch(cfg)
+    run_batch(CFG_PATH)

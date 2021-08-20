@@ -1,9 +1,11 @@
 search:
   run_name: 'TEST_pen_0.3_MNIST'
   penalty: 0.3
-  unrolled: true
+  unrolled: false
   debug_mode: true # run on a small porion of data
   gpu: 1
+  use_soft_edge: false
+  alpha_selector: softmax #gumbel
   log_dir: '/home/dev/data_main/LOGS/DARTS'
   im_dir: 'arch_images'
   dataset: MNIST  # CIFAR10 / MNIST / FashionMNIST
@@ -15,10 +17,10 @@ search:
   w_weight_decay: 3e-4 # weight decay for weights
   w_grad_clip: 5 # gradient clipping for weights
   print_freq: 50 # print frequency
-  epochs: 3 # n of training epochs
+  epochs: 5 # n of training epochs
   init_channels: 16
   temperature_start: 0.1
-  temp_red: 0.5
+  temp_red: 0.1
   warm_up: 1
   layers: 3 # of layers 8 is default
   seed: 2 #random seed

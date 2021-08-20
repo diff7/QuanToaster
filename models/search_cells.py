@@ -41,22 +41,14 @@ class SearchCell(nn.Module):
                 op = ops.MixedOp(C, stride)
                 self.dag[i].append(op)
 
-        self.edge_weights = nn.ParameterList()
-        for i in range(self.n_nodes):
-            self.edge_weights.append(nn.Parameter(torch.ones(i + 2)))
-
-        torch.nn.parameter.Parameter(torch.ones(self.n_nodes) / self.n_nodes)
-
     def forward(self, s0, s1, w_dag):
         s0 = self.preproc0(s0)
         s1 = self.preproc1(s1)
 
         states = [s0, s1]
-        for i, (edges, w_list) in enumerate(zip(self.dag, w_dag)):
-            edge_w = nn.functional.Softamx(self.edge_weights[i])
+        for edges, w_list in zip(self.dag, w_dag):
             s_cur = sum(
-                edges[i](s, (w.T * edge_w).T)
-                for i, (s, w) in enumerate(zip(states, w_list))
+                edges[i](s, w) for i, (s, w) in enumerate(zip(states, w_list))
             )
             states.append(s_cur)
 

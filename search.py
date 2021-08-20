@@ -14,7 +14,7 @@ from visualize import plot
 
 from omegaconf import OmegaConf as omg
 
-CFG_PATH = "./configs/config.yaml"
+CFG_PATH = "./configs/debug.yaml"
 
 
 def train_setup(cfg):
@@ -67,6 +67,8 @@ def run_search(cfg):
         cfg.layers,
         net_crit,
         device_ids=cfg.gpu,
+        use_soft_edge=cfg.use_soft_edge,
+        alpha_selector=cfg.alpha_selector,
     )
     model = model.to(device)
 
@@ -100,6 +102,7 @@ def run_search(cfg):
         lr = lr_scheduler.get_lr()[0]
 
         model.print_alphas(logger)
+        model.print_edges(logger)
 
         if epoch > cfg.warm_up:
             cfg.temperature_start *= cfg.temp_red
@@ -463,4 +466,4 @@ class FlopsLoss:
 
 if __name__ == "__main__":
     cfg = omg.load(CFG_PATH)
-    run_search()
+    run_search(cfg)

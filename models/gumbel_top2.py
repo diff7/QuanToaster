@@ -2,7 +2,7 @@ import torch
 
 
 def sample_gumbel(shape, eps=1e-20):
-    U = torch.rand(shape)
+    U = torch.rand(shape).cuda()
     return -torch.log(-torch.log(U + eps) + eps)
 
 
