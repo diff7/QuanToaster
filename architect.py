@@ -136,21 +136,25 @@ class Architect:
         return hessian
 
 
+
+###### UNUSED #######
 class ArchConstrains:
     def __init__(
-        self, lr=0.001, CL=0, CH=0, max_iter=1000, t=0.01, verbose=True
-    ):
+        self, lr=0.001, CL=0, CH=0, max_iter=1000, t=0.01, verbose=True, gamma=1e-6, device='cpu'):
         self.CL = CL
         self.CH = CH
         self.verbose = verbose
         self.max_iter = max_iter
         self.t = t
-        self.zero = torch.tensor([0.0])
+        self.zero = torch.tensor([0.0]).to(device)
+        self.gamma = gamma
+        self.device = device
+        self.lr = lr
 
     def soft_temp(self, vec):
         # get top2 k items
-        v_one = torch.nn.functional.softmax(vec / self.t)
-        v_two = torch.nn.functional.softmax(v_one * vec / self.t)
+        v_one = torch.nn.functional.softmax(vec / self.t, dim=-1)
+        v_two = torch.nn.functional.softmax(v_one * vec / self.t, dim=-1)
         return v_one + v_two
 
     def loss(self, alphas, alphas_fixed, total_weights):
@@ -158,16 +162,15 @@ class ArchConstrains:
         for a, a_f in zip(alphas, alphas_fixed):
             mse_loss += torch.sum((a - a_f) ** 2)
 
-        high = torch.cat([total_weights - self.CH, self.zero])
-        low = torch.cat([self.CL - total_weights, self.zero])
+        high = torch.cat([(total_weights - self.CH).unsqueeze(0), self.zero])
+        low = torch.cat([(self.CL - total_weights).unsqueeze(0), self.zero])
         h = torch.max(high)
         l = torch.max(low)
-
-        return mse_loss + (h + l)
+        return mse_loss + self.gamma*(h + l)
 
     def adjust(self, model):
-        alphas = model.alphas()
-        alphas_fixed = torch.randn_like(alphas, requers_grad=False).detach()
+        alphas = tuple(model.alphas())
+        alphas_fixed = tuple(torch.clone(a).detach().to(self.device) for a in alphas)
 
         opt = torch.optim.SGD([{"params": alphas}], lr=self.lr)
 
@@ -181,7 +184,8 @@ class ArchConstrains:
             weights_normal, weights_reduce
         )
 
-        for _ in range(self.max_iter):
+        
+        for i in range(self.max_iter):
             weights_normal = model.get_weights_normal()
             weights_reduce = model.get_weights_reduce()
 
@@ -191,10 +195,18 @@ class ArchConstrains:
             total_weights, _ = model.net.fetch_weighted_flops_and_memory(
                 weights_normal, weights_reduce
             )
-
-            L, _ = self.loss(alphas, alphas_fixed, total_weights)
+            if ((total_weights_initial < self.CH) and (total_weights_initial > self.CL)):
+                print(f'Skipping constrain adjustsmen on iter {i+1} - all is within boundaries')
+                break 
+            L = self.loss(alphas, alphas_fixed, total_weights)
             L.backward()
             opt.step()
             opt.zero_grad()
+      
+
+        if self.verbose:
+            print(f'init W {total_weights_initial:.3E}')
+            print(f'final W {total_weights:.3E}')
+            print(f'constrains upper {self.CH:.3E} lower {self.CL:.3E}')
 
         return total_weights_initial, total_weights

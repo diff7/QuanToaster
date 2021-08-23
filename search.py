@@ -14,8 +14,6 @@ from visualize import plot
 
 from omegaconf import OmegaConf as omg
 
-CFG_PATH = "./configs/debug.yaml"
-
 
 def train_setup(cfg):
 
@@ -70,6 +68,9 @@ def run_search(cfg):
         use_soft_edge=cfg.use_soft_edge,
         alpha_selector=cfg.alpha_selector,
     )
+
+    if cfg.use_adjuster:
+        ConstrainAdjuster = ArchConstrains(**cfg.adjuster, device=device)
     model = model.to(device)
 
     flops_loss = FlopsLoss(model.n_ops)
@@ -128,6 +129,9 @@ def run_search(cfg):
             flops_loss,
             temperature,
         )
+
+        if cfg.use_adjuster:
+            ConstrainAdjuster.adjust(model)
 
         # validation
         top1_val, top5_val = validate(
@@ -465,5 +469,6 @@ class FlopsLoss:
 
 
 if __name__ == "__main__":
+    CFG_PATH = "./configs/debug.yaml"
     cfg = omg.load(CFG_PATH)
     run_search(cfg)

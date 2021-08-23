@@ -1,6 +1,7 @@
 search:
   run_name: 'TEST_CIFAR_gumbel_FIXED_warm15_pen_0.01_alpha_LR_0.01'
   penalty: 0.01
+  use_adjuster: true
   unrolled: false
   debug_mode: false # run on a small porion of data
   gpu: 3
@@ -28,6 +29,13 @@ search:
   alpha_lr:  3e-4 #3e-4 #lr for alpha
   alpha_weight_decay: 1e-3 #weight decay for alpha
   train_portion: 0.7  # portion of training data
+  adjuster: 
+    lr: 0.001
+    CL: 2e+7
+    CH: 1e+20 # set some big value if no upper bound 
+    max_iter: 100
+    verbose: true
+    gamma: 1e-6
   
   
 train:
