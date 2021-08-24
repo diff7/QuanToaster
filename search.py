@@ -178,6 +178,9 @@ def run_search(cfg):
             with open(os.path.join(cfg.save, "best_arch.gen"), "w") as f:
                 f.write(str(genotype))
 
+            writer.add_scalar("search/best_val", best_top1, epoch)
+            writer.add_scalar("search/best_flops", best_flops, epoch)
+
             is_best = True
 
             log_genotype(
@@ -286,9 +289,21 @@ def train(
             else:
 
                 logits, (flops, mem) = model(val_X, temperature)
-                loss = model.criterion(logits, val_y) + flops_loss(flops)
+                if cfg.use_l1_alpha:
+                    alphas = model.alphas()
+                    flat_alphas = torch.cat([x.view(-1) for x in alphas])
+                    l1_regularization = cfg.l1_lambda * torch.norm(
+                        flat_alphas, 1
+                    )
+                    loss = (
+                        model.criterion(logits, val_y)
+                        + flops_loss(flops)
+                        + l1_regularization
+                    )
+                else:
+                    loss = model.criterion(logits, val_y) + flops_loss(flops)
                 loss.backward()
-            alpha_optim.step()
+                alpha_optim.step()
 
         # phase 1. child network step (w)
         w_optim.zero_grad()
@@ -408,7 +423,7 @@ def get_data_loaders(cfg):
     # split data to train/validation
     n_train = len(train_data)
     if cfg.debug_mode:
-        cfg.train_portion = 0.001
+        cfg.train_portion = 0.01
 
     split = int(np.floor(cfg.train_portion * n_train))
     leftover = int(np.floor((1 - cfg.train_portion) * n_train)) // 2

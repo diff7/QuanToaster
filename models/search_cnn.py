@@ -119,8 +119,12 @@ class SearchCNNController(nn.Module):
         self.alpha_normal = nn.ParameterList()
         self.alpha_reduce = nn.ParameterList()
 
-        self.alphaselector = AlphaSelector(name=alpha_selector)
-        self.softmax = AlphaSelector(name="softmax")
+        self.alphaselector = AlphaSelector(
+            name=alpha_selector, use_soft_edge=use_soft_edge
+        )
+        self.softmax = AlphaSelector(
+            name="softmax", use_soft_edge=use_soft_edge
+        )
 
         self.use_soft_edge = use_soft_edge
 
@@ -315,12 +319,17 @@ class SearchCNNController(nn.Module):
 
 
 class AlphaSelector:
-    def __init__(self, name="softmax"):
+    def __init__(self, name="softmax", use_soft_edge=False):
         assert name in ["softmax", "gumbel", "gumbel2k"]
         self.name = name
+        self.use_soft_edge = use_soft_edge
 
     def prod(self, vector, edge):
-        return (vector.T * F.softmax(edge)).T
+        if self.use_soft_edge:
+            return (vector.T * F.softmax(edge)).T
+
+        else:
+            return vector
 
     def __call__(self, vector, edge, temperature=1, dim=-1):
 
