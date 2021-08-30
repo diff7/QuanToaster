@@ -150,7 +150,7 @@ class DilConv(BaseConv):
         super().__init__()
         self.net = nn.Sequential(
             nn.ReLU(),
-            nn.Conv2d(
+            self.conv_func(
                 C_in,
                 C_in,
                 kernel_size,
@@ -223,7 +223,7 @@ class FactorizedReduce(BaseConv):
     def __init__(self, C_in, C_out, affine=True):
         super().__init__()
         self.relu = nn.ReLU()
-        self.conv1 = nn.Conv2d(
+        self.conv1 = self.conv_func(
             C_in, C_out // 2, 1, stride=2, padding=0, bias=False
         )
         self.conv2 = self.conv_func(
