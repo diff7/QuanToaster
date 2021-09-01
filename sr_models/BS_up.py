@@ -1,7 +1,17 @@
 import torch
 import torch.nn as nn
-from models.flops import BaseConv
+from flops import BaseConv
+from flops import count_upsample_flops
 
+
+# TODO
+"""
+Two types of blocks
+1. Grouped
+2. Increase num filters in the middle
+3. Test /  Find different stride size
+4. Add / Remove BN
+"""
 
 OPS = {
     "none": lambda C, stride, affine: Zero(stride),
@@ -26,15 +36,67 @@ OPS = {
     "conv_7x1_1x7": lambda C, stride, affine: FacConv(
         C, C, 7, stride, 3, affine=affine
     ),
+    "bs_up_bicubic_residual": lambda C, stride, affine: BSup(
+        "bicubic",
+        C,
+        residual=True,
+    ),
+    "bs_up_nearest_residual": lambda C, stride, affine: BSup(
+        "nearest",
+        C,
+        residual=True,
+    ),
+    "bs_up_bilinear_residual": lambda C, stride, affine: BSup(
+        "bilinear",
+        C,
+        residual=True,
+    ),
+    "bs_up_bicubic": lambda C, stride, affine: BSup(
+        "bicubic",
+        C,
+        residual=False,
+    ),
+    "bs_up_nearest": lambda C, stride, affine: BSup(
+        "nearest",
+        C,
+        residual=False,
+    ),
+    "bs_up_bilinear": lambda C, stride, affine: BSup(
+        "bilinear",
+        C,
+        residual=False,
+    ),
 }
 
 
-class BSup:
+class BSup(nn.Module):
     def __init__(self, mode, scale, residual=False):
+        super(BSup, self).__init__()
         self.residual = residual
         self.scale = scale
-        self.upsample = nn.Upsample(scale_factor=scale ** (1 / 2), mode=mode)
+        self.mode = mode
+
+        if mode == "nearest":
+            align_corners = None
+        else:
+            align_corners = True
+        self.upsample = nn.Upsample(
+            scale_factor=scale ** (1 / 2),
+            mode=mode,
+            align_corners=align_corners,
+        )
         self.space_to_depth = torch.nn.functional.pixel_unshuffle
+
+        self.last_shape_out = ()
+
+    def fetch_info(self):
+        flops = 0
+        mem = 0
+        flops = count_upsample_flops(self.mode, self.last_shape_out)
+        if self.residual:
+            flops += torch.prod(torch.tensor(self.last_shape_out)[1:])
+
+        return flops, mem
 
     def mean_by_c(self, image, scale):
         b, d, w, h = image.shape
@@ -47,7 +109,9 @@ class BSup:
         # x_mean = C, W, H
         x_mean = self.mean_by_c(x, self.scale)
         # upsample C, W*scale^1/2, H^scale^1/2
+
         x_upsample = self.upsample(x_mean)
+        self.last_shape_out = x_upsample.shape
         # x_upscaled = C*scale, W, H
         x_upscaled = self.space_to_depth(x_upsample, int(self.scale ** (1 / 2)))
         if self.residual:
@@ -58,6 +122,7 @@ class BSup:
         assert (
             x.shape == shape_in
         ), f"shape mismatch in BSup {shape_in} {x.shape}"
+
         return x_upscaled
 
 
@@ -68,54 +133,6 @@ class BSup:
 # plt.imshow(bs_up.mean_by_c(bs_im, 9).transpose(1, -1)[0])
 
 # plt.imshow(bs_im.transpose(1,-1)[0])k
-
-
-class CNNBlock:
-    """Standard conv
-    ReLU - Conv - BN"""
-
-    def __init__(
-        self,
-        cnn_func,
-        fixed_c,
-        re_scale,
-        kernel_size,
-        stride,
-        padding,
-        affine=True,
-    ):
-        super().__init__()
-        self.fixed_c = fixed_c
-
-        self.net = nn.Sequential(
-            cnn_func(
-            C_in=fixed_c,
-            C_out=re_scale,
-            kernel_size=kernel_size,
-            stride=stride,
-            padding=padding,
-        ),
-        cnn_func(
-            C_in=re_scale,
-            C_out=fixed_c,
-            kernel_size=kernel_size,
-            stride=stride,
-            padding=padding,
-        )
-
-    def assertion(self, x):
-        assert (
-            x.shape[1] == self.fixed_c
-        ), f"Input size {x.shape}, does not match scale {self.scale}"
-
-    def forward(self, x):
-        b, c, w, h = x.shape
-        self.assertion(x)
-        x = self.net(x)
-        assert b,c,w,h == x.shape
-        return x
-
-
 
 
 def drop_path_(x, drop_prob, training):
@@ -146,7 +163,6 @@ class DropPath_(BaseConv):
         return x
 
 
-
 class StdConv(BaseConv):
     """Standard conv
     ReLU - Conv - BN
@@ -159,7 +175,7 @@ class StdConv(BaseConv):
             self.conv_func(
                 C_in, C_out, kernel_size, stride, padding, bias=False
             ),
-            nn.BatchNorm2d(C_out, affine=affine),
+            # nn.BatchNorm2d(C_out, affine=affine),
         )
 
     def forward(self, x):
@@ -178,12 +194,22 @@ class FacConv(BaseConv):
         self.net = nn.Sequential(
             nn.ReLU(),
             self.conv_func(
-                C_in, C_in, (kernel_length, 1), stride, padding, bias=False
+                C_in,
+                C_in,
+                (kernel_length, 1),
+                stride,
+                padding,
+                bias=False,
             ),
             self.conv_func(
-                C_in, C_out, (1, kernel_length), stride, padding, bias=False
+                C_in,
+                C_out,
+                (1, kernel_length),
+                stride,
+                padding,
+                bias=False,
             ),
-            nn.BatchNorm2d(C_out, affine=affine),
+            # nn.BatchNorm2d(C_out, affine=affine),
         )
 
     def forward(self, x):
@@ -199,7 +225,14 @@ class DilConv(BaseConv):
     """
 
     def __init__(
-        self, C_in, C_out, kernel_size, stride, padding, dilation, affine=True
+        self,
+        C_in,
+        C_out,
+        kernel_size,
+        stride,
+        padding,
+        dilation,
+        affine=True,
     ):
         super().__init__()
         self.net = nn.Sequential(
@@ -215,7 +248,7 @@ class DilConv(BaseConv):
                 bias=False,
             ),
             self.conv_func(C_in, C_out, 1, stride=1, padding=0, bias=False),
-            nn.BatchNorm2d(C_out, affine=affine),
+            # nn.BatchNorm2d(C_out, affine=affine),
         )
 
     def forward(self, x):
@@ -240,7 +273,13 @@ class SepConv(BaseConv):
                 affine=affine,
             ),
             DilConv(
-                C_in, C_out, kernel_size, 1, padding, dilation=1, affine=affine
+                C_in,
+                C_out,
+                kernel_size,
+                1,
+                padding,
+                dilation=1,
+                affine=affine,
             ),
         )
 
@@ -292,8 +331,42 @@ class FactorizedReduce(BaseConv):
         return out
 
 
+class AssertWrapper(nn.Module):
+    """
+    1. Checks that image size does not change.
+    2. Checks that mage input channels are the same as output channels.
+    """
+
+    def __init__(self, func, channels):
+
+        super(AssertWrapper, self).__init__()
+        self.channels = channels
+        self.func = func
+        self.func_name = func.__class__.__name__
+
+    def assertion_in(self, size_in):
+        assert (
+            size_in[1] == self.channels
+        ), f"Input size {size_in}, does not match fixed channels {self.channels}, called from {self.func_name}"
+
+    def assertion_out(self, size_in, size_out):
+        assert (
+            size_in == size_out
+        ), f"Output size {size_in} does not match input size {size_out}, called from {self.func_name}"
+
+    def forward(self, x):
+        b, c, w, h = x.shape
+        self.assertion_in((b, c, w, h))
+        x = self.func(x)
+        self.assertion_out((b, c, w, h), x.shape)
+        return x
+
+    def fetch_info(self):
+        return self.func.fetch_info()
+
+
 class MixedOp(nn.Module):
-    """ Mixed operation """
+    """Mixed operation"""
 
     def __init__(self, C, stride):
         super().__init__()
@@ -322,23 +395,30 @@ class MixedOp(nn.Module):
         return sum(w * op.fetch_info()[1] for w, op in zip(weights, self._ops))
 
 
-
-
 if __name__ == "__main__":
-    random_image = torch.randn(2,9,28,28)
+    random_image = torch.randn(3, 9, 10, 10)
 
-    cnn_funcs = [FactorizedReduce, SepConv, DilConv, StdConv, FacConv]
-    
-    for primitive in cnn_funcs:
-        conv = CNNBlock(primitive,
-        fixed_c=9,
-        re_scale=4,
-        kernel_size=3,
-        stride=1,
-        padding=1,
-        affine=True)
+    C = 9
+    # Keep stride 1 for all but GrowCo
+    stride = 1
+    PRIMITIVES = [
+        # "skip_connect",  # identity
+        "sep_conv_3x3",
+        "sep_conv_5x5",
+        "dil_conv_3x3",
+        "dil_conv_5x5",
+        "bs_up_bicubic_residual",
+        "bs_up_nearest_residual",
+        "bs_up_bilinear_residual",
+        "bs_up_bicubic",
+        "bs_up_nearest",
+        "bs_up_bilinear",
+        "none",
+    ]
+
+    for primitive in PRIMITIVES:
+        func = OPS[primitive](C, stride, affine=False)
+        conv = AssertWrapper(func, channels=C)
 
         x = conv(random_image)
-        print(x.shape)
-
-        
+        print(primitive, "shape", x.shape, f"FLOPS: {conv.fetch_info()[0]}")

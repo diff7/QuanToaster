@@ -73,12 +73,11 @@ class ConvFlops(nn.Module):
         w_out = self.compute_out(w_in, "w")
         h_out = self.compute_out(h_in, "h")
 
-        tmp = torch.tensor(
-            c_in * w_in * h_in, dtype=torch.float
-        )  # stil unsure why we use 1e-3
+        tmp = torch.tensor(c_in * w_in * h_in, dtype=torch.float)
         self.memory_size.copy_(tmp)
         tmp = torch.tensor(self.param_size * w_out * h_out, dtype=torch.float)
         self.flops.copy_(tmp)
+        del tmp
         out = self.conv(input)
         return out
 
@@ -113,4 +112,45 @@ class BaseConv(nn.Module):
                 sum_flops += m.flops.item()
                 sum_memory += m.memory_size.item()
 
-        return sum_flops, sum_memory
+        return torch.tensor([sum_flops]), torch.tensor([sum_memory])
+
+
+# TODO: verify the accuracy
+def count_upsample_flops(mode, shape):
+
+    shape_product = torch.prod(torch.tensor(shape)[1:])
+    """
+    Source ::
+    https://github.com/Lyken17/pytorch-OpCounter/
+
+    """
+
+    if mode not in (
+        "nearest",
+        "linear",
+        "bilinear",
+        "bicubic",
+    ):  # "trilinear"
+        print(f"Flops count for {mode} upsample is not implemented")
+        return torch.tensor([0])
+
+    if mode == "nearest":
+        return torch.tensor([0])
+
+    if mode == "linear":
+        total_ops = shape_product * 5  # 2 muls + 3 add
+    elif mode == "bilinear":
+        # https://en.wikipedia.org/wiki/Bilinear_interpolation
+        total_ops = shape_product * 11  # 6 muls + 5 adds
+    elif mode == "bicubic":
+        # https://en.wikipedia.org/wiki/Bicubic_interpolation
+        # Product matrix [4x4] x [4x4] x [4x4]
+        ops_solve_A = 224  # 128 muls + 96 adds
+        ops_solve_p = 35  # 16 muls + 12 adds + 4 muls + 3 adds
+        total_ops = shape_product * (ops_solve_A + ops_solve_p)
+    elif mode == "trilinear":
+        # https://en.wikipedia.org/wiki/Trilinear_interpolation
+        # can viewed as 2 bilinear + 1 linear
+        total_ops = shape_product * (13 * 2 + 5)
+
+    return torch.tensor([total_ops])
