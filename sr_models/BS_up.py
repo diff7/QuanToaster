@@ -5,19 +5,20 @@ from flops import count_upsample_flops
 
 
 # TODO
+
 """
+
 Two types of blocks
 1. Grouped
 2. Increase num filters in the middle
 3. Test /  Find different stride size
 4. Add / Remove BN
+
 """
 
 OPS = {
     "none": lambda C, stride, affine: Zero(stride),
-    "skip_connect": lambda C, stride, affine: Identity()
-    if stride == 1
-    else FactorizedReduce(C, C, affine=affine),
+    "skip_connect": lambda C, stride, affine: Identity(),
     "sep_conv_3x3": lambda C, stride, affine: SepConv(
         C, C, 3, stride, 1, affine=affine
     ),
@@ -35,6 +36,81 @@ OPS = {
     ),  # 9x9
     "conv_7x1_1x7": lambda C, stride, affine: FacConv(
         C, C, 7, stride, 3, affine=affine
+    ),
+    "conv_3x1_1x3": lambda C, stride, affine: FacConv(
+        C, C, 3, stride, 1, affine=affine
+    ),
+    "conv_7x1_1x7_growth2": lambda C, stride, affine: FacConv(
+        C,
+        C,
+        7,
+        stride,
+        3,
+        affine=affine,
+        growth=2,
+    ),
+    "conv_3x1_1x3_growth2": lambda C, stride, affine: FacConv(
+        C,
+        C,
+        3,
+        stride,
+        1,
+        affine=affine,
+        growth=2,
+    ),
+    "conv_7x1_1x7_growth4": lambda C, stride, affine: FacConv(
+        C,
+        C,
+        7,
+        stride,
+        3,
+        affine=affine,
+        growth=4,
+    ),
+    "conv_3x1_1x3_growth4": lambda C, stride, affine: FacConv(
+        C,
+        C,
+        3,
+        stride,
+        1,
+        affine=affine,
+        growth=4,
+    ),
+    "simple_3x3": lambda C, stride, affine: SimpleConv(
+        C, C, 3, stride, 1, affine=affine
+    ),
+    "simple_1x1": lambda C, stride, affine: SimpleConv(
+        C, C, 1, stride, 0, affine=affine
+    ),
+    "simple_5x5": lambda C, stride, affine: SimpleConv(
+        C, C, 5, stride, 2, affine=affine
+    ),
+    "simple_3x3_grouped_full": lambda C, stride, affine: SimpleConv(
+        C, C, 3, stride, 1, groups=C, affine=affine
+    ),
+    "simple_5x5_grouped_full": lambda C, stride, affine: SimpleConv(
+        C, C, 5, stride, 2, groups=C, affine=affine
+    ),
+    "simple_1x1_grouped_full": lambda C, stride, affine: SimpleConv(
+        C, C, 1, stride, 0, groups=3, affine=affine
+    ),
+    "simple_3x3_grouped_3": lambda C, stride, affine: SimpleConv(
+        C, C, 3, stride, 1, groups=3, affine=affine
+    ),
+    "simple_5x5_grouped_3": lambda C, stride, affine: SimpleConv(
+        C, C, 5, stride, 2, groups=3, affine=affine
+    ),
+    "growth2_3x3": lambda C, stride, affine: GrowthConv(
+        C, C, 5, stride, 2, groups=1, affine=affine, growth=2
+    ),
+    "growth4_3x3": lambda C, stride, affine: GrowthConv(
+        C, C, 5, stride, 2, groups=1, affine=affine, growth=4
+    ),
+    "growth2_3x3_grouped_full": lambda C, stride, affine: GrowthConv(
+        C, C, 5, stride, 2, groups=C, affine=affine, growth=2
+    ),
+    "growth4_3x3_grouped_full": lambda C, stride, affine: GrowthConv(
+        C, C, 5, stride, 2, groups=C, affine=affine, growth=4
     ),
     "bs_up_bicubic_residual": lambda C, stride, affine: BSup(
         "bicubic",
@@ -163,17 +239,80 @@ class DropPath_(BaseConv):
         return x
 
 
-class StdConv(BaseConv):
-    """Standard conv
-    ReLU - Conv - BN
-    """
+class GrowthConv(BaseConv):
+    """Standard conv -C_in -> C_in*growth -> C_in"""
 
-    def __init__(self, C_in, C_out, kernel_size, stride, padding, affine=True):
+    def __init__(
+        self,
+        C_in,
+        C_out,
+        kernel_size,
+        stride,
+        padding,
+        dilation=1,
+        groups=1,
+        affine=True,
+        growth=2,
+    ):
         super().__init__()
         self.net = nn.Sequential(
             nn.ReLU(),
             self.conv_func(
-                C_in, C_out, kernel_size, stride, padding, bias=False
+                C_in,
+                C_in * growth,
+                kernel_size,
+                stride,
+                padding,
+                dilation,
+                groups,
+                bias=affine,
+            ),
+            nn.ReLU(),
+            self.conv_func(
+                C_in * growth,
+                C_out,
+                kernel_size,
+                stride,
+                padding,
+                dilation,
+                groups,
+                bias=affine,
+            ),
+            # nn.BatchNorm2d(C_out, affine=affine),
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+
+class SimpleConv(BaseConv):
+    """Standard conv
+    ReLU - Conv - BN
+    """
+
+    def __init__(
+        self,
+        C_in,
+        C_out,
+        kernel_size,
+        stride,
+        padding,
+        dilation=1,
+        groups=1,
+        affine=True,
+    ):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.ReLU(),
+            self.conv_func(
+                C_in,
+                C_out,
+                kernel_size,
+                stride,
+                padding,
+                dilation,
+                groups,
+                bias=affine,
             ),
             # nn.BatchNorm2d(C_out, affine=affine),
         )
@@ -188,25 +327,25 @@ class FacConv(BaseConv):
     """
 
     def __init__(
-        self, C_in, C_out, kernel_length, stride, padding, affine=True
+        self, C_in, C_out, kernel_length, stride, padding, affine=True, growth=1
     ):
         super().__init__()
         self.net = nn.Sequential(
             nn.ReLU(),
             self.conv_func(
                 C_in,
-                C_in,
+                C_in * growth,
                 (kernel_length, 1),
                 stride,
-                padding,
+                (padding, 0),
                 bias=False,
             ),
             self.conv_func(
-                C_in,
+                C_in * growth,
                 C_out,
                 (1, kernel_length),
                 stride,
-                padding,
+                (0, padding),
                 bias=False,
             ),
             # nn.BatchNorm2d(C_out, affine=affine),
@@ -237,7 +376,7 @@ class DilConv(BaseConv):
         super().__init__()
         self.net = nn.Sequential(
             nn.ReLU(),
-            nn.Conv2d(
+            self.conv_func(
                 C_in,
                 C_in,
                 kernel_size,
@@ -247,7 +386,16 @@ class DilConv(BaseConv):
                 groups=C_in,
                 bias=False,
             ),
-            self.conv_func(C_in, C_out, 1, stride=1, padding=0, bias=False),
+            self.conv_func(
+                C_in,
+                C_out,
+                kernel_size,
+                stride,
+                padding,
+                dilation=dilation,
+                groups=C_in,
+                bias=False,
+            ),
             # nn.BatchNorm2d(C_out, affine=affine),
         )
 
@@ -308,29 +456,6 @@ class Zero(BaseConv):
         return x[:, :, :: self.stride, :: self.stride] * 0.0
 
 
-class FactorizedReduce(BaseConv):
-    """
-    Reduce feature map size by factorized pointwise(stride=2).
-    """
-
-    def __init__(self, C_in, C_out, affine=True):
-        super().__init__()
-        self.relu = nn.ReLU()
-        self.conv1 = nn.Conv2d(
-            C_in, C_out // 2, 1, stride=2, padding=0, bias=False
-        )
-        self.conv2 = self.conv_func(
-            C_in, C_out // 2, 1, stride=2, padding=0, bias=False
-        )
-        self.bn = nn.BatchNorm2d(C_out, affine=affine)
-
-    def forward(self, x):
-        x = self.relu(x)
-        out = torch.cat([self.conv1(x), self.conv2(x[:, :, 1:, 1:])], dim=1)
-        out = self.bn(out)
-        return out
-
-
 class AssertWrapper(nn.Module):
     """
     1. Checks that image size does not change.
@@ -352,7 +477,7 @@ class AssertWrapper(nn.Module):
     def assertion_out(self, size_in, size_out):
         assert (
             size_in == size_out
-        ), f"Output size {size_in} does not match input size {size_out}, called from {self.func_name}"
+        ), f"Output size {size_out} does not match input size {size_in}, called from {self.func_name}"
 
     def forward(self, x):
         b, c, w, h = x.shape
@@ -396,7 +521,7 @@ class MixedOp(nn.Module):
 
 
 if __name__ == "__main__":
-    random_image = torch.randn(3, 9, 10, 10)
+    random_image = torch.randn(3, 9, 120, 120)
 
     C = 9
     # Keep stride 1 for all but GrowCo
@@ -407,6 +532,24 @@ if __name__ == "__main__":
         "sep_conv_5x5",
         "dil_conv_3x3",
         "dil_conv_5x5",
+        "conv_7x1_1x7",
+        "conv_3x1_1x3",
+        "conv_3x1_1x3_growth2",
+        "conv_3x1_1x3_growth4",
+        "conv_7x1_1x7_growth2",
+        "conv_7x1_1x7_growth4",
+        "simple_5x5",
+        "simple_3x3",
+        "simple_1x1",
+        "simple_5x5_grouped_full",
+        "simple_3x3_grouped_full",
+        "simple_1x1_grouped_full",
+        "simple_5x5_grouped_3",
+        "simple_3x3_grouped_3",
+        "growth2_3x3",
+        "growth4_3x3",
+        "growth2_3x3_grouped_full",
+        "growth4_3x3_grouped_full",
         "bs_up_bicubic_residual",
         "bs_up_nearest_residual",
         "bs_up_bilinear_residual",
@@ -416,9 +559,9 @@ if __name__ == "__main__":
         "none",
     ]
 
-    for primitive in PRIMITIVES:
+    for i, primitive in enumerate(PRIMITIVES):
         func = OPS[primitive](C, stride, affine=False)
         conv = AssertWrapper(func, channels=C)
 
         x = conv(random_image)
-        print(primitive, "shape", x.shape, f"FLOPS: {conv.fetch_info()[0]}")
+        print("#", i + 1, primitive, f"FLOPS: {conv.fetch_info()[0].item()}")

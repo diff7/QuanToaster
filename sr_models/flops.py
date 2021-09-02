@@ -37,12 +37,11 @@ class ConvFlops(nn.Module):
             C_out,
             kernel,
             stride,
-            padding=0,
-            dilation=1,
-            groups=groups,
-            bias=False,
+            padding,
+            dilation,
+            groups,
+            bias,
         )
-
         self.kernel = self.to_tuple(kernel)
         self.stride = self.to_tuple(stride)
         self.padding = self.to_tuple(padding)
