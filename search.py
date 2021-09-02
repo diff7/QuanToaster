@@ -98,6 +98,7 @@ def run_search(cfg):
     # training loop
     best_top1 = 0.0
     cur_step = 0
+    temperature = cfg.temperature_start
     for epoch in range(cfg.epochs):
         lr_scheduler.step()
         lr = lr_scheduler.get_lr()[0]
@@ -106,10 +107,7 @@ def run_search(cfg):
         model.print_edges(logger)
 
         if epoch > cfg.warm_up:
-            cfg.temperature_start *= cfg.temp_red
-            temperature = cfg.temperature_start
-        else:
-            temperature = cfg.temperature_start
+            temperature *= cfg.temp_red
 
         # training
         top1_train, top5_train, cur_step, best_current_flops = train(

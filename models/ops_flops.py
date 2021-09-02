@@ -1,6 +1,7 @@
 """ Operations """
 import torch
 import torch.nn as nn
+
 import genotypes as gt
 from models.flops import BaseConv
 
@@ -239,7 +240,7 @@ class FactorizedReduce(BaseConv):
 
 
 class MixedOp(nn.Module):
-    """ Mixed operation """
+    """Mixed operation"""
 
     def __init__(self, C, stride):
         super().__init__()
@@ -266,3 +267,52 @@ class MixedOp(nn.Module):
 
     def fetch_weighted_memory(self, weights):
         return sum(w * op.fetch_info()[1] for w, op in zip(weights, self._ops))
+
+
+if __name__ == "__main__":
+    random_image = torch.randn(3, 9, 120, 120)
+
+    C = 9
+    # Keep stride 1 for all but GrowCo
+    stride = 1
+    PRIMITIVES = [
+        "skip_connect",  # identity
+        "sep_conv_3x3",
+        "sep_conv_5x5",
+        "dil_conv_3x3",
+        "dil_conv_5x5",
+        "conv_7x1_1x7",
+        "none",
+        "avg_pool_3x3",
+        "max_pool_3x3",
+        "sep_conv_7x7",
+    ]
+
+    names = []
+    flops = []
+    for i, primitive in enumerate(PRIMITIVES):
+        func = OPS[primitive](C, stride, affine=False)
+
+        x = func(random_image)
+        flops.append(func.fetch_info()[0])
+        names.append(primitive)
+        print(
+            "#",
+            i + 1,
+            primitive,
+            x.shape,
+            f"FLOPS: {func.fetch_info()[0]}",
+        )
+
+    max_flops = max(flops)
+    flops_normalized = [f / max_flops for f in flops]
+    names_sorted = [
+        n
+        for f, n in sorted(
+            zip(flops_normalized, names), key=lambda pair: pair[0]
+        )
+    ]
+    flops_normalized = sorted(flops_normalized)
+    print("\n## SORTED AND NORMALIZED ##\n")
+    for n, f in zip(names_sorted, flops_normalized):
+        print(n, "FLOPS:", round(f.item(), 5))

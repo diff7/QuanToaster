@@ -37,12 +37,11 @@ class ConvFlops(nn.Module):
             C_out,
             kernel,
             stride,
-            padding=0,
-            dilation=1,
-            groups=groups,
-            bias=False,
+            padding,
+            dilation,
+            groups,
+            bias,
         )
-
         self.kernel = self.to_tuple(kernel)
         self.stride = self.to_tuple(stride)
         self.padding = self.to_tuple(padding)
@@ -73,12 +72,11 @@ class ConvFlops(nn.Module):
         w_out = self.compute_out(w_in, "w")
         h_out = self.compute_out(h_in, "h")
 
-        tmp = torch.tensor(
-            c_in * w_in * h_in, dtype=torch.float
-        )  # stil unsure why we use 1e-3
+        tmp = torch.tensor(c_in * w_in * h_in, dtype=torch.float)
         self.memory_size.copy_(tmp)
         tmp = torch.tensor(self.param_size * w_out * h_out, dtype=torch.float)
         self.flops.copy_(tmp)
+        del tmp
         out = self.conv(input)
         return out
 
