@@ -3,6 +3,7 @@ import torch.nn as nn
 from flops import BaseConv
 from flops import count_upsample_flops
 
+import genotypes as gt
 
 # TODO
 
@@ -146,10 +147,10 @@ OPS = {
 
 
 class BSup(nn.Module):
-    def __init__(self, mode, scale, residual=False):
+    def __init__(self, mode, repeat_factor, residual=False):
         super(BSup, self).__init__()
         self.residual = residual
-        self.scale = scale
+        self.repeat_factor = repeat_factor
         self.mode = mode
 
         if mode == "nearest":
@@ -157,7 +158,7 @@ class BSup(nn.Module):
         else:
             align_corners = True
         self.upsample = nn.Upsample(
-            scale_factor=scale ** (1 / 2),
+            scale_factor=repeat_factor ** (1 / 2),
             mode=mode,
             align_corners=align_corners,
         )
@@ -174,22 +175,24 @@ class BSup(nn.Module):
 
         return flops, mem
 
-    def mean_by_c(self, image, scale):
+    def mean_by_c(self, image, repeat_factor):
         b, d, w, h = image.shape
-        image = image.reshape([b, d // scale, scale, w, h])
+        image = image.reshape([b, d // repeat_factor, repeat_factor, w, h])
         return image.mean(2)
 
     def forward(self, x):
         shape_in = x.shape
         # Input C*scale, W, H
         # x_mean = C, W, H
-        x_mean = self.mean_by_c(x, self.scale)
+        x_mean = self.mean_by_c(x, self.repeat_factor)
         # upsample C, W*scale^1/2, H^scale^1/2
 
         x_upsample = self.upsample(x_mean)
         self.last_shape_out = x_upsample.shape
         # x_upscaled = C*scale, W, H
-        x_upscaled = self.space_to_depth(x_upsample, int(self.scale ** (1 / 2)))
+        x_upscaled = self.space_to_depth(
+            x_upsample, int(self.repeat_factor ** (1 / 2))
+        )
         if self.residual:
             x = (x + x_upscaled) / 2
         else:
@@ -497,8 +500,8 @@ class MixedOp(nn.Module):
         super().__init__()
         self._ops = nn.ModuleList()
         for primitive in gt.PRIMITIVES:
-            op = OPS[primitive](C, stride, affine=False)
-            self._ops.append(op)
+            func = OPS[primitive](C, stride, affine=False)
+            self._ops.append(AssertWrapper(func, channels=C))
 
     def forward(self, x, weights):
         """
