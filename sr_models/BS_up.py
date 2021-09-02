@@ -3,7 +3,7 @@ import torch.nn as nn
 from flops import BaseConv
 from flops import count_upsample_flops
 
-import genotypes as gt
+# import genotypes as gt
 
 # TODO
 
@@ -562,9 +562,26 @@ if __name__ == "__main__":
         "none",
     ]
 
+    names = []
+    flops = []
     for i, primitive in enumerate(PRIMITIVES):
         func = OPS[primitive](C, stride, affine=False)
         conv = AssertWrapper(func, channels=C)
 
         x = conv(random_image)
+        flops.append(conv.fetch_info()[0].item())
+        names.append(primitive)
         print("#", i + 1, primitive, f"FLOPS: {conv.fetch_info()[0].item()}")
+
+    max_flops = max(flops)
+    flops_normalized = [f / max_flops for f in flops]
+    names_sorted = [
+        n
+        for f, n in sorted(
+            zip(flops_normalized, names), key=lambda pair: pair[0]
+        )
+    ]
+    flops_normalized = sorted(flops_normalized)
+    print("\n## SORTED AND NORMALIZED ##\n")
+    for n, f in zip(names_sorted, flops_normalized):
+        print(n, "FLOPS:", round(f, 5))

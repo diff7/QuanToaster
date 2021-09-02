@@ -6,7 +6,6 @@ from models.search_cells import SearchCell
 import genotypes as gt
 import logging
 
-
 # Weighted Soft Edge in forward
 # Gumbel Final flops are not correct
 
