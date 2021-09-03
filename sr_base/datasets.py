@@ -56,8 +56,8 @@ class PatchDataset(torch.utils.data.dataset.Dataset):
             with open(cfg.subset, "r") as f:
                 subset = f.read()
                 subset = subset.split("\n")
-            
-            subset = [s.split('/')[-1] for s in subset]
+
+            subset = [s.split("/")[-1] for s in subset]
             hr_files = fitler_subset(hr_files, subset)
             lr_files = fitler_subset(lr_files, subset)
 
@@ -86,14 +86,8 @@ class PatchDataset(torch.utils.data.dataset.Dataset):
             Low resolution image, high resolution image.
         """
 
-        input_img = Image.open(self.input_filenames[index]).convert("YCbCr")
-        target_img = Image.open(self.target_filenames[index]).convert("YCbCr")
-
-        # We transform image and train the network only using Y - luminiscense
-        # To produce an image back we improve Y and restore image with previous dimenisons
-
-        input_img, _, _ = input_img.split()
-        target_img, _, _ = target_img.split()
+        input_img = Image.open(self.input_filenames[index])
+        target_img = Image.open(self.target_filenames[index])
 
         input_img = self.transforms(input_img)
         target_img = self.transforms(target_img)
