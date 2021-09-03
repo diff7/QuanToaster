@@ -1,10 +1,11 @@
 """ Architect controls architecture of cell by computing gradients of alphas """
 import copy
 import torch
+import torch.nn.functional as F
 
 
 class Architect:
-    """ Compute gradients of alphas """
+    """Compute gradients of alphas"""
 
     def __init__(self, net, w_momentum, w_weight_decay):
         """
@@ -136,11 +137,19 @@ class Architect:
         return hessian
 
 
-
 ###### UNUSED #######
 class ArchConstrains:
     def __init__(
-        self, lr=0.001, CL=0, CH=0, max_iter=1000, t=0.01, verbose=True, gamma=1e-6, device='cpu'):
+        self,
+        lr=0.001,
+        CL=0,
+        CH=0,
+        max_iter=1000,
+        t=0.01,
+        verbose=True,
+        gamma=1e-6,
+        device="cpu",
+    ):
         self.CL = CL
         self.CH = CH
         self.verbose = verbose
@@ -166,16 +175,18 @@ class ArchConstrains:
         low = torch.cat([(self.CL - total_weights).unsqueeze(0), self.zero])
         h = torch.max(high)
         l = torch.max(low)
-        return mse_loss + self.gamma*(h + l)
+        return mse_loss + self.gamma * (h + l)
 
     def adjust(self, model):
         alphas = tuple(model.alphas())
-        alphas_fixed = tuple(torch.clone(a).detach().to(self.device) for a in alphas)
+        alphas_fixed = tuple(
+            torch.clone(a).detach().to(self.device) for a in alphas
+        )
 
         opt = torch.optim.SGD([{"params": alphas}], lr=self.lr)
 
-        weights_normal = model.get_weights_normal()
-        weights_reduce = model.get_weights_reduce()
+        weights_normal = model.get_weights_normal(F.softmax)
+        weights_reduce = model.get_weights_reduce(F.softmax)
 
         weights_normal = [self.soft_temp(w) for w in weights_normal]
         weights_reduce = [self.soft_temp(w) for w in weights_reduce]
@@ -184,10 +195,9 @@ class ArchConstrains:
             weights_normal, weights_reduce
         )
 
-        
         for i in range(self.max_iter):
-            weights_normal = model.get_weights_normal()
-            weights_reduce = model.get_weights_reduce()
+            weights_normal = model.get_weights_normal(F.softmax)
+            weights_reduce = model.get_weights_reduce(F.softmax)
 
             weights_normal = [self.soft_temp(w) for w in weights_normal]
             weights_reduce = [self.soft_temp(w) for w in weights_reduce]
@@ -195,18 +205,21 @@ class ArchConstrains:
             total_weights, _ = model.net.fetch_weighted_flops_and_memory(
                 weights_normal, weights_reduce
             )
-            if ((total_weights_initial < self.CH) and (total_weights_initial > self.CL)):
-                print(f'Skipping constrain adjustsmen on iter {i+1} - all is within boundaries')
-                break 
+            if (total_weights_initial < self.CH) and (
+                total_weights_initial > self.CL
+            ):
+                print(
+                    f"Skipping constrain adjustsmen on iter {i+1} - all is within boundaries"
+                )
+                break
             L = self.loss(alphas, alphas_fixed, total_weights)
             L.backward()
             opt.step()
             opt.zero_grad()
-      
 
         if self.verbose:
-            print(f'init W {total_weights_initial:.3E}')
-            print(f'final W {total_weights:.3E}')
-            print(f'constrains upper {self.CH:.3E} lower {self.CL:.3E}')
+            print(f"init W {total_weights_initial:.3E}")
+            print(f"final W {total_weights:.3E}")
+            print(f"constrains upper {self.CH:.3E} lower {self.CL:.3E}")
 
         return total_weights_initial, total_weights

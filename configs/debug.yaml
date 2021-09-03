@@ -1,15 +1,17 @@
 search:
   run_name: 'TEST'
-  penalty: 0.3
+  penalty: 0.01
+  use_adjuster: true
   unrolled: false
   debug_mode: true # run on a small porion of data
-  gpu: 0
-  use_l1_alpha: true
+  gpu: 3
+  use_l1_alpha: false
   l1_lambda: 1
-  use_soft_edge: false
-  warm_up: 2
+  use_soft_edge: true
+  alpha_selector: softmax #softmax #softmax #gumbel2k #softmax 
+  warm_up: 0
   
-  alpha_selector:  softmax #softmax #gumbel
+  
   log_dir: '/home/dev/data_main/LOGS/DARTS'
   im_dir: 'arch_images'
   dataset: MNIST  # CIFAR10 / MNIST / FashionMNIST
