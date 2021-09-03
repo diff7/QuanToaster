@@ -529,8 +529,9 @@ if __name__ == "__main__":
     C = 9
     # Keep stride 1 for all but GrowCo
     stride = 1
+
     PRIMITIVES = [
-        # "skip_connect",  # identity
+        "skip_connect",  # identity
         "sep_conv_3x3",
         "sep_conv_5x5",
         "dil_conv_3x3",
