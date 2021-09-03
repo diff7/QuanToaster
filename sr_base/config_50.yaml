@@ -17,7 +17,7 @@ rank_items: false
 # TRANING
 load_weiths: #'/home/dev/work_main/2021/crcnn/resutls/epoch_25.909.pth'
 results_dir: './results/'
-device: 3
+device: 0
 seed: 1
 lr: 1e-3
 batch_size: 128

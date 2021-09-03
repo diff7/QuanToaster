@@ -1,22 +1,29 @@
-from torch import nn
+import torch.nn as nn
+from torch.cuda import amp
 
 
-class SRCNN(nn.Module):
-    def __init__(self, num_channels=1, ker_one=9, ker_two=5, ker_three=5):
-        super(SRCNN, self).__init__()
-        self.conv1 = nn.Conv2d(
-            num_channels, 64, kernel_size=ker_one, padding=ker_one // 2
-        )
-        self.conv2 = nn.Conv2d(
-            64, 32, kernel_size=ker_two, padding=ker_two // 2
-        )
-        self.conv3 = nn.Conv2d(
-            32, num_channels, kernel_size=ker_three, padding=ker_three // 2
-        )
-        self.relu = nn.ReLU(inplace=True)
+class ESPCN(nn.Module):
+    def __init__(self, scale_factor):
+        super(ESPCN, self).__init__()
 
-    def forward(self, x):
-        x = self.relu(self.conv1(x))
-        x = self.relu(self.conv2(x))
-        x = self.conv3(x)
-        return x
+        # Feature mapping
+        self.feature_maps = nn.Sequential(
+            nn.Conv2d(1, 64, kernel_size=5, stride=1, padding=2),
+            nn.Tanh(),
+            nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=1),
+            nn.Tanh(),
+        )
+
+        # Sub-pixel convolution layer
+        self.sub_pixel = nn.Sequential(
+            nn.Conv2d(
+                32, 1 * (scale_factor ** 2), kernel_size=3, stride=1, padding=1
+            ),
+            nn.PixelShuffle(scale_factor),
+            nn.Sigmoid(),
+        )
+
+    def forward(self, inputs):
+        out = self.feature_maps(inputs)
+        out = self.sub_pixel(out)
+        return out

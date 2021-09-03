@@ -8,18 +8,13 @@ import torch.backends.cudnn as cudnn
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 
+from torch.utils.tensorboard import SummaryWriter
+
 from models import SRCNN
 from datasets import PatchDataset
 from utils import AverageMeter, calc_psnr, save_images
 from omegaconf import OmegaConf as omg
 
-
-from counters.counters import (
-    SSIMCounter,
-    PSNRCounter,
-    MSECounter,
-    CounterIterator,
-)
 
 CONFIG = "./configs/config_50.yaml"
 
@@ -43,7 +38,6 @@ def train_one_epoch(
     optimizer,
     device,
     scheduler=None,
-    CI=None,
     epoch=0,
     logger=None,
 ):
@@ -64,8 +58,6 @@ def train_one_epoch(
             labels = labels.to(device)
 
             preds = model(inputs)
-            if CI is not None:
-                CI.update(preds, path_input, labels)
 
             loss = criterion(preds, labels)
             loss_sanity = criterion(inputs, labels)
@@ -87,11 +79,12 @@ def train_one_epoch(
 
             if i % cfg.save_steps == 0:
                 save_images(
-                    cfg.results_dir + "/tmp/",
+                    cfg.results_dir + "/images/",
                     path_input[0],
                     path_target[0],
                     preds[0].detach().unsqueeze(0),
                     i,
+                    logger,
                 )
 
     if scheduler is not None:
@@ -143,25 +136,10 @@ def train_main(cfg):
             "You may see unexpected behavior when restarting "
             "from checkpoints."
         )
-
-    if cfg.use_wandb:
-        import wandb as wandb
-
-        os.environ["WANDB_API_KEY"] = cfg.wandb_key
-        wandb.init(name=cfg.run_name, project=cfg.exp_name, reinit=False)
-    else:
-        wandb = None
+    writer = SummaryWriter(log_dir=os.path.join(cfg.results_dir, "board"))
 
     if not os.path.exists(cfg.results_dir):
         os.makedirs(cfg.results_dir)
-
-    if cfg.rank_items:
-        CI = CounterIterator(cfg.results_dir + "/ranks/")
-        CI.add(SSIMCounter, "SSIMCounter")
-        CI.add(PSNRCounter, "PSNRCounter")
-        CI.add(MSECounter, "MSECounter")
-    else:
-        CI = None
 
     device = torch.device(cfg.device if torch.cuda.is_available() else "cpu")
     print("using :", device)
@@ -180,7 +158,7 @@ def train_main(cfg):
 
     model.to(device)
 
-    criterion = nn.MSELoss()
+    criterion = nn.L1oss()
 
     optimizer = optim.Adam(
         [
@@ -225,15 +203,12 @@ def train_main(cfg):
             optimizer,
             device,
             scheduler,
-            CI,
             epoch,
-            logger=wandb,
+            logger=writer,
         )
 
-        if cfg.rank_items:
-            CI.save(epoch)
         best_psnr = eval_and_save(
-            cfg, model, eval_dataloader, device, best_psnr, logger=wandb
+            cfg, model, eval_dataloader, device, best_psnr, logger=writer
         )
 
 
