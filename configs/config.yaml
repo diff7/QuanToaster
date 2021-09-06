@@ -7,15 +7,9 @@ search:
   gpu: 3
   use_l1_alpha: false
   l1_lambda: 1
-<<<<<<< HEAD
   use_soft_edge: false
   alpha_selector: softmax #softmax #softmax #softmax #gumbel2k #softmax 
-  warm_up: 15
-=======
-  use_soft_edge: true
-  alpha_selector: gumbel2k #softmax #softmax #gumbel2k #softmax 
   warm_up: 0
->>>>>>> 7c3dae7c3c65b065d865f4cfc44dc98bb86b3a95
 
   log_dir: '/home/dev/data_main/LOGS/DARTS'
   im_dir: 'arch_images'

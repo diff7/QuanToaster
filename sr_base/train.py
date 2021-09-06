@@ -10,13 +10,13 @@ from tqdm import tqdm
 
 from torch.utils.tensorboard import SummaryWriter
 
-from models import SRCNN
+from models import ESPCN
 from datasets import PatchDataset
 from utils import AverageMeter, calc_psnr, save_images
 from omegaconf import OmegaConf as omg
 
 
-CONFIG = "./configs/config_50.yaml"
+CONFIG = "./config_50.yaml"
 
 
 def save_model(cfg, model, psnr):
@@ -145,11 +145,7 @@ def train_main(cfg):
     print("using :", device)
     torch.manual_seed(cfg.seed)
 
-    model = SRCNN(
-        ker_one=cfg.model.ker_one,
-        ker_two=cfg.model.ker_two,
-        ker_three=cfg.model.ker_three,
-    )
+    model = ESPCN(scale_factor=cfg.scale)
 
     if not cfg.load_weiths is None:
         print(f"LOADING WEIGHTS: {cfg.load_weiths}")
@@ -158,19 +154,9 @@ def train_main(cfg):
 
     model.to(device)
 
-    criterion = nn.L1oss()
+    criterion = nn.L1Loss()
 
-    optimizer = optim.Adam(
-        [
-            {"params": model.conv1.parameters()},
-            {"params": model.conv2.parameters()},
-            {
-                "params": model.conv3.parameters(),
-                "lr": cfg.lr,
-            },  # change last layer LR if required
-        ],
-        lr=cfg.lr,
-    )
+    optimizer = optim.Adam(model.parameters())
 
     scheduler = torch.optim.lr_scheduler.StepLR(
         optimizer, step_size=3, gamma=0.7

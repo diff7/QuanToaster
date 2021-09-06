@@ -3,8 +3,8 @@ data: '/home/dev/data_main/DIV2K'
 data_hr:  '/home/dev/data_main/DIV2K/HR'
 data_lr:  '/home/dev/data_main/DIV2K/LR'
 
-data_processed_hr: '/home/dev/data_main/DIV2K/processed_50/HR'
-data_processed_lr: '/home/dev/data_main/DIV2K/processed_50/LR'
+data_processed_hr: '/home/dev/data_main/DIV2K/processed_50_espcn/HR'
+data_processed_lr: '/home/dev/data_main/DIV2K/processed_50_espcn/LR'
 val_folder: '/valid/'
 train_folder: '/train/'
 scale: 2
@@ -16,17 +16,14 @@ rank_items: false
 
 # TRANING
 load_weiths: #'/home/dev/work_main/2021/crcnn/resutls/epoch_25.909.pth'
-results_dir: './results/'
-device: 0
+results_dir:  '/home/dev/data_main/LOGS/SR_ESPCN'
+device: 3
 seed: 1
 lr: 1e-3
 batch_size: 128
 num_workers: 10
 num_epochs: 20
 
-use_wandb: true
-sasave_model: false
-wandb_key: "beca9453c7ef6a20e21d5705275a0ff72842cbf3"
 run_name: KCENTERS_RAW
 exp_name: srcnn
 

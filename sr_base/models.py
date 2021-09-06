@@ -1,5 +1,4 @@
 import torch.nn as nn
-from torch.cuda import amp
 
 
 class ESPCN(nn.Module):
