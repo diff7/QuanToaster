@@ -75,9 +75,13 @@ def train_one_epoch(
 
             if logger is not None:
                 if i % cfg.log_step == 0:
-                    logger.add_scalars("L1", {"train": epoch_losses.avg}, i)
                     logger.add_scalars(
-                        "psnr", {"train": epoch_psnr_train.avg}, i
+                        "L1", {"train": epoch_losses.avg}, (i + 1) * (epoch + 1)
+                    )
+                    logger.add_scalars(
+                        "psnr",
+                        {"train": epoch_psnr_train.avg},
+                        (i + 1) * (epoch + 1),
                     )
 
             if i % cfg.save_steps == 0:
@@ -96,10 +100,11 @@ def train_one_epoch(
 
     if scheduler is not None:
         scheduler.step()
+    return (i + 1) * (epoch + 1)
 
 
 def eval_and_save(
-    cfg, model, eval_dataloader, device, best_psnr, logger=None, epoch=0
+    cfg, model, eval_dataloader, device, best_psnr, logger=None, step=0
 ):
     model.eval()
 
@@ -127,13 +132,13 @@ def eval_and_save(
         path_input[0],
         path_target[0],
         preds[0],
-        epoch,
+        step,
         logger,
     )
 
     if logger is not None:
-        logger.add_scalars("psnr", {"val": epoch_psnr_val.avg}, epoch)
-        logger.add_scalars("L1", {"val": epoch_l1_val.avg}, epoch)
+        logger.add_scalars("psnr", {"val": epoch_psnr_val.avg}, step)
+        logger.add_scalars("L1", {"val": epoch_l1_val.avg}, step)
 
     if epoch_psnr_val.avg > best_psnr:
         best_psnr = epoch_psnr_val.avg.item()
@@ -202,7 +207,7 @@ def train_main(cfg):
     best_psnr = 0.0
 
     for epoch in range(cfg.num_epochs):
-        train_one_epoch(
+        step = train_one_epoch(
             cfg,
             model,
             train_dataset,
@@ -222,7 +227,7 @@ def train_main(cfg):
             device,
             best_psnr,
             logger=writer,
-            epoch=epoch,
+            step=step,
         )
 
 

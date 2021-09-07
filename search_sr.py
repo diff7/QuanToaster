@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 
 import utils
-from models.search_cnn import SearchCNNController
+from sr_models.search_cnn import SearchCNNController
 from architect import Architect, ArchConstrains
 from visualize import plot
 
@@ -54,16 +54,14 @@ def run_search(cfg):
     device = cfg.gpu
     torch.cuda.set_device(device)
 
-    # set seed
-    loaders, input_channels, n_classes = get_data_loaders(cfg)
-    train_loader, train_loader_alpha, val_loader = loaders
-    net_crit = nn.CrossEntropyLoss().to(device)
+    train_loader, train_loader_alpha, val_loader = get_data_loaders(cfg)
+    criterion = nn.L1Loss().to(device)
+
     model = SearchCNNController(
-        input_channels,
-        cfg.init_channels,
-        n_classes,
-        cfg.layers,
-        net_crit,
+        cfg.cahnnels,
+        cfg.repeat_factor,
+        criterion,
+        cfg.n_nodes,
         device_ids=cfg.gpu,
         use_soft_edge=cfg.use_soft_edge,
         alpha_selector=cfg.alpha_selector,
@@ -96,7 +94,7 @@ def run_search(cfg):
     architect = Architect(model, cfg.w_momentum, cfg.w_weight_decay)
 
     # training loop
-    best_top1 = 0.0
+    best_score = 0.0
     cur_step = 0
     temperature = cfg.temperature_start
     for epoch in range(cfg.epochs):
@@ -110,7 +108,7 @@ def run_search(cfg):
             temperature *= cfg.temp_red
 
         # training
-        top1_train, top5_train, cur_step, best_current_flops = train(
+        score_train, cur_step, best_current_flops = train(
             train_loader,
             train_loader_alpha,
             model,
@@ -132,7 +130,7 @@ def run_search(cfg):
             ConstrainAdjuster.adjust(model)
 
         # validation
-        top1_val, top5_val = validate(
+        score_val = validate(
             val_loader,
             model,
             epoch,
@@ -143,7 +141,7 @@ def run_search(cfg):
             temperature=temperature,
         )
 
-        top1_val_unsummed, top5_val = validate(
+        score_val_unsummed = validate(
             val_loader,
             model,
             epoch,
@@ -169,14 +167,14 @@ def run_search(cfg):
         )
 
         # save
-        if best_top1 < top1_val:
-            best_top1 = top1_val
+        if best_score < score_val:
+            best_score = score_val
             best_flops = best_current_flops
             best_genotype = genotype
             with open(os.path.join(cfg.save, "best_arch.gen"), "w") as f:
                 f.write(str(genotype))
 
-            writer.add_scalar("search/best_val", best_top1, epoch)
+            writer.add_scalar("search/best_val", best_score, epoch)
             writer.add_scalar("search/best_flops", best_flops, epoch)
 
             is_best = True
@@ -195,14 +193,14 @@ def run_search(cfg):
             print("")
 
         writer.add_scalars(
-            "top1/search", {"val": top1_val, "train": top1_train}, epoch
+            "top1/search", {"val": best_score, "train": score_train}, epoch
         )
         writer.add_scalars(
-            "top1_val_unsummed/search", {"val": top1_val_unsummed}, epoch
+            "top1_val_unsummed/search", {"val": score_val_unsummed}, epoch
         )
         writer.add_scalar("search/train/temperature", temperature, epoch)
 
-        logger.info("Final best Prec@1 = {:.4%}".format(best_top1))
+        logger.info("Final best Prec@1 = {:.4%}".format(best_score))
         logger.info("Best Genotype = {}".format(best_genotype))
 
 
@@ -247,10 +245,11 @@ def train(
     flops_loss,
     temperature,
 ):
-    top1 = utils.AverageMeter()
-    top5 = utils.AverageMeter()
-    losses = utils.AverageMeter()
+    psnr_meter = utils.AverageMeter()
+    loss_meter = utils.AverageMeter()
+
     stable = True
+
     writer.add_scalar("search/train/lr", lr, cur_step)
 
     model.train()
@@ -313,22 +312,20 @@ def train(
         nn.utils.clip_grad_norm_(model.weights(), cfg.w_grad_clip)
         w_optim.step()
 
-        prec1, prec5 = utils.accuracy(logits_w, trn_y, topk=(1, 5))
-        losses.update(loss_w.item(), N)
-        top1.update(prec1.item(), N)
-        top5.update(prec5.item(), N)
+        psnr = utils.calc_psnr(preds, y)
+        loss_meter.update(loss.item(), N)
+        psnr_meter.update(psnr.item(), N)
 
         if step % cfg.print_freq == 0 or step == len(train_loader) - 1:
             logger.info(
-                "Train: [{:2d}/{}] Step {:03d}/{:03d} Loss {losses.avg:.3f} "
-                "Prec@(1,5) ({top1.avg:.1%}, {top5.avg:.1%})".format(
+                "Valid: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} "
+                "PSNR ({psnr.avg:.1%} ".format(
                     epoch + 1,
                     cfg.epochs,
                     step,
                     len(train_loader) - 1,
-                    losses=losses,
-                    top1=top1,
-                    top5=top5,
+                    losses=loss_meter,
+                    psnr=psnr_meter,
                 )
             )
 
@@ -354,20 +351,19 @@ def train(
         cur_step += 1
 
     logger.info(
-        "Train: [{:2d}/{}] Final Prec@1 {:.4%}".format(
-            epoch + 1, cfg.epochs, top1.avg
+        "Train: [{:2d}/{}] Final PSNR {:.4%}".format(
+            epoch + 1, cfg.epochs, psnr_meter.avg
         )
     )
 
-    return top1.avg, top5.avg, cur_step, best_current_flops
+    return psnr_meter.avg, cur_step, best_current_flops
 
 
 def validate(
     valid_loader, model, epoch, logger, cfg, device, best=False, temperature=1
 ):
-    top1 = utils.AverageMeter()
-    top5 = utils.AverageMeter()
-    losses = utils.AverageMeter()
+    psnr_meter = utils.AverageMeter()
+    loss_meter = utils.AverageMeter()
 
     model.eval()
 
@@ -379,44 +375,43 @@ def validate(
             N = X.size(0)
 
             if best:
-                logits = model.forward_current_best(X)
+                preds = model.forward_current_best(X)
             else:
-                logits, (flops, mem) = model(X, temperature)
+                preds, (flops, mem) = model(X, temperature)
 
-            loss = model.criterion(logits, y)
+            loss = model.criterion(preds, y)
 
-            prec1, prec5 = utils.accuracy(logits, y, topk=(1, 5))
-            losses.update(loss.item(), N)
-            top1.update(prec1.item(), N)
-            top5.update(prec5.item(), N)
+            psnr = utils.calc_psnr(preds, y)
+            loss_meter.update(loss.item(), N)
+            psnr_meter.update(psnr.item(), N)
             if step % cfg.print_freq == 0 or step == len(valid_loader) - 1:
                 logger.info(
-                    "Valid: [{:2d}/{}] Step {:03d}/{:03d} Loss {losses.avg:.3f} "
-                    "Prec@(1,5) ({top1.avg:.1%}, {top5.avg:.1%})".format(
+                    "Valid: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} "
+                    "PSNR ({psnr.avg:.1%} ".format(
                         epoch + 1,
                         cfg.epochs,
                         step,
                         len(valid_loader) - 1,
-                        losses=losses,
-                        top1=top1,
-                        top5=top5,
+                        losses=loss_meter,
+                        psnr=psnr_meter,
                     )
                 )
 
     logger.info(
         "Valid: [{:2d}/{}] Final Prec@1 {:.4%}".format(
-            epoch + 1, cfg.epochs, top1.avg
+            epoch + 1, cfg.epochs, psnr_meter.avg
         )
     )
 
-    return top1.avg, top5.avg
+    return psnr_meter
 
 
 def get_data_loaders(cfg):
+    from sr_base.datasets import PatchDataset
+
     # get data with meta info
-    input_size, input_channels, n_classes, train_data = utils.get_data(
-        cfg.dataset, cfg.data_path, cutout_length=0, validation=False
-    )
+    train_data = PatchDataset(cfg, train=True)
+    eval_data = PatchDataset(cfg, train=False)
 
     # split data to train/validation
     n_train = len(train_data)
@@ -426,6 +421,7 @@ def get_data_loaders(cfg):
     split = int(np.floor(cfg.train_portion * n_train))
     leftover = int(np.floor((1 - cfg.train_portion) * n_train)) // 2
     indices = list(range(n_train))
+
     train_sampler = torch.utils.data.sampler.SubsetRandomSampler(
         indices[:split]
     )
@@ -456,12 +452,12 @@ def get_data_loaders(cfg):
                 train_data,
                 batch_size=cfg.batch_size,
                 sampler=sampler,
+                shuffle=True,
                 num_workers=cfg.workers,
-                pin_memory=True,
+                pin_memory=False,
             )
         )
-
-    return loaders, input_channels, n_classes
+    return loaders
 
 
 class FlopsLoss:
