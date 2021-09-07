@@ -32,12 +32,12 @@ def min_max(m):
 
 
 def prepare_images(path_input, path_target, out):
-    out = out.tarnspose(1, 2, 0)
+    out = out.permute(1, 2, 0)
     out = min_max(out)
     input_img = Image.open(path_input)
     target_img = Image.open(path_target)
 
-    out_image = out.mul(255.0).cpu().numpy().squeeze(0).squeeze(0)
+    out_image = out.mul(255.0).cpu().numpy()
 
     out_image = np.clip(out_image, 0.0, 255.0).astype(np.uint8)
     out_image = Image.fromarray(out_image)
@@ -71,7 +71,7 @@ def save_images(
             global_step=cur_iter,
         )
         logger.add_image(
-            tag=f"input_img",
+            tag=f"out_image",
             img_tensor=np.array(out_image),
             dataformats="HWC",
             global_step=cur_iter,

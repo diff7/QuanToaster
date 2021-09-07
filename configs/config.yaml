@@ -1,7 +1,7 @@
 search:
   run_name: 'TEST_CIFAR_gumbel_FIXED_warm15_pen_0.01_alpha_LR_0.01'
   penalty: 0.01
-  use_adjuster: true
+  use_adjuster: false
   unrolled: false
   debug_mode: false # run on a small porion of data
   gpu: 3

@@ -43,7 +43,7 @@ def train_one_epoch(
 ):
     model.train()
     epoch_losses = AverageMeter()
-    sanity_losses = AverageMeter()
+    epoch_psnr_train = AverageMeter()
 
     with tqdm(
         total=(len(train_dataset) - len(train_dataset) % cfg.batch_size)
@@ -60,10 +60,11 @@ def train_one_epoch(
             preds = model(inputs)
 
             loss = criterion(preds, labels)
-            loss_sanity = criterion(inputs, labels)
 
-            epoch_losses.update(loss.item(), len(inputs))
-            sanity_losses.update(loss_sanity.item(), len(inputs))
+            epoch_losses.update(loss.detach().item(), len(inputs))
+            epoch_psnr_train.update(
+                calc_psnr(preds.detach(), labels), len(inputs)
+            )
 
             optimizer.zero_grad()
             loss.backward()
@@ -74,26 +75,37 @@ def train_one_epoch(
 
             if logger is not None:
                 if i % cfg.log_step == 0:
-                    logger.log({"target - output": epoch_losses.avg})
-                    logger.log({"target - input": sanity_losses.avg})
+                    logger.add_scalars("L1", {"train": epoch_losses.avg}, i)
+                    logger.add_scalars(
+                        "psnr", {"train": epoch_psnr_train.avg}, i
+                    )
 
             if i % cfg.save_steps == 0:
                 save_images(
                     cfg.results_dir + "/images/",
                     path_input[0],
                     path_target[0],
-                    preds[0].detach().unsqueeze(0),
+                    preds[0].detach(),
                     i,
                     logger,
                 )
+
+            del inputs
+            del labels
+            del preds
 
     if scheduler is not None:
         scheduler.step()
 
 
-def eval_and_save(cfg, model, eval_dataloader, device, best_psnr, logger=None):
+def eval_and_save(
+    cfg, model, eval_dataloader, device, best_psnr, logger=None, epoch=0
+):
     model.eval()
-    epoch_psnr = AverageMeter()
+
+    criterion = nn.L1Loss()
+    epoch_psnr_val = AverageMeter()
+    epoch_l1_val = AverageMeter()
 
     for data in eval_dataloader:
         inputs, labels, path_input, path_target = data
@@ -103,24 +115,34 @@ def eval_and_save(cfg, model, eval_dataloader, device, best_psnr, logger=None):
 
         with torch.no_grad():
             preds = model(inputs).clamp(0.0, 1.0)
+            loss = criterion(preds, labels)
+            epoch_psnr_val.update(
+                calc_psnr(preds.detach(), labels), len(inputs)
+            )
+            epoch_l1_val.update(loss.detach().item(), len(inputs))
 
-        epoch_psnr.update(calc_psnr(preds, labels), len(inputs))
-
-    print("eval psnr: {:.2f}".format(epoch_psnr.avg))
+    print("eval psnr: {:.2f}".format(epoch_psnr_val.avg))
     save_images(
         cfg.results_dir,
         path_input[0],
         path_target[0],
-        preds,
-        epoch_psnr.avg.item(),
+        preds[0],
+        epoch,
+        logger,
     )
 
     if logger is not None:
-        logger.log({"psnr": epoch_psnr.avg})
+        logger.add_scalars("psnr", {"val": epoch_psnr_val.avg}, epoch)
+        logger.add_scalars("L1", {"val": epoch_l1_val.avg}, epoch)
 
-    if epoch_psnr.avg > best_psnr:
-        best_psnr = epoch_psnr.avg.item()
+    if epoch_psnr_val.avg > best_psnr:
+        best_psnr = epoch_psnr_val.avg.item()
         save_model(cfg, model, best_psnr)
+
+    del inputs
+    del labels
+    del preds
+
     return best_psnr
 
 
@@ -168,7 +190,7 @@ def train_main(cfg):
         batch_size=cfg.batch_size,
         shuffle=True,
         num_workers=cfg.num_workers,
-        pin_memory=True,
+        pin_memory=False,
         drop_last=True,
     )
     eval_dataset = PatchDataset(cfg, train=False)
@@ -194,7 +216,13 @@ def train_main(cfg):
         )
 
         best_psnr = eval_and_save(
-            cfg, model, eval_dataloader, device, best_psnr, logger=writer
+            cfg,
+            model,
+            eval_dataloader,
+            device,
+            best_psnr,
+            logger=writer,
+            epoch=epoch,
         )
 
 

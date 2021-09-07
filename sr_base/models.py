@@ -7,7 +7,7 @@ class ESPCN(nn.Module):
 
         # Feature mapping
         self.feature_maps = nn.Sequential(
-            nn.Conv2d(1, 64, kernel_size=5, stride=1, padding=2),
+            nn.Conv2d(3, 64, kernel_size=5, stride=1, padding=2),
             nn.Tanh(),
             nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=1),
             nn.Tanh(),
@@ -16,7 +16,7 @@ class ESPCN(nn.Module):
         # Sub-pixel convolution layer
         self.sub_pixel = nn.Sequential(
             nn.Conv2d(
-                32, 1 * (scale_factor ** 2), kernel_size=3, stride=1, padding=1
+                32, 3 * (scale_factor ** 2), kernel_size=3, stride=1, padding=1
             ),
             nn.PixelShuffle(scale_factor),
             nn.Sigmoid(),

@@ -1,4 +1,6 @@
 # used for data preprocessing:
+
+results_dir:  '/home/dev/data_main/LOGS/SR_ESPCN/baseline/trial_01'
 data: '/home/dev/data_main/DIV2K'
 data_hr:  '/home/dev/data_main/DIV2K/HR'
 data_lr:  '/home/dev/data_main/DIV2K/LR'
@@ -7,33 +9,24 @@ data_processed_hr: '/home/dev/data_main/DIV2K/processed_50_espcn/HR'
 data_processed_lr: '/home/dev/data_main/DIV2K/processed_50_espcn/LR'
 val_folder: '/valid/'
 train_folder: '/train/'
-scale: 2
+scale: 4
 patch_size: 50
 stride: 60
 
-subset: '/home/dev/work_main/2021/RAW_SELECTION/subset_1.0%_KCenters.txt'
+subset: #'/home/dev/work_main/2021/RAW_SELECTION/subset_1.0%_KCenters.txt'
 rank_items: false
 
 # TRANING
 load_weiths: #'/home/dev/work_main/2021/crcnn/resutls/epoch_25.909.pth'
-results_dir:  '/home/dev/data_main/LOGS/SR_ESPCN'
-device: 3
+
+device: 1
 seed: 1
 lr: 1e-3
-batch_size: 128
+batch_size: 32
 num_workers: 10
 num_epochs: 20
-
-run_name: KCENTERS_RAW
-exp_name: srcnn
 
 log_step : 100 
 save_steps: 1000
 
-
 benchmark: false # use true for reproducibility 
-
-model:
-  ker_one: 9
-  ker_two: 5
-  ker_three: 5
