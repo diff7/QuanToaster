@@ -8,6 +8,8 @@ import numpy as np
 import preproc
 import time
 
+from PIL import Image
+
 
 def get_run_path(base_dir, run_name):
     run_dir = "{}-{}".format(run_name, time.strftime("%Y-%m-%d-%H"))
@@ -21,7 +23,7 @@ def get_sr_data(cfg):
 
 
 def get_data(dataset, data_path, cutout_length, validation):
-    """ Get torchvision dataset """
+    """Get torchvision dataset"""
     dataset = dataset.lower()
 
     if dataset == "cifar10":
@@ -66,7 +68,7 @@ def get_data(dataset, data_path, cutout_length, validation):
 
 
 def get_logger(file_path):
-    """ Make python logger """
+    """Make python logger"""
     # [!] Since tensorboardX use default logger (e.g. logging.info()), we should use custom logger
     logger = logging.getLogger("darts")
     log_format = "%(asctime)s | %(message)s"
@@ -84,7 +86,7 @@ def get_logger(file_path):
 
 
 def param_size(model):
-    """ Compute parameter size in MB """
+    """Compute parameter size in MB"""
     n_params = sum(
         np.prod(v.size())
         for k, v in model.named_parameters()
@@ -94,20 +96,20 @@ def param_size(model):
 
 
 class AverageMeter:
-    """ Computes and stores the average and current value """
+    """Computes and stores the average and current value"""
 
     def __init__(self):
         self.reset()
 
     def reset(self):
-        """ Reset all statistics """
+        """Reset all statistics"""
         self.val = 0
         self.avg = 0
         self.sum = 0
         self.count = 0
 
     def update(self, val, n=1):
-        """ Update statistics """
+        """Update statistics"""
         self.val = val
         self.sum += val * n
         self.count += n
@@ -115,7 +117,7 @@ class AverageMeter:
 
 
 def accuracy(output, target, topk=(1,)):
-    """ Computes the precision@k for the specified values of k """
+    """Computes the precision@k for the specified values of k"""
     maxk = max(topk)
     batch_size = target.size(0)
 

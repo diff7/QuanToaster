@@ -137,6 +137,7 @@ def run_search(cfg):
             model,
             epoch,
             logger,
+            writer,
             cfg,
             device,
             best=False,
@@ -202,7 +203,7 @@ def run_search(cfg):
         )
         writer.add_scalar("search/train/temperature", temperature, epoch)
 
-        logger.info("Final best Prec@1 = {:.4%}".format(best_score))
+        logger.info("Final best Prec@1 = {:.3f}".format(best_score))
         logger.info("Best Genotype = {}".format(best_genotype))
 
 
@@ -352,7 +353,7 @@ def train(
         cur_step += 1
 
     logger.info(
-        "Train: [{:2d}/{}] Final PSNR {:.4%}".format(
+        "Train: [{:2d}/{}] Final PSNR {:.3f}".format(
             epoch + 1, cfg.epochs, psnr_meter.avg
         )
     )
@@ -361,7 +362,15 @@ def train(
 
 
 def validate(
-    valid_loader, model, epoch, logger, cfg, device, best=False, temperature=1
+    valid_loader,
+    model,
+    epoch,
+    logger,
+    writer,
+    cfg,
+    device,
+    best=False,
+    temperature=1,
 ):
     psnr_meter = utils.AverageMeter()
     loss_meter = utils.AverageMeter()
@@ -398,12 +407,12 @@ def validate(
                 )
 
     logger.info(
-        "Valid: [{:2d}/{}] Final Prec@1 {:.4%}".format(
+        "Valid: [{:2d}/{}] Final Prec@1 {:.3f}".format(
             epoch + 1, cfg.epochs, psnr_meter.avg
         )
     )
 
-    utils.save_images(cfg.save, x_path[0], y_path[0], preds[0], epoch, logger)
+    utils.save_images(cfg.save, x_path[0], y_path[0], preds[0], epoch, writer)
     return psnr_meter
 
 
@@ -415,7 +424,7 @@ def get_data_loaders(cfg):
     # split data to train/validation
     n_train = len(train_data)
     if cfg.debug_mode:
-        cfg.train_portion = 0.001
+        cfg.train_portion = 0.01
 
     split = int(np.floor(cfg.train_portion * n_train))
     leftover = int(np.floor((1 - cfg.train_portion) * n_train)) // 2

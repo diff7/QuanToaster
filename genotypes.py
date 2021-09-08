@@ -114,7 +114,7 @@ def parse(alpha, k):
         [('node2_ops_1', node_idx), ..., ('node2_ops_k', node_idx)],
         ...
     ]
-    each node has two edges (k=2) in CNN.
+    each node has two edges (k=2) in CN"N.
     """
 
     gene = []

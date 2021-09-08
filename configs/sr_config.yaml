@@ -11,6 +11,7 @@ dataset:
   workers: 10
   train_portion: 0.5
   batch_size: 32
+  debug_mode: true # run on a small porion of data
   
 
 search:
@@ -18,7 +19,6 @@ search:
   penalty: 0.01
   use_adjuster: false
   unrolled: false
-  debug_mode: true # run on a small porion of data
   gpu: 1
   use_l1_alpha: false
   l1_lambda: 1
