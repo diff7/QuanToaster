@@ -75,7 +75,6 @@ class SearchArch(nn.Module):
                 edges[i](s, w) for i, (s, w) in enumerate(zip(states, w_list))
             )
             states.append(s_cur)
-            print("### s_cur", s_cur.shape)
 
         # Only two last states
         s_out = states[-1] + states[-2]

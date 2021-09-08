@@ -127,7 +127,9 @@ def parse(alpha, k):
         edge_max, primitive_indices = torch.topk(
             edges[:, :-1], 1
         )  # ignore 'none'
-        topk_edge_values, topk_edge_indices = torch.topk(edge_max.view(-1), k)
+        topk_edge_values, topk_edge_indices = torch.topk(
+            edge_max.view(-1), min(k, edges.shape[0])
+        )
         node_gene = []
         for edge_idx in topk_edge_indices:
             prim_idx = primitive_indices[edge_idx]

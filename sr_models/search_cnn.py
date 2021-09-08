@@ -13,7 +13,7 @@ from models.gumbel_top2 import gumbel_top2k
 
 
 class SearchCNNController(nn.Module):
-    """ SearchCNN controller supporting multi-gpu """
+    """SearchCNN controller supporting multi-gpu"""
 
     def __init__(
         self,
@@ -128,14 +128,10 @@ class SearchCNNController(nn.Module):
             self.prod(a, self.net.edge_n[i]) for i, a in enumerate(self.alpha)
         ]
 
-        gene_normal = gt.parse(alpha_normal, k=2)
+        gene = gt.parse(alpha_normal, k=2)
         concat = range(self.n_nodes, 2 + self.n_nodes)  # concat last two nodes
 
-        return gt.Genotype(
-            normal=gene_normal,
-            normal_concat=concat,
-            reduce_concat=concat,
-        )
+        return gt.Genotype(normal=gene, normal_concat=concat)
 
     def weights(self):
         return self.net.parameters()
@@ -176,7 +172,9 @@ class SearchCNNController(nn.Module):
         values, indices = alpha[:, :-1].max(1)
         ones = (values.unsqueeze(1) == alpha).type(torch.int)
         zero_rows = [
-            i for i in range(alpha.shape[0]) if not i in values.topk(k).indices
+            i
+            for i in range(alpha.shape[0])
+            if not i in values.topk(min(k, alpha.shape[0])).indices
         ]
         ones[zero_rows] = 0
         if keep_weight:

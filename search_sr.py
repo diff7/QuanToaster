@@ -320,7 +320,7 @@ def train(
         if step % cfg.print_freq == 0 or step == len(train_loader) - 1:
             logger.info(
                 "Valid: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} "
-                "PSNR ({psnr.avg:.1%} ".format(
+                "PSNR ({psnr.avg:.3f}) ".format(
                     epoch + 1,
                     cfg.epochs,
                     step,
@@ -387,7 +387,7 @@ def validate(
             if step % cfg.print_freq == 0 or step == len(valid_loader) - 1:
                 logger.info(
                     "Valid: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} "
-                    "PSNR ({psnr.avg:.1%} ".format(
+                    "PSNR ({psnr.avg:.3f}) ".format(
                         epoch + 1,
                         cfg.epochs,
                         step,
@@ -415,7 +415,7 @@ def get_data_loaders(cfg):
     # split data to train/validation
     n_train = len(train_data)
     if cfg.debug_mode:
-        cfg.train_portion = 0.01
+        cfg.train_portion = 0.001
 
     split = int(np.floor(cfg.train_portion * n_train))
     leftover = int(np.floor((1 - cfg.train_portion) * n_train)) // 2
