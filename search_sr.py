@@ -149,6 +149,7 @@ def run_search(cfg):
             model,
             epoch,
             logger,
+            writer,
             cfg,
             device,
             best=True,
