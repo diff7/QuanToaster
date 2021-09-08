@@ -111,7 +111,7 @@ class BaseConv(nn.Module):
                 sum_flops += m.flops.item()
                 sum_memory += m.memory_size.item()
 
-        return torch.tensor([sum_flops]), torch.tensor([sum_memory])
+        return sum_flops, sum_memory
 
 
 # TODO: verify the accuracy
@@ -134,7 +134,7 @@ def count_upsample_flops(mode, shape):
         return torch.tensor([0])
 
     if mode == "nearest":
-        return torch.tensor([0])
+        return 0
 
     if mode == "linear":
         total_ops = shape_product * 5  # 2 muls + 3 add
@@ -152,4 +152,4 @@ def count_upsample_flops(mode, shape):
         # can viewed as 2 bilinear + 1 linear
         total_ops = shape_product * (13 * 2 + 5)
 
-    return torch.tensor([total_ops])
+    return total_ops

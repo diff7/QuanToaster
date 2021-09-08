@@ -241,7 +241,7 @@ class MixedOp(nn.Module):
     def __init__(self, C, stride):
         super().__init__()
         self._ops = nn.ModuleList()
-        for primitive in gt.PRIMITIVES:
+        for primitive in gt.PRIMITIVES_SR:
             op = OPS[primitive](C, stride, affine=False)
             self._ops.append(op)
 

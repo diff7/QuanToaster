@@ -10,6 +10,7 @@ from torch.utils.tensorboard import SummaryWriter
 import utils
 from sr_models.search_cnn import SearchCNNController
 from architect import Architect, ArchConstrains
+from sr_base.datasets import PatchDataset
 from visualize import plot
 
 from omegaconf import OmegaConf as omg
@@ -19,6 +20,7 @@ def train_setup(cfg):
 
     # INIT FOLDERS & cfg
 
+    cfg_dataset = cfg.dataset
     cfg = cfg.search
     cfg.save = utils.get_run_path(cfg.log_dir, "SEARCH_" + cfg.run_name)
 
@@ -43,22 +45,22 @@ def train_setup(cfg):
         for k, v in cfg.items():
             f.write(f"{str(k)}:{str(v)}\n")
 
-    return cfg, writer, logger
+    return cfg, writer, logger, cfg_dataset
 
 
 def run_search(cfg):
-    cfg, writer, logger = train_setup(cfg)
+    cfg, writer, logger, cfg_dataset = train_setup(cfg)
     logger.info("Logger is set - training start")
 
     # set default gpu device id
     device = cfg.gpu
     torch.cuda.set_device(device)
 
-    train_loader, train_loader_alpha, val_loader = get_data_loaders(cfg)
+    train_loader, train_loader_alpha, val_loader = get_data_loaders(cfg_dataset)
     criterion = nn.L1Loss().to(device)
 
     model = SearchCNNController(
-        cfg.cahnnels,
+        cfg.channels,
         cfg.repeat_factor,
         criterion,
         cfg.n_nodes,
@@ -254,7 +256,7 @@ def train(
 
     model.train()
 
-    for step, ((trn_X, trn_y), (val_X, val_y)) in enumerate(
+    for step, ((trn_X, trn_y, _, _), (val_X, val_y, _, _)) in enumerate(
         zip(train_loader, train_alpha_loader)
     ):
 
@@ -265,7 +267,6 @@ def train(
             device, non_blocking=True
         )
         N = trn_X.size(0)
-
         if flops_loss.norm == 0:
             model(val_X)
             flops_norm, _ = model.fetch_weighted_flops_and_memory()
@@ -304,16 +305,16 @@ def train(
 
         # phase 1. child network step (w)
         w_optim.zero_grad()
-        logits_w, (flops, mem) = model(trn_X, temperature, stable=stable)
+        preds, (flops, mem) = model(trn_X, temperature, stable=stable)
 
-        loss_w = model.criterion(logits_w, trn_y)
+        loss_w = model.criterion(preds, trn_y)
         loss_w.backward()
         # gradient clipping
         nn.utils.clip_grad_norm_(model.weights(), cfg.w_grad_clip)
         w_optim.step()
 
-        psnr = utils.calc_psnr(preds, y)
-        loss_meter.update(loss.item(), N)
+        psnr = utils.calc_psnr(preds, trn_y)
+        loss_meter.update(loss_w.item(), N)
         psnr_meter.update(psnr.item(), N)
 
         if step % cfg.print_freq == 0 or step == len(train_loader) - 1:
@@ -368,12 +369,11 @@ def validate(
     model.eval()
 
     with torch.no_grad():
-        for step, (X, y) in enumerate(valid_loader):
+        for step, (X, y, x_path, y_path) in enumerate(valid_loader):
             X, y = X.to(device, non_blocking=True), y.to(
                 device, non_blocking=True
             )
             N = X.size(0)
-
             if best:
                 preds = model.forward_current_best(X)
             else:
@@ -403,15 +403,14 @@ def validate(
         )
     )
 
+    utils.save_images(cfg.save, x_path[0], y_path[0], preds[0], epoch, logger)
     return psnr_meter
 
 
 def get_data_loaders(cfg):
-    from sr_base.datasets import PatchDataset
 
     # get data with meta info
     train_data = PatchDataset(cfg, train=True)
-    eval_data = PatchDataset(cfg, train=False)
 
     # split data to train/validation
     n_train = len(train_data)
@@ -452,7 +451,6 @@ def get_data_loaders(cfg):
                 train_data,
                 batch_size=cfg.batch_size,
                 sampler=sampler,
-                shuffle=True,
                 num_workers=cfg.workers,
                 pin_memory=False,
             )
@@ -478,6 +476,6 @@ class FlopsLoss:
 
 
 if __name__ == "__main__":
-    CFG_PATH = "./configs/debug.yaml"
+    CFG_PATH = "./configs/sr_config.yaml"
     cfg = omg.load(CFG_PATH)
     run_search(cfg)

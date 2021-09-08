@@ -33,10 +33,12 @@ class SearchCell(nn.Module):
 
         # generate dag
         self.dag = nn.ModuleList()
+        print("INITIALIZING MODEL's DAG")
         for i in range(self.n_nodes):
             self.dag.append(nn.ModuleList())
             for j in range(2 + i):  # include 2 input nodes
                 # reduction should be used only for input node
+                print("initialized:", i, j)
                 stride = 2 if reduction and j < 2 else 1
                 op = ops.MixedOp(C, stride)
                 self.dag[i].append(op)

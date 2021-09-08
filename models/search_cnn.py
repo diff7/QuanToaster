@@ -117,7 +117,7 @@ class SearchCNNController(nn.Module):
         self.device_ids = device_ids
 
         # initialize architect parameters: alphas
-        self.n_ops = len(gt.PRIMITIVES)
+        self.n_ops = len(gt.PRIMITIVES_SR)
 
         self.alpha_normal = nn.ParameterList()
         self.alpha_reduce = nn.ParameterList()

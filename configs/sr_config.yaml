@@ -1,32 +1,80 @@
-# used for data preprocessing:
 
-results_dir:  '/home/dev/data_main/LOGS/SR_ESPCN/baseline/trial_01'
-data: '/home/dev/data_main/DIV2K'
-data_hr:  '/home/dev/data_main/DIV2K/HR'
-data_lr:  '/home/dev/data_main/DIV2K/LR'
+dataset:
+  data_processed_hr: '/home/dev/data_main/DIV2K/processed_50_espcn/HR'
+  data_processed_lr: '/home/dev/data_main/DIV2K/processed_50_espcn/LR'
+  val_folder: '/valid/'
+  train_folder: '/train/'
+  scale: 4
+  patch_size: 50
+  stride: 60
+  subset: #'/home/dev/work_main/2021/RAW_SELECTION/subset_1.0%_KCenters.txt'
+  workers: 10
+  train_portion: 0.5
+  batch_size: 32
+  
 
-data_processed_hr: '/home/dev/data_main/DIV2K/processed_50_espcn/HR'
-data_processed_lr: '/home/dev/data_main/DIV2K/processed_50_espcn/LR'
-val_folder: '/valid/'
-train_folder: '/train/'
-scale: 4
-patch_size: 50
-stride: 60
+search:
+  run_name: 'TEST_run'
+  penalty: 0.01
+  use_adjuster: false
+  unrolled: false
+  debug_mode: true # run on a small porion of data
+  gpu: 1
+  use_l1_alpha: false
+  l1_lambda: 1
+  use_soft_edge: false
+  alpha_selector: softmax #softmax #softmax #softmax #gumbel2k #softmax 
+  warm_up: 0
 
-subset: #'/home/dev/work_main/2021/RAW_SELECTION/subset_1.0%_KCenters.txt'
-rank_items: false
+  channels: 3
+  repeat_factor: 16
+  n_nodes: 4
 
-# TRANING
-load_weiths: #'/home/dev/work_main/2021/crcnn/resutls/epoch_25.909.pth'
-
-device: 1
-seed: 1
-lr: 1e-3
-batch_size: 32
-num_workers: 10
-num_epochs: 20
-
-log_step : 100 
-save_steps: 1000
-
-benchmark: false # use true for reproducibility 
+  log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
+  im_dir: 'arch_images'
+  w_lr: 1e-3 # lr for weights
+  w_lr_min: 0.001 # minimum lr for weights
+  w_momentum: 0.9 # momentum for weights
+  w_weight_decay: 3e-4 # weight decay for weights
+  w_grad_clip: 5 # gradient clipping for weights
+  print_freq: 30 # print frequency
+  epochs: 30 # n of training epochs
+  temperature_start: 1
+  temp_red: 0.6
+  init_channels: 16
+  layers: 4 # of layers 8 is default
+  seed: 2 #random seed
+  workers: 4 ## of workers
+  alpha_lr:  3e-4 #3e-4 #lr for alpha
+  alpha_weight_decay: 0 #1e-3 #weight decay for alpha
+  train_portion: 0.5  # portion of training data
+  adjuster: 
+    lr: 0.001
+    CL: 2e+7
+    CH: 1e+8 # set some big value if no upper bound 
+    max_iter: 100
+    verbose: true
+    gamma: 1e-6
+  
+  
+train:
+  run_name: 'CIFAR10_pen_1_gumbel_warm_30'
+  log_dir: '/home/dev/data_main/LOGS/DARTS'
+  dataset: 'CIFAR10'  # CIFAR10 / MNIST / FashionMNIST
+  gpu: 2
+  batch_size : 128 # batch size
+  lr : 0.025 # lr for weights
+  momentum : 0.9 # momentum
+  weight_decay : 3e-4 # weight decay
+  grad_clip : 5 # gradient clipping for weights
+  print_freq : 200 # print frequency
+  epochs : 70 # # of training epochs
+  init_channels : 36
+  layers : 6 # n of layers
+  seed : 2 # random seed
+  workers : 4 # of workers
+  aux_weight : 0.4 # auxiliary loss weight
+  cutout_length : 0 # cutout length
+  drop_path_prob : 0.2 # drop path prob
+  genotype_path:  '/home/dev/data_main/LOGS/DARTS/SEARCH_TEST_CIFAR_gumbel_FIXED_30_pen_1-2021-08-11-10_27_36/best_arch.gen'
+  data_path: 'data'

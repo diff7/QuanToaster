@@ -2,7 +2,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from models.search_cells import SearchCell
+from sr_models.search_cells import SearchArch
 import genotypes as gt
 import logging
 
@@ -33,7 +33,7 @@ class SearchCNNController(nn.Module):
         self.device_ids = device_ids
 
         # initialize architect parameters: alphas
-        self.n_ops = len(gt.PRIMITIVES)
+        self.n_ops = len(gt.PRIMITIVES_SR)
 
         self.alpha = nn.ParameterList()
 
@@ -57,7 +57,7 @@ class SearchCNNController(nn.Module):
             if "alpha" in n:
                 self._alphas.append((n, p))
 
-        self.net = SearchCell(n_nodes, c_in, repeat_factor)
+        self.net = SearchArch(n_nodes, c_in, repeat_factor)
 
     def forward(self, x, temperature=1, stable=False):
 
@@ -69,7 +69,6 @@ class SearchCNNController(nn.Module):
         weight_alphas = [
             func(alpha, edge_w, temperature, dim=-1)
             for alpha, edge_w in zip(self.alpha, self.net.edge_n)
-        ]
         ]
 
         out = self.net(x, weight_alphas)
@@ -126,10 +125,8 @@ class SearchCNNController(nn.Module):
 
     def genotype(self):
         alpha_normal = [
-            self.prod(a, self.net.edge_n[i])
-            for i, a in enumerate(self.alpha)
+            self.prod(a, self.net.edge_n[i]) for i, a in enumerate(self.alpha)
         ]
-    
 
         gene_normal = gt.parse(alpha_normal, k=2)
         concat = range(self.n_nodes, 2 + self.n_nodes)  # concat last two nodes
@@ -159,7 +156,8 @@ class SearchCNNController(nn.Module):
     ):
 
         return self.net.fetch_weighted_flops_and_memory(
-            self.get_weights_normal(F.softmax))
+            self.get_weights_normal(F.softmax)
+        )
 
     def get_weights_normal(self, FN):
         return [
@@ -188,7 +186,8 @@ class SearchCNNController(nn.Module):
 
     def fetch_current_best_flops_and_memory(self):
         return self.net.fetch_weighted_flops_and_memory(
-            self.get_weights_normal(self.get_max))
+            self.get_weights_normal(self.get_max)
+        )
 
 
 class AlphaSelector:

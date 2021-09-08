@@ -73,15 +73,14 @@ def train_one_epoch(
             t.set_postfix(loss="{:.6f}".format(epoch_losses.avg))
             t.update(len(inputs))
 
+            step = i + (epoch * len(train_dataloader))
             if logger is not None:
                 if i % cfg.log_step == 0:
-                    logger.add_scalars(
-                        "L1", {"train": epoch_losses.avg}, (i + 1) * (epoch + 1)
-                    )
+                    logger.add_scalars("L1", {"train": epoch_losses.avg}, step)
                     logger.add_scalars(
                         "psnr",
                         {"train": epoch_psnr_train.avg},
-                        (i + 1) * (epoch + 1),
+                        step,
                     )
 
             if i % cfg.save_steps == 0:
@@ -100,7 +99,7 @@ def train_one_epoch(
 
     if scheduler is not None:
         scheduler.step()
-    return (i + 1) * (epoch + 1)
+    return step
 
 
 def eval_and_save(

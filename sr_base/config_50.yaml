@@ -1,6 +1,6 @@
 # used for data preprocessing:
 
-results_dir:  '/home/dev/data_main/LOGS/SR_ESPCN/baseline/trial_01'
+results_dir:  '/home/dev/data_main/LOGS/SR_ESPCN/baseline/trial_02'
 data: '/home/dev/data_main/DIV2K'
 data_hr:  '/home/dev/data_main/DIV2K/HR'
 data_lr:  '/home/dev/data_main/DIV2K/LR'
