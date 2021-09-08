@@ -216,17 +216,10 @@ def log_genotype(
     caption = "Epoch {}   FLOPS {:.02E}".format(epoch + 1, best_current_flops)
 
     im_normal = plot(genotype.normal, plot_path + "-normal", caption)
-    im_reduce = plot(genotype.reduce, plot_path + "-reduce", caption)
 
     writer.add_image(
-        tag=f"im_normal_best_{best}",
+        tag=f"SR_im_normal_best_{best}",
         img_tensor=np.array(im_normal),
-        dataformats="HWC",
-        global_step=cur_step,
-    )
-    writer.add_image(
-        tag=f"im_reduce_best_{best}",
-        img_tensor=np.array(im_reduce),
         dataformats="HWC",
         global_step=cur_step,
     )

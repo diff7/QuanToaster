@@ -131,7 +131,7 @@ class SearchCNNController(nn.Module):
         gene = gt.parse(alpha_normal, k=2)
         concat = range(self.n_nodes, 2 + self.n_nodes)  # concat last two nodes
 
-        return gt.Genotype(normal=gene, normal_concat=concat)
+        return gt.Genotype_SR(normal=gene, normal_concat=concat)
 
     def weights(self):
         return self.net.parameters()

@@ -10,6 +10,7 @@ from models import ops
 
 
 Genotype = namedtuple("Genotype", "normal normal_concat reduce reduce_concat")
+Genotype_SR = namedtuple("Genotype", "normal normal_concat")
 
 
 PRIMITIVES = [
