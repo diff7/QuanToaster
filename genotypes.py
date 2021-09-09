@@ -68,11 +68,11 @@ def to_dag(C_in, gene, reduction):
         for op_name, s_idx in edges:
             # reduction cell & from input nodes => stride = 2
             stride = 2 if reduction and s_idx < 2 else 1
-            op = ops.OPS[op_name](C_in, stride, True)
+            op = ops_cls.OPS[op_name](C_in, stride, True)
             if not isinstance(
-                op, ops.Identity
+                op, ops_cls.Identity
             ):  # Identity does not use drop path
-                op = nn.Sequential(op, ops.DropPath_())
+                op = nn.Sequential(op, ops_cls.DropPath_())
             op.s_idx = s_idx
             row.append(op)
         dag.append(row)
@@ -80,19 +80,17 @@ def to_dag(C_in, gene, reduction):
     return dag
 
 
-def to_dag_sr(C_in, gene, reduction):
+def to_dag_sr(C_in, gene):
     """generate discrete ops from gene"""
     dag = nn.ModuleList()
     for edges in gene:
         row = nn.ModuleList()
         for op_name, s_idx in edges:
-            # reduction cell & from input nodes => stride = 2
-            stride = 2 if reduction and s_idx < 2 else 1
-            op = ops.OPS[op_name](C_in, stride, True)
+            op = ops_sr.OPS[op_name](C_in, 1, True)
             if not isinstance(
-                op, ops.Identity
+                op, ops_sr.Identity
             ):  # Identity does not use drop path
-                op = nn.Sequential(op, ops.DropPath_())
+                op = nn.Sequential(op, ops_sr.DropPath_())
             op.s_idx = s_idx
             row.append(op)
         dag.append(row)
