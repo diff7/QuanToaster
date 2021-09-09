@@ -6,20 +6,24 @@ import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from omegaconf import OmegaConf as omg
 
-from models.augment_cnn import AugmentCNN
+from sr_models.augment_cnn import AugmentCNN
 import utils
 from architect import Architect, ArchConstrains
 from sr_base.datasets import PatchDataset
 from genotypes import from_str
-
-CFG_PATH = "./configs/config.yaml"
 
 
 def train_setup(cfg):
 
     # INIT FOLDERS & cfg
     cfg_dataset = cfg.dataset
+    repeat_factor = cfg.search.repeat_factor
+    channels = cfg.search.channels
     cfg = cfg.train
+
+    cfg.channels = channels
+    cfg.repeat_factor = repeat_factor
+
     cfg.save = utils.get_run_path(cfg.log_dir, "TUNE_" + cfg.run_name)
 
     logger = utils.get_logger(cfg.save + "/log.txt")
@@ -48,7 +52,6 @@ def train_setup(cfg):
 
 def run_train(cfg):
     cfg, writer, logger, cfg_dataset = train_setup(cfg)
-
     logger.info("Logger is set - training start")
 
     # set default gpu device id
@@ -68,7 +71,7 @@ def run_train(cfg):
 
     val_loader = torch.utils.data.DataLoader(
         val_data,
-        batch_size=cfg.batch_size,
+        batch_size=1,
         shuffle=False,
         num_workers=cfg.workers,
         pin_memory=False,
@@ -186,7 +189,7 @@ def train(
         N = X.size(0)
 
         optimizer.zero_grad()
-        preds, aux_logits = model(X)
+        preds = model(X)
         loss = criterion(preds, y)
         loss.backward()
         # gradient clipping
@@ -242,7 +245,7 @@ def validate(
             )
             N = X.size(0)
 
-            preds, _ = model(X)
+            preds = model(X)
             loss = criterion(preds, y)
 
             psnr = utils.calc_psnr(preds, y)
@@ -276,5 +279,6 @@ def validate(
 
 
 if __name__ == "__main__":
+    CFG_PATH = "./configs/sr_config.yaml"
     cfg = omg.load(CFG_PATH)
     run_train(cfg)

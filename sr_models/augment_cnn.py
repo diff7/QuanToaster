@@ -22,7 +22,7 @@ class AugmentCNN(nn.Module):
         self.c_fixed = c_init * repeat_factor
         self.repeat_factor = repeat_factor
 
-        self.dag = gt.to_dag_sr(self.c_fixed, genotype)
+        self.dag = gt.to_dag_sr(self.c_fixed, genotype.normal)
 
     def forward(self, x):
 

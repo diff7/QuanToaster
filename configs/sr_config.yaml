@@ -7,8 +7,8 @@ dataset:
   scale: 4
   subset: #'/home/dev/work_main/2021/RAW_SELECTION/subset_1.0%_KCenters.txt'
   workers: 10
-  train_portion: 0.1
-  batch_size: 32
+  train_portion: 0.7
+  batch_size: 128
   debug_mode: false # run on a small porion of data
   
 
@@ -17,7 +17,7 @@ search:
   penalty: 0.0
   use_adjuster: false
   unrolled: false
-  gpu: 1
+  gpu: 3
   use_l1_alpha: false
   l1_lambda: 1
   use_soft_edge: false
@@ -56,9 +56,8 @@ search:
   
   
 train:
-  run_name: 'CIFAR10_pen_1_gumbel_warm_30'
-  log_dir: '/home/dev/data_main/LOGS/DARTS'
-  dataset: 'CIFAR10'  # CIFAR10 / MNIST / FashionMNIST
+  run_name: 'TEST_Tune'
+  log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
   gpu: 2
   batch_size : 128 # batch size
   lr : 0.025 # lr for weights
@@ -66,7 +65,7 @@ train:
   weight_decay : 3e-4 # weight decay
   grad_clip : 5 # gradient clipping for weights
   print_freq : 200 # print frequency
-  epochs : 70 # # of training epochs
+  epochs : 30 # # of training epochs
   init_channels : 36
   layers : 6 # n of layers
   seed : 2 # random seed
@@ -74,5 +73,5 @@ train:
   aux_weight : 0.4 # auxiliary loss weight
   cutout_length : 0 # cutout length
   drop_path_prob : 0.2 # drop path prob
-  genotype_path:  '/home/dev/data_main/LOGS/DARTS/SEARCH_TEST_CIFAR_gumbel_FIXED_30_pen_1-2021-08-11-10_27_36/best_arch.gen'
-  data_path: 'data'
+  genotype_path:  '/home/dev/work_main/2021/DARTS/genotype_example_sr.gen'
+  
