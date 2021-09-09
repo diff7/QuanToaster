@@ -11,7 +11,7 @@ import utils
 from sr_models.search_cnn import SearchCNNController
 from architect import Architect, ArchConstrains
 from sr_base.datasets import PatchDataset
-from visualize import plot
+from visualize import plot_sr
 
 from omegaconf import OmegaConf as omg
 
@@ -215,7 +215,7 @@ def log_genotype(
     plot_path = os.path.join(cfg.save, cfg.im_dir, "EP{:02d}".format(epoch + 1))
     caption = "Epoch {}   FLOPS {:.02E}".format(epoch + 1, best_current_flops)
 
-    im_normal = plot(genotype.normal, plot_path + "-normal", caption)
+    im_normal = plot_sr(genotype.normal, plot_path + "-normal", caption)
 
     writer.add_image(
         tag=f"SR_im_normal_best_{best}",
@@ -314,7 +314,7 @@ def train(
 
         if step % cfg.print_freq == 0 or step == len(train_loader) - 1:
             logger.info(
-                "Valid: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} "
+                "Train: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} "
                 "PSNR ({psnr.avg:.3f}) ".format(
                     epoch + 1,
                     cfg.epochs,
@@ -340,7 +340,6 @@ def train(
         )
 
         writer.add_scalar("search/train/flops_loss", flops, cur_step)
-        # writer.add_scalar("search/train/loss", loss.item(), cur_step)
         writer.add_scalar("search/train/weighted_flops", flops.item(), cur_step)
         writer.add_scalar("search/train/weighted_memory", mem.item(), cur_step)
 
@@ -407,7 +406,7 @@ def validate(
     )
 
     utils.save_images(cfg.save, x_path[0], y_path[0], preds[0], epoch, writer)
-    return psnr_meter
+    return psnr_meter.avg
 
 
 def get_data_loaders(cfg):

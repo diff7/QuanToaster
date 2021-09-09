@@ -5,18 +5,16 @@ dataset:
   val_folder: '/valid/'
   train_folder: '/train/'
   scale: 4
-  patch_size: 50
-  stride: 60
   subset: #'/home/dev/work_main/2021/RAW_SELECTION/subset_1.0%_KCenters.txt'
   workers: 10
-  train_portion: 0.5
+  train_portion: 0.1
   batch_size: 32
-  debug_mode: true # run on a small porion of data
+  debug_mode: false # run on a small porion of data
   
 
 search:
-  run_name: 'TEST_run'
-  penalty: 0.01
+  run_name: 'FIRST_run_10_percent'
+  penalty: 0.0
   use_adjuster: false
   unrolled: false
   gpu: 1

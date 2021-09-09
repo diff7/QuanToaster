@@ -128,7 +128,7 @@ class SearchCNNController(nn.Module):
             self.prod(a, self.net.edge_n[i]) for i, a in enumerate(self.alpha)
         ]
 
-        gene = gt.parse(alpha_normal, k=2)
+        gene = gt.parse_sr(alpha_normal, k=2)
         concat = range(self.n_nodes, 2 + self.n_nodes)  # concat last two nodes
 
         return gt.Genotype_SR(normal=gene, normal_concat=concat)
