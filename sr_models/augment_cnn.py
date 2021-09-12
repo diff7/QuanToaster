@@ -6,7 +6,7 @@ import genotypes as gt
 
 
 class AugmentCNN(nn.Module):
-    """ Augmented CNN model """
+    """Augmented CNN model"""
 
     def __init__(self, c_init, repeat_factor, genotype):
 
@@ -17,7 +17,6 @@ class AugmentCNN(nn.Module):
             C: # of starting model channels
         """
         super().__init__()
-        self.genotype = genotype
 
         self.c_fixed = c_init * repeat_factor
         self.repeat_factor = repeat_factor
@@ -43,7 +42,7 @@ class AugmentCNN(nn.Module):
         return out
 
     def drop_path_prob(self, p):
-        """ Set drop path probability """
+        """Set drop path probability"""
         for module in self.modules():
             if isinstance(module, ops.DropPath_):
                 module.p = p

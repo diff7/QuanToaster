@@ -103,7 +103,7 @@ def run_search(cfg):
         lr_scheduler.step()
         lr = lr_scheduler.get_lr()[0]
 
-        model.print_alphas(logger, cfg.temperature_start)
+        model.print_alphas(logger, temperature)
         model.print_edges(logger)
 
         if epoch > cfg.warm_up:

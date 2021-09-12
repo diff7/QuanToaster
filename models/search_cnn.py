@@ -14,7 +14,7 @@ from models.gumbel_top2 import gumbel_top2k
 
 
 class SearchCNN(nn.Module):
-    """ Search CNN model """
+    """Search CNN model"""
 
     def __init__(
         self, C_in, C, n_classes, n_layers, n_nodes=4, stem_multiplier=3
@@ -94,7 +94,7 @@ class SearchCNN(nn.Module):
 
 
 class SearchCNNController(nn.Module):
-    """ SearchCNN controller supporting multi-gpu """
+    """SearchCNN controller supporting multi-gpu"""
 
     def __init__(
         self,
@@ -186,7 +186,6 @@ class SearchCNNController(nn.Module):
         return self.net(x, weights_normal, weights_reduce)
 
     def print_alphas(self, logger, temperature):
-
         # remove formats
         org_formatters = []
         for handler in logger.handlers:
@@ -327,7 +326,9 @@ class AlphaSelector:
     def __call__(self, vector, edge, temperature=1, dim=-1):
 
         if self.name == "gumbel":
-            return self.prod(F.gumbel_softmax(vector, temperature, dim), edge)
+            return self.prod(
+                F.gumbel_softmax(vector, temperature, hard=False), edge
+            )
 
         if self.name == "softmax":
             return self.prod(F.softmax(vector, dim), edge)

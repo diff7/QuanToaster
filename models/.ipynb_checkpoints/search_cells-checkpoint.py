@@ -33,6 +33,7 @@ class SearchCell(nn.Module):
 
         # generate dag
         self.dag = nn.ModuleList()
+        print("INITIALIZING MODEL's DAG")
         for i in range(self.n_nodes):
             self.dag.append(nn.ModuleList())
             for j in range(2 + i):  # include 2 input nodes

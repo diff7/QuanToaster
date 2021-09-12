@@ -213,7 +213,8 @@ def train(
                 )
             )
 
-        writer.add_scalar("tune/train/loss", loss.item(), cur_step)
+        writer.add_scalar("tune/train/loss", loss_meter.avg, cur_step)
+        writer.add_scalar("tune/train/psnr", psnr_meter.avg, cur_step)
 
         cur_step += 1
 
@@ -266,6 +267,7 @@ def validate(
             )
 
     writer.add_scalar("tune/val/loss", loss_meter.avg, cur_step)
+    writer.add_scalar("tune/val/psnr", psnr_meter.avg, cur_step)
 
     logger.info(
         "Valid: [{:3d}/{}] Final PSNR{:.3f}".format(

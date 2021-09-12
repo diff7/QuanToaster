@@ -5,8 +5,8 @@ search:
   unrolled: false
   debug_mode: true # run on a small porion of data
   gpu: 3
-  use_l1_alpha: false
-  l1_lambda: 1
+  use_l1_alpha: true
+  l1_lambda: 0.5
   use_soft_edge: true
   alpha_selector: softmax #softmax #softmax #gumbel2k #softmax 
   warm_up: 0
@@ -23,7 +23,7 @@ search:
   w_weight_decay: 3e-4 # weight decay for weights
   w_grad_clip: 5 # gradient clipping for weights
   print_freq: 50 # print frequency
-  epochs: 15 # n of training epochs
+  epochs: 5 # n of training epochs
   init_channels: 16
   temperature_start: 0.001
   temp_red: 0.1

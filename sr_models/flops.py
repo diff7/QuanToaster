@@ -62,22 +62,27 @@ class ConvFlops(nn.Module):
         if type(value) == tuple:
             return value
 
-    def forward(self, input):
+    def forward(self, input_x):
         """
         BATCH x C x W x H
 
         """
-        c_in, w_in, h_in = input.shape[1], input.shape[2], input.shape[3]
+        # get the same device to avoid errors
+        device = input_x.device
+
+        c_in, w_in, h_in = input_x.shape[1], input_x.shape[2], input_x.shape[3]
 
         w_out = self.compute_out(w_in, "w")
         h_out = self.compute_out(h_in, "h")
 
-        tmp = torch.tensor(c_in * w_in * h_in, dtype=torch.float)
+        tmp = torch.tensor(c_in * w_in * h_in, dtype=torch.float).to(device)
         self.memory_size.copy_(tmp)
-        tmp = torch.tensor(self.param_size * w_out * h_out, dtype=torch.float)
+        tmp = torch.tensor(
+            self.param_size * w_out * h_out, dtype=torch.float
+        ).to(device)
         self.flops.copy_(tmp)
         del tmp
-        out = self.conv(input)
+        out = self.conv(input_x)
         return out
 
     def compute_out(self, input_size, spatial="w"):
@@ -131,7 +136,7 @@ def count_upsample_flops(mode, shape):
         "bicubic",
     ):  # "trilinear"
         print(f"Flops count for {mode} upsample is not implemented")
-        return torch.tensor([0])
+        return 0
 
     if mode == "nearest":
         return 0

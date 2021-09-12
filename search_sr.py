@@ -96,7 +96,7 @@ def run_search(cfg):
     architect = Architect(model, cfg.w_momentum, cfg.w_weight_decay)
 
     # training loop
-    best_score = 0.0
+    best_score = -1e3
     cur_step = 0
     temperature = cfg.temperature_start
     for epoch in range(cfg.epochs):
@@ -197,10 +197,10 @@ def run_search(cfg):
             print("")
 
         writer.add_scalars(
-            "top1/search", {"val": best_score, "train": score_train}, epoch
+            "psnr/search", {"val": best_score, "train": score_train}, epoch
         )
         writer.add_scalars(
-            "top1_val_unsummed/search", {"val": score_val_unsummed}, epoch
+            "psnr_val_unsummed/search", {"val": score_val_unsummed}, epoch
         )
         writer.add_scalar("search/train/temperature", temperature, epoch)
 
@@ -417,7 +417,7 @@ def get_data_loaders(cfg):
     # split data to train/validation
     n_train = len(train_data)
     if cfg.debug_mode:
-        cfg.train_portion = 0.01
+        cfg.train_portion = 0.1
 
     split = int(np.floor(cfg.train_portion * n_train))
     leftover = int(np.floor((1 - cfg.train_portion) * n_train)) // 2

@@ -177,19 +177,19 @@ class BSup(nn.Module):
         x_upsample = self.upsample(x_mean)
         self.last_shape_out = x_upsample.shape
         # x_upscaled = C*scale, W, H
-        x_upscaled = self.space_to_depth(
+        x_de_pscaled = self.space_to_depth(
             x_upsample, int(self.repeat_factor ** (1 / 2))
         )
         if self.residual:
-            x = (x + x_upscaled) / 2
+            x = (x + x_de_pscaled) / 2
         else:
-            x = x_upscaled
+            x = x_de_pscaled
 
         assert (
             x.shape == shape_in
         ), f"shape mismatch in BSup {shape_in} {x.shape}"
 
-        return x_upscaled
+        return x
 
 
 # bs_up = BSup("nearest", scale=9, residual=False)
@@ -246,7 +246,7 @@ class GrowthConv(BaseConv):
     ):
         super().__init__()
         self.net = nn.Sequential(
-            nn.ReLU(),
+          
             self.conv_func(
                 C_in,
                 C_in * growth,
@@ -268,6 +268,7 @@ class GrowthConv(BaseConv):
                 groups,
                 bias=affine,
             ),
+            nn.ReLU()
             # nn.BatchNorm2d(C_out, affine=affine),
         )
 
@@ -321,7 +322,6 @@ class FacConv(BaseConv):
     ):
         super().__init__()
         self.net = nn.Sequential(
-            nn.ReLU(),
             self.conv_func(
                 C_in,
                 C_in * growth,
@@ -330,6 +330,7 @@ class FacConv(BaseConv):
                 (padding, 0),
                 bias=False,
             ),
+            nn.ReLU(),
             self.conv_func(
                 C_in * growth,
                 C_out,
@@ -338,6 +339,7 @@ class FacConv(BaseConv):
                 (0, padding),
                 bias=False,
             ),
+            nn.ReLU(),
             # nn.BatchNorm2d(C_out, affine=affine),
         )
 
@@ -365,7 +367,6 @@ class DilConv(BaseConv):
     ):
         super().__init__()
         self.net = nn.Sequential(
-            nn.ReLU(),
             self.conv_func(
                 C_in,
                 C_in,
@@ -376,6 +377,7 @@ class DilConv(BaseConv):
                 groups=C_in,
                 bias=False,
             ),
+            nn.ReLU(),
             self.conv_func(
                 C_in,
                 C_out,
@@ -386,6 +388,7 @@ class DilConv(BaseConv):
                 groups=C_in,
                 bias=False,
             ),
+            nn.ReLU()
             # nn.BatchNorm2d(C_out, affine=affine),
         )
 

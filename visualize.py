@@ -24,7 +24,7 @@ Genotype(normal=[[('sep_conv_3x3', 0), ('sep_conv_3x3', 1)],
 
 
 def plot(genotype, file_path, caption=None):
-    """ make DAG plot and save to file_path as .png """
+    """make DAG plot and save to file_path as .png"""
     edge_attr = {"fontsize": "20", "fontname": "times"}
     node_attr = {
         "style": "filled",
@@ -63,7 +63,7 @@ def plot(genotype, file_path, caption=None):
             g.edge(u, v, label=op, fillcolor="gray")
 
     # output node
-    g.node("Sum & Pixel shuffle", fillcolor="palegoldenrod")
+    g.node("CONCAT_OUT", fillcolor="palegoldenrod")
     for i in range(n_nodes):
         g.edge(str(i), "Sum & Pixel shuffle", fillcolor="gray")
 
@@ -88,7 +88,7 @@ Genotype(normal=[[('simple_1x1_grouped_full', 0)],
 
 
 def plot_sr(genotype, file_path, caption=None):
-    """ make DAG plot and save to file_path as .png """
+    """make DAG plot and save to file_path as .png"""
     edge_attr = {"fontsize": "20", "fontname": "times"}
     node_attr = {
         "style": "filled",

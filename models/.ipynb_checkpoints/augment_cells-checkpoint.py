@@ -1,15 +1,14 @@
 """ CNN cell for network augmentation """
 import torch
 import torch.nn as nn
-from models import ops_flops as ops
+from models import ops_flops
 import genotypes as gt
 
 
 class AugmentCell(nn.Module):
-    """Cell for augmentation
+    """ Cell for augmentation
     Each edge is discrete.
     """
-
     def __init__(self, genotype, C_pp, C_p, C, reduction_p, reduction):
         super().__init__()
         self.reduction = reduction

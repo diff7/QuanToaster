@@ -5,10 +5,10 @@ search:
   unrolled: false
   debug_mode: false # run on a small porion of data
   gpu: 3
-  use_l1_alpha: false
-  l1_lambda: 1
+  use_l1_alpha: true
+  l1_lambda: 0.3
   use_soft_edge: false
-  alpha_selector: softmax #softmax #gumbel2k #softmax 
+  alpha_selector: softmax #softmax #softmax #softmax #gumbel2k #softmax 
   warm_up: 0
 
   log_dir: '/home/dev/data_main/LOGS/DARTS'
@@ -23,8 +23,8 @@ search:
   w_grad_clip: 5 # gradient clipping for weights
   print_freq: 30 # print frequency
   epochs: 30 # n of training epochs
-  temperature_start: 10
-  temp_red: 0.7
+  temperature_start: 1
+  temp_red: 0.6
   init_channels: 16
   layers: 4 # of layers 8 is default
   seed: 2 #random seed

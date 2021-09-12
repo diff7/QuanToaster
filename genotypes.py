@@ -50,12 +50,12 @@ PRIMITIVES_SR = [
     "growth4_3x3",
     "growth2_3x3_grouped_full",
     "growth4_3x3_grouped_full",
-    "bs_up_bicubic_residual",
-    "bs_up_nearest_residual",
-    "bs_up_bilinear_residual",
-    "bs_up_bicubic",
-    "bs_up_nearest",
-    "bs_up_bilinear",
+    # "bs_up_bicubic_residual",
+    # "bs_up_nearest_residual",
+    # "bs_up_bilinear_residual",
+    # "bs_up_bicubic",
+    # "bs_up_nearest",
+    # "bs_up_bilinear",
     "none",
 ]
 
