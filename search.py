@@ -277,7 +277,7 @@ def train(
 
         alpha_optim.zero_grad()
 
-        if epoch > cfg.warm_up:
+        if epoch >= cfg.warm_up:
             stable = False
 
             if cfg.unrolled:
@@ -298,7 +298,10 @@ def train(
                         + flops_loss(flops)
                         + l1_regularization
                     )
+
+                    logger.info(f"ALPHA Loss: {loss}, VECTOR: {flat_alphas}")
                 else:
+                    l1_regularization = 0
                     loss = model.criterion(preds, val_y) + flops_loss(flops)
                 loss.backward()
                 alpha_optim.step()
@@ -336,6 +339,7 @@ def train(
             best_current_flops,
             best_current_memory,
         ) = model.fetch_current_best_flops_and_memory()
+        writer.add_scalar("search/train/loss", loss_w, cur_step)
         writer.add_scalar("search/train/loss", loss_w, cur_step)
 
         writer.add_scalar(

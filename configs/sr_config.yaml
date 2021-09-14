@@ -13,16 +13,16 @@ dataset:
   
 
 search:
-  run_name: 'TEST_no_BS'
+  run_name: 'SKIP_ONLY'
   penalty: 0.0
   use_adjuster: false
   unrolled: false
-  gpu: 0
+  gpu: 2
   use_l1_alpha: false
   l1_lambda: 1
-  use_soft_edge: false
+  use_soft_edge: true
   alpha_selector: softmax #softmax #softmax #softmax #gumbel2k #softmax 
-  warm_up: 0
+  warm_up: 15
 
   channels: 3
   repeat_factor: 16
@@ -59,8 +59,8 @@ train:
   run_name: 'TEST_Tune_BEST_founds'
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
   gpu: 2
-  batch_size : 128 # batch size
-  lr : 0.025 # lr for weights
+  batch_size : 32 # batch size
+  lr : 1e-3 # lr for weights
   momentum : 0.9 # momentum
   weight_decay : 3e-4 # weight decay
   grad_clip : 5 # gradient clipping for weights

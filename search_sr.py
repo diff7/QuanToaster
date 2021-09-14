@@ -404,8 +404,10 @@ def validate(
             epoch + 1, cfg.epochs, psnr_meter.avg
         )
     )
-
-    utils.save_images(cfg.save, x_path[0], y_path[0], preds[0], epoch, writer)
+    if not best:
+        utils.save_images(
+            cfg.save, x_path[0], y_path[0], preds[0], epoch, writer
+        )
     return psnr_meter.avg
 
 

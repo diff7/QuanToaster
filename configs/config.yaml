@@ -6,10 +6,10 @@ search:
   debug_mode: false # run on a small porion of data
   gpu: 2
   use_l1_alpha: true
-  l1_lambda: 0.3
+  l1_lambda: 0.001
   use_soft_edge: false
   alpha_selector: softmax #softmax #softmax #softmax #gumbel2k #softmax 
-  warm_up: 10
+  warm_up: 0
 
   log_dir: '/home/dev/data_main/LOGS/DARTS'
   im_dir: 'arch_images'
