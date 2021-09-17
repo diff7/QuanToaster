@@ -13,33 +13,32 @@ dataset:
   
 
 search:
-  run_name: 'SKIP_ONLY'
+  run_name: 'DEBUG no residual'
   penalty: 0.0
   use_adjuster: false
   unrolled: false
-  gpu: 2
+  gpu: 0
   use_l1_alpha: false
   l1_lambda: 1
-  use_soft_edge: true
+  use_soft_edge: false
   alpha_selector: softmax #softmax #softmax #softmax #gumbel2k #softmax 
-  warm_up: 15
+  warm_up: 0
 
   channels: 3
   repeat_factor: 16
-  n_nodes: 4
-
+  n_nodes: 3
+  lr_scheduler: cosine
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
   im_dir: 'arch_images'
-  w_lr: 1e-3 # lr for weights
+  w_lr: 1e-2 # lr for weights
   w_lr_min: 0.001 # minimum lr for weights
   w_momentum: 0.9 # momentum for weights
-  w_weight_decay: 3e-4 # weight decay for weights
+  w_weight_decay: 3e-6 # weight decay for weights
   w_grad_clip: 5 # gradient clipping for weights
   print_freq: 30 # print frequency
-  epochs: 30 # n of training epochs
-  temperature_start: 1
+  epochs: 60 # n of training epochs
+  temperature_start: 1e6
   temp_red: 0.6
-  init_channels: 16
   layers: 4 # of layers 8 is default
   seed: 2 #random seed
   workers: 4 ## of workers
@@ -56,22 +55,19 @@ search:
   
   
 train:
-  run_name: 'TEST_Tune_BEST_founds'
+  run_name: 'GENE NO x0'
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
   gpu: 2
+  lr_scheduler: linear
+  use_drop_prob: false
   batch_size : 32 # batch size
   lr : 1e-3 # lr for weights
   momentum : 0.9 # momentum
-  weight_decay : 3e-4 # weight decay
+  weight_decay : 0 # weight decay
   grad_clip : 5 # gradient clipping for weights
   print_freq : 200 # print frequency
   epochs : 30 # # of training epochs
-  init_channels : 36
-  layers : 6 # n of layers
   seed : 2 # random seed
   workers : 4 # of workers
-  aux_weight : 0.4 # auxiliary loss weight
-  cutout_length : 0 # cutout length
-  drop_path_prob : 0.2 # drop path prob
-  genotype_path:  '/home/dev/work_main/2021/DARTS/genotype_example_sr.gen'
+  genotype_path: './genotype_example_sr.gen' # '/home/dev/data_main/LOGS/SR_DARTS/SEARCH_TEST_no_BS-2021-09-10-11/best_arch.gen'
   

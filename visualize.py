@@ -63,9 +63,9 @@ def plot(genotype, file_path, caption=None):
             g.edge(u, v, label=op, fillcolor="gray")
 
     # output node
-    g.node("CONCAT_OUT", fillcolor="palegoldenrod")
+    g.node("CONCAT", fillcolor="palegoldenrod")
     for i in range(n_nodes):
-        g.edge(str(i), "Sum & Pixel shuffle", fillcolor="gray")
+        g.edge(str(i), "Out", fillcolor="gray")
 
     # add image caption
     if caption:
@@ -125,7 +125,7 @@ def plot_sr(genotype, file_path, caption=None):
 
     # output node
     g.node("Sum & Pixel shuffle", fillcolor="palegoldenrod")
-    for i in range(n_nodes - 2, n_nodes):
+    for i in range(n_nodes - 1, n_nodes):
         g.edge(
             str(i + 1), "Sum & Pixel shuffle", label="sum +", fillcolor="gray"
         )

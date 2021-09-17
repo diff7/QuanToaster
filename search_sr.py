@@ -3,6 +3,7 @@ import os
 from types import new_class
 import torch
 import torch.nn as nn
+import random
 import numpy as np
 import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
@@ -90,9 +91,17 @@ def run_search(cfg):
         weight_decay=cfg.alpha_weight_decay,
     )
 
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        w_optim, cfg.epochs, eta_min=cfg.w_lr_min
-    )
+    scheduler = {
+        "cosine": torch.optim.lr_scheduler.CosineAnnealingLR(
+            w_optim, cfg.epochs
+        ),
+        "linear": torch.optim.lr_scheduler.StepLR(
+            w_optim, step_size=3, gamma=0.8
+        ),
+    }
+
+    lr_scheduler = scheduler[cfg.lr_scheduler]
+
     architect = Architect(model, cfg.w_momentum, cfg.w_weight_decay)
 
     # training loop
@@ -272,7 +281,7 @@ def train(
 
         alpha_optim.zero_grad()
 
-        if epoch > cfg.warm_up:
+        if epoch >= cfg.warm_up:
             stable = False
 
             if cfg.unrolled:
@@ -375,6 +384,7 @@ def validate(
             X, y = X.to(device, non_blocking=True), y.to(
                 device, non_blocking=True
             )
+
             N = X.size(0)
             if best:
                 preds = model.forward_current_best(X)
@@ -419,11 +429,12 @@ def get_data_loaders(cfg):
     # split data to train/validation
     n_train = len(train_data)
     if cfg.debug_mode:
-        cfg.train_portion = 0.1
+        cfg.train_portion = 0.02
 
     split = int(np.floor(cfg.train_portion * n_train))
     leftover = int(np.floor((1 - cfg.train_portion) * n_train)) // 2
     indices = list(range(n_train))
+    random.shuffle(indices)
 
     train_sampler = torch.utils.data.sampler.SubsetRandomSampler(
         indices[:split]

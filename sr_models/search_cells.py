@@ -15,12 +15,6 @@ def is_square(apositiveint):
     return True
 
 
-def mean_by_c(image, repeat_factor):
-    b, d, w, h = image.shape
-    image = image.reshape([b, d // repeat_factor, repeat_factor, w, h])
-    return image.mean(2)
-
-
 class SearchArch(nn.Module):
     """Cell for search
     Each edge is mixed and continuous relaxed.
@@ -44,7 +38,9 @@ class SearchArch(nn.Module):
         self.edge_n = nn.ParameterList()
         self.edge_r = nn.ParameterList()
 
-        for i in range(n_nodes):
+        self.edge_n.append(nn.Parameter(torch.ones(1)))
+        self.edge_r.append(nn.Parameter(torch.ones(1)))
+        for i in range(n_nodes - 1):
             self.edge_n.append(nn.Parameter(torch.ones(i + 1)))
             self.edge_r.append(nn.Parameter(torch.ones(i + 1)))
 
@@ -53,12 +49,18 @@ class SearchArch(nn.Module):
         # generate dag
         self.dag = nn.ModuleList()
         print("INITIALIZING MODEL's DAG")
-        for i in range(self.n_nodes):
+        self.dag.append(nn.ModuleList())
+        self.dag[0].append(ops.MixedOp(self.c_fixed, 1))
+        for i in range(self.n_nodes - 1):
             self.dag.append(nn.ModuleList())
             for j in range(1 + i):  # include 1 input nodes
                 print("initialized:", i, j, "C_FIXED", self.c_fixed)
                 op = ops.MixedOp(self.c_fixed, 1)
-                self.dag[i].append(op)
+                self.dag[i + 1].append(op)
+
+        self.pixelup = nn.Sequential(
+            nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.PReLU()
+        )
 
     def assertion_in(self, size_in):
         assert int(size_in[1]) == int(
@@ -69,22 +71,20 @@ class SearchArch(nn.Module):
         state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
         self.assertion_in(state_zero.shape)
 
-        states = [state_zero]
-        for edges, w_list in zip(self.dag, w_dag):
+        s_cur = self.dag[0][0](state_zero, w_dag[0][0])
+        states = [s_cur]
+        for edges, w_list in zip(self.dag[1:], w_dag[1:]):
             s_cur = sum(
                 edges[i](s, w) for i, (s, w) in enumerate(zip(states, w_list))
             )
             states.append(s_cur)
 
-        # Only two last states
-        s_out = states[-1] + states[-2]
-        self.assertion_in(s_out.shape)
-        out = torch.nn.functional.pixel_shuffle(
-            s_out, int(self.repeat_factor ** (1 / 2))
-        )
-        # Final output should have the same number of channels as input
+        self.assertion_in(s_cur.shape)
 
-        return out
+        out = self.pixelup(s_cur)
+        x_residual = self.pixelup(state_zero)
+
+        return out + x_residual
 
     def fetch_weighted_flops_and_memory(self, w_dag):
         total_flops = 0
@@ -99,3 +99,13 @@ class SearchArch(nn.Module):
             )
 
         return total_flops, total_memory
+
+
+Genotype_SR(
+    normal=[
+        [("simple_1x1_grouped_full", 0)],
+        [("growth2_5x5", 0)],
+        [("conv_3x1_1x3_growth2", 1), ("simple_1x1_groupe_full", 0)],
+    ],
+    normal_concat=range(3, 5),
+)

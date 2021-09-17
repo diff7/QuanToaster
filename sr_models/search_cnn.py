@@ -46,7 +46,8 @@ class SearchCNNController(nn.Module):
 
         self.use_soft_edge = use_soft_edge
 
-        for i in range(n_nodes):
+        self.alpha.append(nn.Parameter(torch.ones(1, self.n_ops) / self.n_ops))
+        for i in range(n_nodes - 1):
             self.alpha.append(
                 nn.Parameter(torch.ones(i + 1, self.n_ops) / self.n_ops)
             )
@@ -129,9 +130,9 @@ class SearchCNNController(nn.Module):
         ]
 
         gene = gt.parse_sr(alpha_normal, k=2)
-        concat = range(self.n_nodes, 2 + self.n_nodes)  # concat last two nodes
+        out = range(self.n_nodes, 2 + self.n_nodes)  # concat last two nodes
 
-        return gt.Genotype_SR(normal=gene, normal_concat=concat)
+        return gt.Genotype_SR(normal=gene, normal_concat=out)
 
     def weights(self):
         return self.net.parameters()
@@ -204,7 +205,7 @@ class AlphaSelector:
     def __call__(self, vector, edge, temperature=1, dim=-1):
 
         if self.name == "gumbel":
-            return self.prod(F.gumbel_softmax(vector, temperature, dim), edge)
+            return self.prod(F.gumbel_softmax(vector, temperature,  hard=False), edge)
 
         if self.name == "softmax":
             return self.prod(F.softmax(vector, dim), edge)

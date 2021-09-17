@@ -7,6 +7,7 @@ from torch.utils.tensorboard import SummaryWriter
 from omegaconf import OmegaConf as omg
 
 from sr_models.augment_cnn import AugmentCNN
+from sr_models.test_arch import ManualCNN, ESPCN, FromGENE
 import utils
 from architect import Architect, ArchConstrains
 from sr_base.datasets import PatchDataset
@@ -77,7 +78,7 @@ def run_train(cfg):
         pin_memory=False,
     )
 
-    criterion = criterion = nn.L1Loss().to(device)
+    criterion = nn.L1Loss().to(device)
 
     with open(cfg.genotype_path, "r") as f:
         genotype = from_str(f.read())
@@ -85,11 +86,13 @@ def run_train(cfg):
     writer.add_text(tag="tune/arch/", text_string=str(genotype))
     print(genotype)
 
-    model = AugmentCNN(
-        cfg.channels,
-        cfg.repeat_factor,
-        genotype,
-    )
+    model = FromGENE(cfg.channels, cfg.repeat_factor)
+    # model = ESPCN(4)
+    # model = AugmentCNN(
+    #     cfg.channels,
+    #     cfg.repeat_factor,
+    #     genotype,
+    # )
 
     model.to(device)
 
@@ -102,23 +105,31 @@ def run_train(cfg):
     )
 
     # weights optimizer
-    optimizer = torch.optim.SGD(
+    optimizer = torch.optim.Adam(
         model.parameters(),
         cfg.lr,
-        momentum=cfg.momentum,
+        ##momentum=cfg.momentum,
         weight_decay=cfg.weight_decay,
     )
 
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, cfg.epochs
-    )
+    scheduler = {
+        "cosine": torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, cfg.epochs
+        ),
+        "linear": torch.optim.lr_scheduler.StepLR(
+            optimizer, step_size=3, gamma=0.7
+        ),
+    }
+
+    lr_scheduler = scheduler[cfg.lr_scheduler]
 
     best_score = 0.0
     # training loop
     for epoch in range(cfg.epochs):
         lr_scheduler.step()
-        drop_prob = cfg.drop_path_prob * epoch / cfg.epochs
-        model.drop_path_prob(drop_prob)
+        if cfg.use_drop_prob:
+            drop_prob = cfg.drop_path_prob * epoch / cfg.epochs
+            model.drop_path_prob(drop_prob)
 
         # training
         score_train = train(
@@ -246,7 +257,7 @@ def validate(
             )
             N = X.size(0)
 
-            preds = model(X)
+            preds = model(X).clamp(0.0, 1.0)
             loss = criterion(preds, y)
 
             psnr = utils.calc_psnr(preds, y)

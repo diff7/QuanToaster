@@ -6,7 +6,8 @@ import genotypes as gt
 
 
 OPS = {
-    "none": lambda C, stride, affine: Zero(stride),
+    "none": lambda C, stride, affine: Zero(stride, zero=0),
+    "zero": lambda C, stride, affine: Zero(stride),
     "skip_connect": lambda C, stride, affine: Identity(),
     "sep_conv_3x3": lambda C, stride, affine: SepConv(
         C, C, 3, stride, 1, affine=affine
@@ -90,16 +91,25 @@ OPS = {
         C, C, 5, stride, 2, groups=3, affine=affine
     ),
     "growth2_3x3": lambda C, stride, affine: GrowthConv(
+        C, C, 3, stride, 1, groups=1, affine=affine, growth=2
+    ),
+    "decenc_3x3": lambda C, stride, affine: DecEnc(
+        C, C, 3, stride, 1, groups=1, affine=affine
+    ),
+    "decenc_5x5": lambda C, stride, affine: DecEnc(
+        C, C, 5, stride, 2, groups=1, affine=affine
+    ),
+    "growth2_5x5": lambda C, stride, affine: GrowthConv(
         C, C, 5, stride, 2, groups=1, affine=affine, growth=2
     ),
     "growth4_3x3": lambda C, stride, affine: GrowthConv(
-        C, C, 5, stride, 2, groups=1, affine=affine, growth=4
+        C, C, 3, stride, 1, groups=1, affine=affine, growth=4
     ),
     "growth2_3x3_grouped_full": lambda C, stride, affine: GrowthConv(
-        C, C, 5, stride, 2, groups=C, affine=affine, growth=2
+        C, C, 3, stride, 1, groups=C, affine=affine, growth=2
     ),
     "growth4_3x3_grouped_full": lambda C, stride, affine: GrowthConv(
-        C, C, 5, stride, 2, groups=C, affine=affine, growth=4
+        C, C, 3, stride, 1, groups=C, affine=affine, growth=4
     ),
     "bs_up_bicubic_residual": lambda C, stride, affine: BSup(
         "bicubic",
@@ -241,12 +251,11 @@ class GrowthConv(BaseConv):
         padding,
         dilation=1,
         groups=1,
-        affine=True,
+        affine=False,
         growth=2,
     ):
         super().__init__()
         self.net = nn.Sequential(
-          
             self.conv_func(
                 C_in,
                 C_in * growth,
@@ -257,7 +266,7 @@ class GrowthConv(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.ReLU(),
+            nn.PReLU(),
             self.conv_func(
                 C_in * growth,
                 C_out,
@@ -268,8 +277,75 @@ class GrowthConv(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.ReLU()
-            # nn.BatchNorm2d(C_out, affine=affine),
+            nn.ReLU(),
+            nn.BatchNorm2d(C_out, affine=affine),
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+
+class DecEnc(BaseConv):
+    """Standard conv -C_in -> C_in*growth -> C_in"""
+
+    def __init__(
+        self,
+        C_in,
+        C_out,
+        kernel_size,
+        stride,
+        padding,
+        dilation=1,
+        groups=1,
+        affine=False,
+    ):
+        super().__init__()
+        self.net = nn.Sequential(
+            self.conv_func(
+                C_in,
+                C_in // 2,
+                kernel_size,
+                stride,
+                padding,
+                dilation,
+                groups,
+                bias=affine,
+            ),
+            nn.PReLU(),
+            self.conv_func(
+                C_in // 2,
+                C_in // 4,
+                kernel_size,
+                stride,
+                padding,
+                dilation,
+                groups,
+                bias=affine,
+            ),
+            nn.PReLU(),
+            self.conv_func(
+                C_in // 4,
+                C_in // 2,
+                kernel_size,
+                stride,
+                padding,
+                dilation,
+                groups,
+                bias=affine,
+            ),
+            nn.PReLU(),
+            self.conv_func(
+                C_in // 2,
+                C_out,
+                kernel_size,
+                stride,
+                padding,
+                dilation,
+                groups,
+                bias=affine,
+            ),
+            nn.ReLU(),
+            nn.BatchNorm2d(C_out, affine=affine),
         )
 
     def forward(self, x):
@@ -305,7 +381,7 @@ class SimpleConv(BaseConv):
                 bias=affine,
             ),
             nn.ReLU(),
-            # nn.BatchNorm2d(C_out, affine=affine),
+            nn.BatchNorm2d(C_out, affine=affine),
         )
 
     def forward(self, x):
@@ -330,7 +406,7 @@ class FacConv(BaseConv):
                 (padding, 0),
                 bias=False,
             ),
-            nn.ReLU(),
+            nn.PReLU(),
             self.conv_func(
                 C_in * growth,
                 C_out,
@@ -340,7 +416,7 @@ class FacConv(BaseConv):
                 bias=False,
             ),
             nn.ReLU(),
-            # nn.BatchNorm2d(C_out, affine=affine),
+            nn.BatchNorm2d(C_out, affine=affine),
         )
 
     def forward(self, x):
@@ -377,7 +453,7 @@ class DilConv(BaseConv):
                 groups=C_in,
                 bias=False,
             ),
-            nn.ReLU(),
+            nn.PReLU(),
             self.conv_func(
                 C_in,
                 C_out,
@@ -388,8 +464,8 @@ class DilConv(BaseConv):
                 groups=C_in,
                 bias=False,
             ),
-            nn.ReLU()
-            # nn.BatchNorm2d(C_out, affine=affine),
+            nn.ReLU(),
+            nn.BatchNorm2d(C_out, affine=affine),
         )
 
     def forward(self, x):
@@ -437,16 +513,17 @@ class Identity(BaseConv):
 
 
 class Zero(BaseConv):
-    def __init__(self, stride):
+    def __init__(self, stride, zero=1e-15):
         super().__init__()
         self.stride = stride
+        self.zero = zero
 
     def forward(self, x):
         if self.stride == 1:
-            return x * 0.0
+            return x * self.zero
 
         # re-sizing by stride
-        return x[:, :, :: self.stride, :: self.stride] * 0.0
+        return x[:, :, :: self.stride, :: self.stride] * self.zero
 
 
 class AssertWrapper(nn.Module):
@@ -503,10 +580,6 @@ class MixedOp(nn.Module):
         return sum(w * op(x) for w, op in zip(weights, self._ops))
 
     def fetch_weighted_flops(self, weights):
-        # s = 0
-        # for w, op in zip(weights, self._ops):
-        #     s += w * op.fetch_info()[0]
-        #     print(type(op).__name__, w, op.fetch_info()[0])
 
         return sum(w * op.fetch_info()[0] for w, op in zip(weights, self._ops))
 

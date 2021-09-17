@@ -11,7 +11,7 @@ from models import ops_flops as ops_cls
 
 
 Genotype = namedtuple("Genotype", "normal normal_concat reduce reduce_concat")
-Genotype_SR = namedtuple("Genotype", "normal normal_concat")
+Genotype_SR = namedtuple("Genotype_SR", "normal normal_concat")
 
 
 PRIMITIVES = [
@@ -28,28 +28,32 @@ PRIMITIVES = [
 
 PRIMITIVES_SR = [
     "skip_connect",  # identity
-    # "sep_conv_3x3",
-    # "sep_conv_5x5",
-    # "dil_conv_3x3",
-    # "dil_conv_5x5",
-    # "conv_7x1_1x7",
-    # "conv_3x1_1x3",
-    # "conv_3x1_1x3_growth2",
-    # "conv_3x1_1x3_growth4",
-    # "conv_7x1_1x7_growth2",
-    # "conv_7x1_1x7_growth4",
-    # "simple_5x5",
-    # "simple_3x3",
-    # "simple_1x1",
-    # "simple_5x5_grouped_full",
-    # "simple_3x3_grouped_full",
-    # "simple_1x1_grouped_full",
-    # "simple_5x5_grouped_3",
-    # "simple_3x3_grouped_3",
-    # "growth2_3x3",
-    # "growth4_3x3",
-    # "growth2_3x3_grouped_full",
-    # "growth4_3x3_grouped_full",
+    "zero",
+    "sep_conv_3x3",
+    "decenc_3x3",
+    "decenc_5x5",
+    "sep_conv_5x5",
+    "dil_conv_3x3",
+    "dil_conv_5x5",
+    "conv_7x1_1x7",
+    "conv_3x1_1x3",
+    "conv_3x1_1x3_growth2",
+    "conv_3x1_1x3_growth4",
+    "conv_7x1_1x7_growth2",
+    "conv_7x1_1x7_growth4",
+    "simple_5x5",
+    "simple_3x3",
+    "simple_1x1",
+    "simple_5x5_grouped_full",
+    "simple_3x3_grouped_full",
+    "simple_1x1_grouped_full",
+    "simple_5x5_grouped_3",
+    "simple_3x3_grouped_3",
+    "growth2_3x3",
+    "growth2_5x5",
+    "growth4_3x3",
+    "growth2_3x3_grouped_full",
+    "growth4_3x3_grouped_full",
     # "bs_up_bicubic_residual",
     # "bs_up_nearest_residual",
     # "bs_up_bilinear_residual",
@@ -87,10 +91,7 @@ def to_dag_sr(C_in, gene):
         row = nn.ModuleList()
         for op_name, s_idx in edges:
             op = ops_sr.OPS[op_name](C_in, 1, True)
-            if not isinstance(
-                op, ops_sr.Identity
-            ):  # Identity does not use drop path
-                op = nn.Sequential(op, ops_sr.DropPath_())
+
             op.s_idx = s_idx
             row.append(op)
         dag.append(row)
@@ -114,7 +115,6 @@ def from_str(s):
     """
 
     genotype = eval(s)
-
     return genotype
 
 
