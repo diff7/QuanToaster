@@ -2,9 +2,11 @@
 import os
 import torch
 import torch.nn as nn
+import random
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from omegaconf import OmegaConf as omg
+
 
 from sr_models.augment_cnn import AugmentCNN
 from sr_models.test_arch import ManualCNN, ESPCN, FromGENE
@@ -62,9 +64,15 @@ def run_train(cfg):
     train_data = PatchDataset(cfg_dataset, train=True)
     val_data = PatchDataset(cfg_dataset, train=False)
 
+    # indices = list(range(300))
+    # random.shuffle(indices)
+    # sampler_train = torch.utils.data.sampler.SubsetRandomSampler(indices[:150])
+    # sampler_val = torch.utils.data.sampler.SubsetRandomSampler(indices[150:])
+
     train_loader = torch.utils.data.DataLoader(
         train_data,
         batch_size=cfg.batch_size,
+        # sampler=sampler_train,
         shuffle=True,
         num_workers=cfg.workers,
         pin_memory=False,
@@ -73,6 +81,7 @@ def run_train(cfg):
     val_loader = torch.utils.data.DataLoader(
         val_data,
         batch_size=1,
+        # sampler=sampler_val,
         shuffle=False,
         num_workers=cfg.workers,
         pin_memory=False,
@@ -86,13 +95,13 @@ def run_train(cfg):
     writer.add_text(tag="tune/arch/", text_string=str(genotype))
     print(genotype)
 
-    model = FromGENE(cfg.channels, cfg.repeat_factor)
+    # model = FromGENE(cfg.channels, cfg.repeat_factor)
     # model = ESPCN(4)
-    # model = AugmentCNN(
-    #     cfg.channels,
-    #     cfg.repeat_factor,
-    #     genotype,
-    # )
+    model = AugmentCNN(
+        cfg.channels,
+        cfg.repeat_factor,
+        genotype,
+    )
 
     model.to(device)
 
@@ -117,7 +126,7 @@ def run_train(cfg):
             optimizer, cfg.epochs
         ),
         "linear": torch.optim.lr_scheduler.StepLR(
-            optimizer, step_size=3, gamma=0.7
+            optimizer, step_size=3, gamma=0.8
         ),
     }
 
@@ -172,6 +181,10 @@ def run_train(cfg):
         )
 
     logger.info("Final best PSNR = {:.4%}".format(best_score))
+
+    # FINISH TRAINING
+    del logger
+    del model
 
 
 def train(
@@ -286,7 +299,10 @@ def validate(
         )
     )
 
-    utils.save_images(cfg.save, x_path[0], y_path[0], preds[0], epoch, writer)
+    indx = random.randint(0, len(x_path) - 1)
+    utils.save_images(
+        cfg.save, x_path[indx], y_path[indx], preds[indx], epoch, writer
+    )
 
     return psnr_meter.avg
 

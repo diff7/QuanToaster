@@ -1,5 +1,4 @@
-Genotype_SR(normal=[[('growth2_5x5', 0)], 
-			   [('sep_conv_5x5', 1), ('growth2_3x3', 0)], 
-			   [('sep_conv_3x3', 1), ('growth4_3x3', 2)], 
-                           [('growth4_3x3', 3), ('skip_connect', 0)]], 
-                           normal_concat=range(4, 6))
+Genotype_SR(normal=[[('simple_1x1_grouped_full', 0)], 
+                    [('growth2_5x5', 1)], 
+                    [('conv_3x1_1x3_growth2', 2), ('growth4_3x3_grouped_full', 1)]], 
+                    normal_concat=range(3, 5))             

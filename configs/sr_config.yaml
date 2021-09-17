@@ -9,11 +9,11 @@ dataset:
   workers: 10
   train_portion: 0.7
   batch_size: 32
-  debug_mode: true # run on a small porion of data
+  debug_mode: false # run on a small porion of data
   
 
 search:
-  run_name: 'DEBUG no residual'
+  run_name: 'DEBUG + residual'
   penalty: 0.0
   use_adjuster: false
   unrolled: false
@@ -26,17 +26,17 @@ search:
 
   channels: 3
   repeat_factor: 16
-  n_nodes: 3
+  n_nodes: 4
   lr_scheduler: cosine
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
   im_dir: 'arch_images'
-  w_lr: 1e-2 # lr for weights
+  w_lr: 1e-3 # lr for weights
   w_lr_min: 0.001 # minimum lr for weights
   w_momentum: 0.9 # momentum for weights
   w_weight_decay: 3e-6 # weight decay for weights
   w_grad_clip: 5 # gradient clipping for weights
-  print_freq: 30 # print frequency
-  epochs: 60 # n of training epochs
+  print_freq: 60 # print frequency
+  epochs: 30 # n of training epochs
   temperature_start: 1e6
   temp_red: 0.6
   layers: 4 # of layers 8 is default
@@ -55,10 +55,10 @@ search:
   
   
 train:
-  run_name: 'GENE NO x0'
+  run_name: 'TINY search'
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
   gpu: 2
-  lr_scheduler: linear
+  lr_scheduler: cosine
   use_drop_prob: false
   batch_size : 32 # batch size
   lr : 1e-3 # lr for weights
@@ -66,7 +66,7 @@ train:
   weight_decay : 0 # weight decay
   grad_clip : 5 # gradient clipping for weights
   print_freq : 200 # print frequency
-  epochs : 30 # # of training epochs
+  epochs : 50 # # of training epochs
   seed : 2 # random seed
   workers : 4 # of workers
   genotype_path: './genotype_example_sr.gen' # '/home/dev/data_main/LOGS/SR_DARTS/SEARCH_TEST_no_BS-2021-09-10-11/best_arch.gen'

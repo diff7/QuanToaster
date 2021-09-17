@@ -165,19 +165,9 @@ def run_search(cfg):
             temperature=temperature,
         )
 
-        # log
-        # genotype
+        # log genotype
         genotype = model.genotype()
         logger.info("genotype = {}".format(genotype))
-        log_genotype(
-            genotype,
-            cfg,
-            epoch,
-            cur_step,
-            writer,
-            best_current_flops,
-            best=False,
-        )
 
         # save
         if best_score < score_val:
@@ -199,11 +189,23 @@ def run_search(cfg):
                 cur_step,
                 writer,
                 best_flops,
+                best_score,
                 best=True,
             )
 
             utils.save_checkpoint(model, cfg.save, is_best)
             print("")
+        else:
+            log_genotype(
+                genotype,
+                cfg,
+                epoch,
+                cur_step,
+                writer,
+                best_current_flops,
+                score_val,
+                best=False,
+            )
 
         writer.add_scalars(
             "psnr/search", {"val": best_score, "train": score_train}, epoch
@@ -216,13 +218,19 @@ def run_search(cfg):
         logger.info("Final best Prec@1 = {:.3f}".format(best_score))
         logger.info("Best Genotype = {}".format(best_genotype))
 
+    # FINISH TRAINING
+    del logger
+    del model
+
 
 def log_genotype(
-    genotype, cfg, epoch, cur_step, writer, best_current_flops, best=False
+    genotype, cfg, epoch, cur_step, writer, best_current_flops, psnr, best=False
 ):
     # genotype as a image
     plot_path = os.path.join(cfg.save, cfg.im_dir, "EP{:02d}".format(epoch + 1))
-    caption = "Epoch {}   FLOPS {:.02E}".format(epoch + 1, best_current_flops)
+    caption = "Epoch {}   FLOPS {:.02E}  search PSNR: {:.3f}".format(
+        epoch + 1, best_current_flops, psnr
+    )
 
     im_normal = plot_sr(genotype.normal, plot_path + "-normal", caption)
 
@@ -429,7 +437,7 @@ def get_data_loaders(cfg):
     # split data to train/validation
     n_train = len(train_data)
     if cfg.debug_mode:
-        cfg.train_portion = 0.02
+        cfg.train_portion = 0.01
 
     split = int(np.floor(cfg.train_portion * n_train))
     leftover = int(np.floor((1 - cfg.train_portion) * n_train)) // 2

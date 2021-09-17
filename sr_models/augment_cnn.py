@@ -22,8 +22,9 @@ class AugmentCNN(nn.Module):
         self.repeat_factor = repeat_factor
 
         self.dag = gt.to_dag_sr(self.c_fixed, genotype.normal)
-        self.upscale = nn.Sequential(
-            nn.Conv2d(3, self.c_fixed, kernel_size=3, stride=1, padding=1)
+
+        self.pixelup = nn.Sequential(
+            nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.PReLU()
         )
 
     def forward(self, x):
@@ -33,20 +34,18 @@ class AugmentCNN(nn.Module):
         self.assertion_in(state_zero.shape)
 
         states = [state_zero]
-
         for edges in self.dag:
             s_cur = sum(op(states[op.s_idx]) for op in edges)
             states.append(s_cur)
 
-        s_out = states[-1] + states[-2]
-        self.assertion_in(s_out.shape)
+        self.assertion_in(s_cur.shape)
         out = torch.nn.functional.pixel_shuffle(
-            s_out, int(self.repeat_factor ** (1 / 2))
+            s_cur, int(self.repeat_factor ** (1 / 2))
         )
-        x_residual = torch.nn.functional.pixel_shuffle(
-            state_zero, int(self.repeat_factor ** (1 / 2))
-        )
-        return out + x_residual
+
+        x = self.pixelup(s_cur)
+        x_residual = self.pixelup(state_zero)
+        return x + x_residual
 
     def drop_path_prob(self, p):
         """Set drop path probability"""

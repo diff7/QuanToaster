@@ -2,14 +2,27 @@
 
 import os
 import argparse
-from search import run_search
-from augment import run_train
+from search import run_search as run_search_cls
+from augment import run_train as run_train_cls
+
+from search_sr import run_search as run_search_sr
+from augment_sr import run_train as run_train_sr
+
 from utils import get_run_path
 from omegaconf import OmegaConf as omg
 
 """
-EXAMPLE: python batch_exp.py -k penalty -v 0.01 0.05 0.1 0.5 0.7 -d gumbel_plus -r 3 -g 3
+EXAMPLE: python batch_exp.py -t SR -k penalty -v 0.01 0.05 0.1 0.5 0.7 -d gumbel_plus -r 3 -g 3
 """
+
+functions = {
+    "SR": [run_search_sr, run_train_sr],
+    "CLS": [run_search_cls, run_train_cls],
+}
+
+
+configs = {"SR": "./configs/sr_config.yaml", "CLS": "./configs/config.yaml"}
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument(
@@ -21,6 +34,14 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "-t",
+    "--task",
+    type=str,
+    default="penalty",
+    help="SR or CLS",
+)
+
+parser.add_argument(
     "-v",
     "--values",
     nargs="+",
@@ -29,7 +50,6 @@ parser.add_argument(
 )
 
 parser.add_argument("-d", "--dir", type=str, default="batch", help="log dir")
-
 parser.add_argument(
     "-n", "--name", type=str, default="batch experiment", help="experiment name"
 )
@@ -43,17 +63,18 @@ parser.add_argument(
 )
 
 parser.add_argument("-g", "--gpu", type=int, default=0, help="gpu to use")
-
 args = parser.parse_args()
 
 
-def run_batch(cfg):
-
+def run_batch():
     key = args.key
     values = args.values
     base_run_name = args.name
-    log_dir = {"search": cfg.search.log_dir, "train": cfg.search.log_dir}
 
+    run_search, run_train = functions[args.task]
+    cfg = omg.load(configs[args.task])
+
+    log_dir = {"search": cfg.search.log_dir, "train": cfg.search.log_dir}
     assert (key in cfg.train) or (
         key in cfg.search
     ), f"{key} is not found in config"
@@ -73,7 +94,7 @@ def run_batch(cfg):
         print("TRIAL #", r)
         for val in values:
             for mode in ["train", "search"]:
-                cfg[mode].run_name = f"{base_run_name}_{key}_{val}"
+                cfg[mode].run_name = f"{base_run_name}_{key}_{val}_trail_{r}"
 
             if key in cfg.search:
                 cfg.search[key] = val
@@ -99,6 +120,4 @@ def run_batch(cfg):
 
 
 if __name__ == "__main__":
-    CFG_PATH = "./configs/config.yaml"
-    cfg = omg.load(CFG_PATH)
-    run_batch(cfg)
+    run_batch()

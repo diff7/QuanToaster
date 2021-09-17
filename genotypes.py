@@ -90,6 +90,8 @@ def to_dag_sr(C_in, gene):
     for edges in gene:
         row = nn.ModuleList()
         for op_name, s_idx in edges:
+            if op_name == "zero":
+                op_name = "zerograd"
             op = ops_sr.OPS[op_name](C_in, 1, True)
 
             op.s_idx = s_idx
@@ -184,7 +186,11 @@ def parse_sr(alpha, k):
 
     # 1) Convert the mixed op to discrete edge (single op) by choosing top-1 weight edge
     # 2) Choose top-k edges per node by edge score (top-1 weight in edge)
-    for edges in alpha:
+
+    shift = 0
+    for i, edges in enumerate(alpha):
+        if i > 0:
+            shift = 1
         # edges: Tensor(n_edges, n_ops)
         edge_max, primitive_indices = torch.topk(
             edges[:, :-1], 1
@@ -193,10 +199,12 @@ def parse_sr(alpha, k):
             edge_max.view(-1), min(k, edges.shape[0])
         )
         node_gene = []
+
         for edge_idx in topk_edge_indices:
             prim_idx = primitive_indices[edge_idx]
             prim = PRIMITIVES_SR[prim_idx]
-            node_gene.append((prim, edge_idx.item()))
+            print(i, edge_idx, shift, prim)
+            node_gene.append((prim, edge_idx.item() + shift))
 
         gene.append(node_gene)
 

@@ -8,6 +8,7 @@ import genotypes as gt
 OPS = {
     "none": lambda C, stride, affine: Zero(stride, zero=0),
     "zero": lambda C, stride, affine: Zero(stride),
+    "zerograd": lambda C, stride, affine: ZeroGrad(stride),
     "skip_connect": lambda C, stride, affine: Identity(),
     "sep_conv_3x3": lambda C, stride, affine: SepConv(
         C, C, 3, stride, 1, affine=affine
@@ -526,6 +527,20 @@ class Zero(BaseConv):
         return x[:, :, :: self.stride, :: self.stride] * self.zero
 
 
+class ZeroGrad(BaseConv):
+    def __init__(self, stride, zero=1e-15):
+        super().__init__()
+        self.stride = stride
+        self.zero = nn.Parameter(torch.tensor(zero))
+
+    def forward(self, x):
+        if self.stride == 1:
+            return x * self.zero
+
+        # re-sizing by stride
+        return x[:, :, :: self.stride, :: self.stride] * self.zero
+
+
 class AssertWrapper(nn.Module):
     """
     1. Checks that image size does not change.
@@ -563,10 +578,13 @@ class AssertWrapper(nn.Module):
 class MixedOp(nn.Module):
     """Mixed operation"""
 
-    def __init__(self, C, stride):
+    def __init__(self, C, stride, first=False):
         super().__init__()
         self._ops = nn.ModuleList()
         for primitive in gt.PRIMITIVES_SR:
+            # avoid zero connection at the first node
+            if first and primitive == "zero":
+                continue
             print(primitive, "channels:", C)
             func = OPS[primitive](C, stride, affine=False)
             self._ops.append(AssertWrapper(func, channels=C))

@@ -50,7 +50,7 @@ class SearchArch(nn.Module):
         self.dag = nn.ModuleList()
         print("INITIALIZING MODEL's DAG")
         self.dag.append(nn.ModuleList())
-        self.dag[0].append(ops.MixedOp(self.c_fixed, 1))
+        self.dag[0].append(ops.MixedOp(self.c_fixed, 1, first=True))
         for i in range(self.n_nodes - 1):
             self.dag.append(nn.ModuleList())
             for j in range(1 + i):  # include 1 input nodes
@@ -99,13 +99,3 @@ class SearchArch(nn.Module):
             )
 
         return total_flops, total_memory
-
-
-Genotype_SR(
-    normal=[
-        [("simple_1x1_grouped_full", 0)],
-        [("growth2_5x5", 0)],
-        [("conv_3x1_1x3_growth2", 1), ("simple_1x1_groupe_full", 0)],
-    ],
-    normal_concat=range(3, 5),
-)
