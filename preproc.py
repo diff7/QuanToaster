@@ -29,7 +29,7 @@ class Cutout(object):
 
 def data_transforms(dataset, cutout_length):
     dataset = dataset.lower()
-    if dataset == 'cifar10':
+    if dataset in ['cifar10', 'fake_cifar10']:
         MEAN = [0.49139968, 0.48215827, 0.44653124]
         STD = [0.24703233, 0.24348505, 0.26158768]
         transf = [

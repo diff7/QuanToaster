@@ -6,9 +6,11 @@ from search import run_search
 from augment import run_train
 from utils import get_run_path
 from omegaconf import OmegaConf as omg
+import traceback
 
 """
 EXAMPLE: python batch_exp.py -k penalty -v 0.01 0.05 0.1 0.5 0.7 -d gumbel_plus -r 3 -g 3
+python batch_exp.py -k penalty -v 0.0 -d test_repr -r 1 -g 1
 """
 parser = argparse.ArgumentParser()
 
@@ -101,4 +103,9 @@ def run_batch(cfg):
 if __name__ == "__main__":
     CFG_PATH = "./configs/config.yaml"
     cfg = omg.load(CFG_PATH)
-    run_batch(cfg)
+    try:
+        run_batch(cfg)
+    except Exception as e:
+        with open(os.path.join(cfg["search"].log_dir, "ERROR.txt"), "a") as f:
+            f.write(traceback.format_exc())
+            print(traceback.format_exc())

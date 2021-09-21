@@ -26,7 +26,7 @@ def get_data(dataset, data_path, cutout_length, validation):
     """Get torchvision dataset"""
     dataset = dataset.lower()
 
-    if dataset == "cifar10":
+    if (dataset == "cifar10") or (dataset == "fake_cifar10"):
         dset_cls = dset.CIFAR10
         n_classes = 10
         input_size = 32
@@ -50,7 +50,9 @@ def get_data(dataset, data_path, cutout_length, validation):
     trn_data = dset_cls(
         root=data_path, train=True, download=True, transform=trn_transform
     )
-
+    if dataset == "fake_cifar10":
+        trn_data.data = trn_data.data[:100]
+        print(trn_data)
     # assuming shape is NHW or NHWC
 
     ret = [input_size, input_channels, n_classes, trn_data]
