@@ -1,4 +1,6 @@
+.ipynb_checkpoints/
 *.pyc
 *.swp
 /data/*
 __pycache__/
+output/
