@@ -1,7 +1,9 @@
 import torch
 import torch.nn as nn
+
 from sr_models.flops import BaseConv
 from sr_models.flops import count_upsample_flops
+
 import genotypes as gt
 
 
@@ -594,6 +596,15 @@ class MixedOp(nn.Module):
             x: input
             weights: weight for each operation
         """
+        # s = 0
+        # print("weigts", weights.shape)
+        # for w, op in zip(weights, self._ops):
+        #     print(op.func_name)
+        #     print("shape X", x.shape)
+        #     print("shape W", w.shape)
+        #     si = op(x)
+        #     s += si
+        # return s
         return sum(w * op(x) for w, op in zip(weights, self._ops))
 
     def fetch_weighted_flops(self, weights):
@@ -619,6 +630,8 @@ if __name__ == "__main__":
         "dil_conv_5x5",
         "conv_7x1_1x7",
         "conv_3x1_1x3",
+        "decenc_3x3",
+        "decenc_3x3",
         "conv_3x1_1x3_growth2",
         "conv_3x1_1x3_growth4",
         "conv_7x1_1x7_growth2",
@@ -635,12 +648,12 @@ if __name__ == "__main__":
         "growth4_3x3",
         "growth2_3x3_grouped_full",
         "growth4_3x3_grouped_full",
-        "bs_up_bicubic_residual",
-        "bs_up_nearest_residual",
-        "bs_up_bilinear_residual",
-        "bs_up_bicubic",
-        "bs_up_nearest",
-        "bs_up_bilinear",
+        # "bs_up_bicubic_residual",
+        # "bs_up_nearest_residual",
+        # "bs_up_bilinear_residual",
+        # "bs_up_bicubic",
+        # "bs_up_nearest",
+        # "bs_up_bilinear",
         "none",
     ]
 

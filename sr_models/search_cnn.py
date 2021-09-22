@@ -22,7 +22,6 @@ class SearchCNNController(nn.Module):
         criterion,
         n_nodes=4,
         device_ids=None,
-        use_soft_edge=False,
         alpha_selector="softmax",
     ):
         super().__init__()
@@ -37,21 +36,11 @@ class SearchCNNController(nn.Module):
 
         self.alpha = nn.ParameterList()
 
-        self.alphaselector = AlphaSelector(
-            name=alpha_selector, use_soft_edge=use_soft_edge
-        )
-        self.softmax = AlphaSelector(
-            name="softmax", use_soft_edge=use_soft_edge
-        )
+        self.alphaselector = AlphaSelector(name=alpha_selector)
+        self.softmax = AlphaSelector(name="softmax")
 
-        self.use_soft_edge = use_soft_edge
-
-        # TO CLEAN
-        # self.alpha.append(nn.Parameter(torch.ones(1, self.n_ops) / self.n_ops))
-        for i in range(n_nodes - 0):
-            self.alpha.append(
-                nn.Parameter(torch.ones(i + 1, self.n_ops) / self.n_ops)
-            )
+        for i in range(n_nodes):
+            self.alpha.append(nn.Parameter(torch.ones(self.n_ops) / self.n_ops))
 
         # setup alphas list
         self._alphas = []
@@ -69,8 +58,7 @@ class SearchCNNController(nn.Module):
             func = self.alphaselector
 
         weight_alphas = [
-            func(alpha, edge_w, temperature, dim=-1)
-            for alpha, edge_w in zip(self.alpha, self.net.edge_n)
+            func(alpha, temperature, dim=-1) for alpha in self.alpha
         ]
 
         out = self.net(x, weight_alphas)
@@ -78,10 +66,7 @@ class SearchCNNController(nn.Module):
         return out, (flops, mem)
 
     def forward_current_best(self, x):
-        weight_alphas = [
-            self.get_max(self.prod(a, self.net.edge_n[i]))
-            for i, a in enumerate(self.alpha)
-        ]
+        weight_alphas = [self.get_max(a) for i, a in enumerate(self.alpha)]
 
         return self.net(x, weight_alphas)
 
@@ -95,43 +80,16 @@ class SearchCNNController(nn.Module):
 
         logger.info("####### ALPHA #######")
         logger.info("# Alpha - normal")
-        for alpha, edge in zip(self.alpha, self.net.edge_n):
-            logger.info(self.alphaselector(alpha, edge, temperature, dim=-1))
-
-        # restore formats
-        for handler, formatter in zip(logger.handlers, org_formatters):
-            handler.setFormatter(formatter)
-
-    def print_edges(self, logger):
-
-        # remove formats
-        org_formatters = []
-        for handler in logger.handlers:
-            org_formatters.append(handler.formatter)
-            handler.setFormatter(logging.Formatter("%(message)s"))
-
-        logger.info("####### EDGES #######")
-        logger.info("# EDGE W  - normal")
-        for edge in self.net.edge_n:
-            logger.info(F.softmax(edge, dim=-1))
-
-        logger.info("\n# EDGE W - reduce")
-        for edge in self.net.edge_r:
-            logger.info(F.softmax(edge, dim=-1))
-        logger.info("#####################")
+        for alpha in self.alpha:
+            logger.info(self.alphaselector(alpha, temperature, dim=-1))
 
         # restore formats
         for handler, formatter in zip(logger.handlers, org_formatters):
             handler.setFormatter(formatter)
 
     def genotype(self):
-        alpha_normal = [
-            self.prod(a, self.net.edge_n[i]) for i, a in enumerate(self.alpha)
-        ]
-
-        gene = gt.parse_sr(alpha_normal, k=1)
+        gene = gt.parse_sr(self.alpha)
         out = range(self.n_nodes, 2 + self.n_nodes)  # concat last two nodes
-
         return gt.Genotype_SR(normal=gene, normal_concat=out)
 
     def weights(self):
@@ -157,27 +115,14 @@ class SearchCNNController(nn.Module):
         )
 
     def get_weights_normal(self, FN):
-        return [
-            FN(self.prod(a, self.net.edge_n[i]))
-            for i, a in enumerate(self.alpha)
-        ]
+        return [FN(a) for a in self.alpha]
 
-    def prod(self, vector, edge):
-        if self.use_soft_edge:
-            return (vector.T * F.softmax(edge)).T
+    def get_max(self, alpha, keep_weight=False):
+        # get ones on the place of max values
+        # alpha is 1d vector here
+        values = alpha[:-1].max()
+        ones = (values == alpha).type(torch.int)
 
-        else:
-            return vector
-
-    def get_max(self, alpha, k=1, keep_weight=False):
-        values, indices = alpha[:, :-1].max(1)
-        ones = (values.unsqueeze(1) == alpha).type(torch.int)
-        zero_rows = [
-            i
-            for i in range(alpha.shape[0])
-            if not i in values.topk(min(k, alpha.shape[0])).indices
-        ]
-        ones[zero_rows] = 0
         if keep_weight:
             return alpha * ones.detach()
         else:
@@ -193,24 +138,14 @@ class AlphaSelector:
     def __init__(self, name="softmax", use_soft_edge=False):
         assert name in ["softmax", "gumbel", "gumbel2k"]
         self.name = name
-        self.use_soft_edge = use_soft_edge
 
-    def prod(self, vector, edge):
-        if self.use_soft_edge:
-            return (vector.T * F.softmax(edge)).T
-
-        else:
-            return vector
-
-    def __call__(self, vector, edge, temperature=1, dim=-1):
+    def __call__(self, vector, temperature=1, dim=-1):
 
         if self.name == "gumbel":
-            return self.prod(
-                F.gumbel_softmax(vector, temperature, hard=False), edge
-            )
+            return F.gumbel_softmax(vector, temperature, hard=False)
 
         if self.name == "softmax":
-            return self.prod(F.softmax(vector, dim), edge)
+            return F.softmax(vector, dim)
 
         if self.name == "gumbel2k":
-            return self.prod(gumbel_top2k(vector, temperature, dim), edge)
+            return gumbel_top2k(vector, temperature, dim)

@@ -33,16 +33,11 @@ class AugmentCNN(nn.Module):
         # state_zero = self.upscale(x)
         self.assertion_in(state_zero.shape)
 
-        states = [state_zero]
-        for edges in self.dag:
-            s_cur = sum(op(states[op.s_idx]) for op in edges)
-            states.append(s_cur)
+        s_cur = state_zero
+        for op in self.dag:
+            s_cur = op(s_cur)
 
         self.assertion_in(s_cur.shape)
-        out = torch.nn.functional.pixel_shuffle(
-            s_cur, int(self.repeat_factor ** (1 / 2))
-        )
-
         x = self.pixelup(s_cur)
         x_residual = self.pixelup(state_zero)
         return x + x_residual

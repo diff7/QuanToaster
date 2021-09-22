@@ -66,7 +66,6 @@ def run_search(cfg):
         criterion,
         cfg.n_nodes,
         device_ids=cfg.gpu,
-        use_soft_edge=cfg.use_soft_edge,
         alpha_selector=cfg.alpha_selector,
     )
 
@@ -113,7 +112,6 @@ def run_search(cfg):
         lr = lr_scheduler.get_lr()[0]
 
         model.print_alphas(logger, cfg.temperature_start)
-        model.print_edges(logger)
 
         if epoch > cfg.warm_up:
             temperature *= cfg.temp_red
