@@ -28,7 +28,6 @@ PRIMITIVES = [
 
 PRIMITIVES_SR = [
     "skip_connect",  # identity
-    "zero",
     "sep_conv_3x3",
     "decenc_3x3",
     "decenc_5x5",
@@ -90,7 +89,7 @@ def to_dag_sr(C_in, gene):
     for edges in gene:
         row = nn.ModuleList()
         for op_name, s_idx in edges:
-            if op_name == "zero":
+            if op_name == "none":
                 op_name = "zerograd"
             op = ops_sr.OPS[op_name](C_in, 1, True)
 
@@ -189,8 +188,9 @@ def parse_sr(alpha, k):
 
     shift = 0
     for i, edges in enumerate(alpha):
-        if i > 0:
-            shift = 1
+        # TO CLEAN
+        # if i > 0:
+        #     shift = 1
         # edges: Tensor(n_edges, n_ops)
         edge_max, primitive_indices = torch.topk(
             edges[:, :-1], 1
@@ -203,7 +203,6 @@ def parse_sr(alpha, k):
         for edge_idx in topk_edge_indices:
             prim_idx = primitive_indices[edge_idx]
             prim = PRIMITIVES_SR[prim_idx]
-            print(i, edge_idx, shift, prim)
             node_gene.append((prim, edge_idx.item() + shift))
 
         gene.append(node_gene)

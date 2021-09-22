@@ -37,10 +37,10 @@ class SearchArch(nn.Module):
         # Used for soft edge experiments to stabilize training after warm up
         self.edge_n = nn.ParameterList()
         self.edge_r = nn.ParameterList()
-
-        self.edge_n.append(nn.Parameter(torch.ones(1)))
-        self.edge_r.append(nn.Parameter(torch.ones(1)))
-        for i in range(n_nodes - 1):
+        # TO CLEAN
+        # self.edge_n.append(nn.Parameter(torch.ones(1)))
+        # self.edge_r.append(nn.Parameter(torch.ones(1)))
+        for i in range(n_nodes - 0):
             self.edge_n.append(nn.Parameter(torch.ones(i + 1)))
             self.edge_r.append(nn.Parameter(torch.ones(i + 1)))
 
@@ -49,14 +49,15 @@ class SearchArch(nn.Module):
         # generate dag
         self.dag = nn.ModuleList()
         print("INITIALIZING MODEL's DAG")
-        self.dag.append(nn.ModuleList())
-        self.dag[0].append(ops.MixedOp(self.c_fixed, 1, first=True))
-        for i in range(self.n_nodes - 1):
+        # TO CLEAN
+        # self.dag.append(nn.ModuleList())
+        # self.dag[0].append(ops.MixedOp(self.c_fixed, 1, first=True))
+        for i in range(self.n_nodes - 0):
             self.dag.append(nn.ModuleList())
             for j in range(1 + i):  # include 1 input nodes
                 print("initialized:", i, j, "C_FIXED", self.c_fixed)
                 op = ops.MixedOp(self.c_fixed, 1)
-                self.dag[i + 1].append(op)
+                self.dag[i + 0].append(op)
 
         self.pixelup = nn.Sequential(
             nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.PReLU()
@@ -70,10 +71,11 @@ class SearchArch(nn.Module):
     def forward(self, x, w_dag):
         state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
         self.assertion_in(state_zero.shape)
-
-        s_cur = self.dag[0][0](state_zero, w_dag[0][0])
-        states = [s_cur]
-        for edges, w_list in zip(self.dag[1:], w_dag[1:]):
+        # TO CLEAN
+        # s_cur = self.dag[0][0](state_zero, w_dag[0][0])
+        # states = [s_cur]
+        states = [state_zero]
+        for edges, w_list in zip(self.dag[0:], w_dag[0:]):
             s_cur = sum(
                 edges[i](s, w) for i, (s, w) in enumerate(zip(states, w_list))
             )
@@ -90,12 +92,11 @@ class SearchArch(nn.Module):
         total_flops = 0
         total_memory = 0
 
-        for edges, w_list in zip(self.dag, w_dag):
+        for j, (edges, w_list) in enumerate(zip(self.dag, w_dag)):
             total_flops += sum(
                 edges[i].fetch_weighted_flops(w) for i, w in enumerate(w_list)
             )
             total_memory += sum(
                 edges[i].fetch_weighted_memory(w) for i, w in enumerate(w_list)
             )
-
         return total_flops, total_memory

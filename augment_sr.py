@@ -82,7 +82,7 @@ def run_train(cfg):
         val_data,
         batch_size=1,
         # sampler=sampler_val,
-        shuffle=False,
+        shuffle=True,
         num_workers=cfg.workers,
         pin_memory=False,
     )

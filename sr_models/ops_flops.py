@@ -7,7 +7,6 @@ import genotypes as gt
 
 OPS = {
     "none": lambda C, stride, affine: Zero(stride, zero=0),
-    "zero": lambda C, stride, affine: Zero(stride),
     "zerograd": lambda C, stride, affine: ZeroGrad(stride),
     "skip_connect": lambda C, stride, affine: Identity(),
     "sep_conv_3x3": lambda C, stride, affine: SepConv(
@@ -528,7 +527,7 @@ class Zero(BaseConv):
 
 
 class ZeroGrad(BaseConv):
-    def __init__(self, stride, zero=1e-15):
+    def __init__(self, stride, zero=1e-30):
         super().__init__()
         self.stride = stride
         self.zero = nn.Parameter(torch.tensor(zero))
@@ -652,9 +651,10 @@ if __name__ == "__main__":
         conv = AssertWrapper(func, channels=C)
 
         x = conv(random_image)
-        flops.append(conv.fetch_info()[0].item())
+        print(conv.fetch_info()[0])
+        flops.append(conv.fetch_info()[0])
         names.append(primitive)
-        print("#", i + 1, primitive, f"FLOPS: {conv.fetch_info()[0].item()}")
+        print("#", i + 1, primitive, f"FLOPS: {conv.fetch_info()[0]}")
 
     max_flops = max(flops)
     flops_normalized = [f / max_flops for f in flops]

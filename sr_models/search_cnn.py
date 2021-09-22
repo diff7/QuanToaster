@@ -46,8 +46,9 @@ class SearchCNNController(nn.Module):
 
         self.use_soft_edge = use_soft_edge
 
-        self.alpha.append(nn.Parameter(torch.ones(1, self.n_ops) / self.n_ops))
-        for i in range(n_nodes - 1):
+        # TO CLEAN
+        # self.alpha.append(nn.Parameter(torch.ones(1, self.n_ops) / self.n_ops))
+        for i in range(n_nodes - 0):
             self.alpha.append(
                 nn.Parameter(torch.ones(i + 1, self.n_ops) / self.n_ops)
             )
@@ -77,7 +78,6 @@ class SearchCNNController(nn.Module):
         return out, (flops, mem)
 
     def forward_current_best(self, x):
-
         weight_alphas = [
             self.get_max(self.prod(a, self.net.edge_n[i]))
             for i, a in enumerate(self.alpha)
@@ -129,7 +129,7 @@ class SearchCNNController(nn.Module):
             self.prod(a, self.net.edge_n[i]) for i, a in enumerate(self.alpha)
         ]
 
-        gene = gt.parse_sr(alpha_normal, k=2)
+        gene = gt.parse_sr(alpha_normal, k=1)
         out = range(self.n_nodes, 2 + self.n_nodes)  # concat last two nodes
 
         return gt.Genotype_SR(normal=gene, normal_concat=out)
@@ -169,7 +169,7 @@ class SearchCNNController(nn.Module):
         else:
             return vector
 
-    def get_max(self, alpha, k=2, keep_weight=False):
+    def get_max(self, alpha, k=1, keep_weight=False):
         values, indices = alpha[:, :-1].max(1)
         ones = (values.unsqueeze(1) == alpha).type(torch.int)
         zero_rows = [
@@ -205,7 +205,9 @@ class AlphaSelector:
     def __call__(self, vector, edge, temperature=1, dim=-1):
 
         if self.name == "gumbel":
-            return self.prod(F.gumbel_softmax(vector, temperature,  hard=False), edge)
+            return self.prod(
+                F.gumbel_softmax(vector, temperature, hard=False), edge
+            )
 
         if self.name == "softmax":
             return self.prod(F.softmax(vector, dim), edge)

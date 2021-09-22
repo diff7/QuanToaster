@@ -206,7 +206,7 @@ def run_search(cfg):
                 score_val,
                 best=False,
             )
-
+        print("best current", best_current_flops)
         writer.add_scalars(
             "psnr/search", {"val": best_score, "train": score_train}, epoch
         )
@@ -435,14 +435,14 @@ def get_data_loaders(cfg):
     train_data = PatchDataset(cfg, train=True)
 
     # split data to train/validation
-    n_train = len(train_data)
+    n_train = len(train_data) // 2
+    indices = list(range(len(train_data)))
+    random.shuffle(indices)
     if cfg.debug_mode:
-        cfg.train_portion = 0.01
+        cfg.train_portion = 0.05
 
     split = int(np.floor(cfg.train_portion * n_train))
-    leftover = int(np.floor((1 - cfg.train_portion) * n_train)) // 2
-    indices = list(range(n_train))
-    random.shuffle(indices)
+    leftover = int(np.floor((1 - cfg.train_portion) * n_train))
 
     train_sampler = torch.utils.data.sampler.SubsetRandomSampler(
         indices[:split]
@@ -452,7 +452,7 @@ def get_data_loaders(cfg):
             indices[:split]
         )
         valid_sampler_selection = torch.utils.data.sampler.SubsetRandomSampler(
-            indices[:split]
+            indices[split : split * 2]
         )
     else:
         train_sampler_alpha = torch.utils.data.sampler.SubsetRandomSampler(
