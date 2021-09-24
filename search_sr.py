@@ -226,7 +226,7 @@ def log_genotype(
 ):
     # genotype as a image
     plot_path = os.path.join(cfg.save, cfg.im_dir, "EP{:02d}".format(epoch + 1))
-    caption = "Epoch {}   FLOPS {:.02E}  search PSNR: {:.3f}".format(
+    caption = "Epoch {}   FLOPS {:.2e}  search PSNR: {:.3f}".format(
         epoch + 1, best_current_flops, psnr
     )
 
@@ -355,8 +355,8 @@ def train(
         )
 
         writer.add_scalar("search/train/flops_loss", flops, cur_step)
-        writer.add_scalar("search/train/weighted_flops", flops.item(), cur_step)
-        writer.add_scalar("search/train/weighted_memory", mem.item(), cur_step)
+        writer.add_scalar("search/train/weighted_flops", flops, cur_step)
+        writer.add_scalar("search/train/weighted_memory", mem, cur_step)
 
         cur_step += 1
 

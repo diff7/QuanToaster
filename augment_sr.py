@@ -11,7 +11,6 @@ from omegaconf import OmegaConf as omg
 from sr_models.augment_cnn import AugmentCNN
 from sr_models.test_arch import ManualCNN, ESPCN, FromGENE
 import utils
-from architect import Architect, ArchConstrains
 from sr_base.datasets import PatchDataset
 from genotypes import from_str
 

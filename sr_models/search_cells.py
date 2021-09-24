@@ -1,6 +1,7 @@
 """ CNN cell for architecture search """
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from sr_models import ops_flops as ops
 
 
@@ -30,12 +31,12 @@ class SearchArch(nn.Module):
 
         super().__init__()
         self.n_nodes = n_nodes
-        self.c_fixed = c_init * repeat_factor
+        self.c_fixed = c_init * repeat_factor  # 3x16 = 48
         self.repeat_factor = repeat_factor
         self.c_init = c_init
 
         # Used for soft edge experiments to stabilize training after warm up
-        assert is_square(repeat_factor), "Repear factor should be a square of N"
+        assert is_square(repeat_factor), "Repeat factor should be a square of N"
 
         # generate dag
         self.dag = nn.ModuleList()
@@ -43,7 +44,7 @@ class SearchArch(nn.Module):
         for _ in range(self.n_nodes):
             self.dag.append(ops.MixedOp(self.c_fixed, 1))
 
-        self.pixelup = nn.Sequential(
+        self.pixelup = nn.Sequential(  # 4
             nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.PReLU()
         )
 
@@ -63,16 +64,15 @@ class SearchArch(nn.Module):
         self.assertion_in(s_cur.shape)
 
         out = self.pixelup(s_cur)
-        x_residual = self.pixelup(state_zero)
+        # x_residual = self.pixelup(state_zero)
 
-        return out + x_residual
+        return out
 
     def fetch_weighted_flops_and_memory(self, w_dag):
         total_flops = 0
         total_memory = 0
 
-        for edge, alphas in zip(self.dag, w_dag):
-            total_flops += edge.fetch_weighted_memory(alphas)
-            total_memory += edge.fetch_weighted_memory(alphas)
+        for k, (edges, w_list) in enumerate(zip(self.dag, w_dag)):
+            total_flops += edges.fetch_weighted_flops(w_list)
 
         return total_flops, total_memory

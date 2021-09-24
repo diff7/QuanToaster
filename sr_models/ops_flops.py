@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-
+import torch.nn.functional as F
 from sr_models.flops import BaseConv
 from sr_models.flops import count_upsample_flops
 
@@ -204,43 +204,6 @@ class BSup(nn.Module):
         return x
 
 
-# bs_up = BSup("nearest", scale=9, residual=False)
-
-# bs_im = bs_up.forward(image_repeat)
-
-# plt.imshow(bs_up.mean_by_c(bs_im, 9).transpose(1, -1)[0])
-
-# plt.imshow(bs_im.transpose(1,-1)[0])k
-
-
-def drop_path_(x, drop_prob, training):
-    if training and drop_prob > 0.0:
-        keep_prob = 1.0 - drop_prob
-        # per data point mask; assuming x in cuda.
-        mask = torch.cuda.FloatTensor(x.size(0), 1, 1, 1).bernoulli_(keep_prob)
-        x.div_(keep_prob).mul_(mask)
-
-    return x
-
-
-class DropPath_(BaseConv):
-    def __init__(self, p=0.0):
-        """[!] DropPath is inplace module
-        Args:
-            p: probability of an path to be zeroed.
-        """
-        super().__init__()
-        self.p = p
-
-    def extra_repr(self):
-        return "p={}, inplace".format(self.p)
-
-    def forward(self, x):
-        drop_path_(x, self.p, self.training)
-
-        return x
-
-
 class GrowthConv(BaseConv):
     """Standard conv -C_in -> C_in*growth -> C_in"""
 
@@ -279,12 +242,12 @@ class GrowthConv(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.ReLU(),
-            nn.BatchNorm2d(C_out, affine=affine),
+            # nn.ReLU(),
+            # nn.BatchNorm2d(C_out, affine=affine),
         )
 
     def forward(self, x):
-        return self.net(x)
+        return F.relu(self.net(x) + x)
 
 
 class DecEnc(BaseConv):
@@ -346,12 +309,12 @@ class DecEnc(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.ReLU(),
-            nn.BatchNorm2d(C_out, affine=affine),
+            # nn.ReLU(),
+            # nn.BatchNorm2d(C_out, affine=affine),
         )
 
     def forward(self, x):
-        return self.net(x)
+        return F.relu(self.net(x) + x)
 
 
 class SimpleConv(BaseConv):
@@ -372,6 +335,7 @@ class SimpleConv(BaseConv):
     ):
         super().__init__()
         self.net = nn.Sequential(
+            nn.BatchNorm2d(C_out, affine=affine),
             self.conv_func(
                 C_in,
                 C_out,
@@ -382,12 +346,11 @@ class SimpleConv(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.ReLU(),
-            nn.BatchNorm2d(C_out, affine=affine),
+            # nn.ReLU(),
         )
 
     def forward(self, x):
-        return self.net(x)
+        return F.relu(self.net(x) + x)
 
 
 class FacConv(BaseConv):
@@ -400,6 +363,7 @@ class FacConv(BaseConv):
     ):
         super().__init__()
         self.net = nn.Sequential(
+            nn.BatchNorm2d(C_out, affine=affine),
             self.conv_func(
                 C_in,
                 C_in * growth,
@@ -417,12 +381,11 @@ class FacConv(BaseConv):
                 (0, padding),
                 bias=False,
             ),
-            nn.ReLU(),
-            nn.BatchNorm2d(C_out, affine=affine),
+            # nn.ReLU(),
         )
 
     def forward(self, x):
-        return self.net(x)
+        return F.relu(self.net(x) + x)
 
 
 class DilConv(BaseConv):
@@ -445,6 +408,7 @@ class DilConv(BaseConv):
     ):
         super().__init__()
         self.net = nn.Sequential(
+            nn.BatchNorm2d(C_out, affine=affine),
             self.conv_func(
                 C_in,
                 C_in,
@@ -467,11 +431,10 @@ class DilConv(BaseConv):
                 bias=False,
             ),
             nn.ReLU(),
-            nn.BatchNorm2d(C_out, affine=affine),
         )
 
     def forward(self, x):
-        return self.net(x)
+        return x
 
 
 class SepConv(BaseConv):
@@ -503,7 +466,7 @@ class SepConv(BaseConv):
         )
 
     def forward(self, x):
-        return self.net(x)
+        return F.relu(self.net(x) + x)
 
 
 class Identity(BaseConv):
@@ -596,19 +559,18 @@ class MixedOp(nn.Module):
             x: input
             weights: weight for each operation
         """
-        # s = 0
-        # print("weigts", weights.shape)
-        # for w, op in zip(weights, self._ops):
-        #     print(op.func_name)
-        #     print("shape X", x.shape)
-        #     print("shape W", w.shape)
-        #     si = op(x)
-        #     s += si
-        # return s
+
         return sum(w * op(x) for w, op in zip(weights, self._ops))
 
     def fetch_weighted_flops(self, weights):
-
+        # s = 0
+        # print("weigts", weights.shape)
+        # for w, op in zip(weights, self._ops):
+        #     si = w * op.fetch_info()[0]
+        #     print(op.func_name, "W", w, f"FLOPS {si:.2e}")
+        #     print()
+        #     s += si
+        # return s
         return sum(w * op.fetch_info()[0] for w, op in zip(weights, self._ops))
 
     def fetch_weighted_memory(self, weights):
@@ -616,9 +578,9 @@ class MixedOp(nn.Module):
 
 
 if __name__ == "__main__":
-    random_image = torch.randn(3, 9, 120, 120)
+    random_image = torch.randn(3, 48, 32, 32)
 
-    C = 9
+    C = 48
     # Keep stride 1 for all but GrowCo
     stride = 1
 
@@ -631,7 +593,7 @@ if __name__ == "__main__":
         "conv_7x1_1x7",
         "conv_3x1_1x3",
         "decenc_3x3",
-        "decenc_3x3",
+        "decenc_5x5",
         "conv_3x1_1x3_growth2",
         "conv_3x1_1x3_growth4",
         "conv_7x1_1x7_growth2",
@@ -660,14 +622,13 @@ if __name__ == "__main__":
     names = []
     flops = []
     for i, primitive in enumerate(PRIMITIVES_SR):
-        func = OPS[primitive](C, stride, affine=False)
+        func = OPS[primitive](C, stride, affine=True)
         conv = AssertWrapper(func, channels=C)
 
         x = conv(random_image)
-        print(conv.fetch_info()[0])
         flops.append(conv.fetch_info()[0])
         names.append(primitive)
-        print("#", i + 1, primitive, f"FLOPS: {conv.fetch_info()[0]}")
+        print(i + 1, primitive, f"FLOPS: {conv.fetch_info()[0]:.2e}")
 
     max_flops = max(flops)
     flops_normalized = [f / max_flops for f in flops]

@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from sr_models import ops_flops as ops_sr
+from sr_models.flops import BaseConv
 
 
 class ManualCNN(nn.Module):
@@ -82,22 +83,22 @@ class FromGENE(nn.Module):
         return out + x_residual
 
 
-class ESPCN(nn.Module):
+class ESPCN(BaseConv):
     def __init__(self, scale_factor):
         super(ESPCN, self).__init__()
 
         # Feature mapping
         self.feature_maps = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=5, stride=1, padding=2),
+            self.conv_func(3, 64, kernel=5, stride=1, padding=2),
             nn.Tanh(),
-            nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=1),
+            self.conv_func(64, 32, kernel=3, stride=1, padding=1),
             nn.Tanh(),
         )
 
         # Sub-pixel convolution layer
         self.sub_pixel = nn.Sequential(
-            nn.Conv2d(
-                32, 3 * (scale_factor ** 2), kernel_size=3, stride=1, padding=1
+            self.conv_func(
+                32, 3 * (scale_factor ** 2), kernel=3, stride=1, padding=1
             ),
             nn.PixelShuffle(scale_factor),
             nn.Sigmoid(),
@@ -142,3 +143,15 @@ class ESPCN(nn.Module):
 #         out = self.pixelup(s_out)
 #         x_residual = self.pixelup(x0)
 #         return out + x_residual
+
+
+if __name__ == "__main__":
+    random_image = torch.randn(3, 48, 32, 32)
+
+    names = []
+    flops = []
+    model = ESPCN(4)
+    model(random_image)
+
+    f = model.fetch_info()[0]
+    print(n, "FLOPS:", round(f, 5))

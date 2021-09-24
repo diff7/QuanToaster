@@ -1,6 +1,7 @@
 """ CNN for network augmentation """
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from sr_models import ops_flops as ops
 import genotypes as gt
 
@@ -30,7 +31,6 @@ class AugmentCNN(nn.Module):
     def forward(self, x):
 
         state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
-        # state_zero = self.upscale(x)
         self.assertion_in(state_zero.shape)
 
         s_cur = state_zero
@@ -39,8 +39,8 @@ class AugmentCNN(nn.Module):
 
         self.assertion_in(s_cur.shape)
         x = self.pixelup(s_cur)
-        x_residual = self.pixelup(state_zero)
-        return x + x_residual
+        # x_residual = self.pixelup(state_zero)
+        return x
 
     def drop_path_prob(self, p):
         """Set drop path probability"""
