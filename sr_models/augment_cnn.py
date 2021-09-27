@@ -23,6 +23,7 @@ class AugmentCNN(nn.Module):
         self.repeat_factor = repeat_factor
 
         self.dag = gt.to_dag_sr(self.c_fixed, genotype.normal)
+        self.dag_len = len(self.dag)
 
         self.pixelup = nn.Sequential(
             nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.PReLU()
@@ -34,8 +35,13 @@ class AugmentCNN(nn.Module):
         self.assertion_in(state_zero.shape)
 
         s_cur = state_zero
-        for op in self.dag:
+        states = []
+        for i, op in enumerate(self.dag):
             s_cur = op(s_cur)
+            # skip between first and the last nodes
+            if i == self.dag_len - 2:
+                s_cur += states[0]
+            states.append(s_cur)
 
         self.assertion_in(s_cur.shape)
         x = self.pixelup(s_cur)
@@ -52,3 +58,6 @@ class AugmentCNN(nn.Module):
         assert int(size_in[1]) == int(
             self.c_fixed
         ), f"Input size {size_in}, does not match fixed channels {self.c_fixed}"
+
+    def fetch_flops(self):
+        return sum(op.fetch_info()[0] for op in self.dag)

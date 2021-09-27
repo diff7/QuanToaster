@@ -58,8 +58,13 @@ class SearchArch(nn.Module):
         self.assertion_in(state_zero.shape)
         s_cur = state_zero
 
+        states = []
         for i, (edge, alphas) in enumerate(zip(self.dag, w_dag)):
             s_cur = edge(s_cur, alphas)
+            # skip between first and the last nodes
+            if i == self.n_nodes - 2:
+                s_cur += states[0]
+            states.append(s_cur)
 
         self.assertion_in(s_cur.shape)
 
@@ -74,5 +79,6 @@ class SearchArch(nn.Module):
 
         for k, (edges, w_list) in enumerate(zip(self.dag, w_dag)):
             total_flops += edges.fetch_weighted_flops(w_list)
+            total_memory += edges.fetch_weighted_memory(w_list)
 
         return total_flops, total_memory

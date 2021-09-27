@@ -59,20 +59,26 @@ def run_train(cfg):
     # set default gpu device id
     device = cfg.gpu
     torch.cuda.set_device(device)
-
+    cfg_dataset.subset = None
     train_data = PatchDataset(cfg_dataset, train=True)
     val_data = PatchDataset(cfg_dataset, train=False)
 
-    # indices = list(range(300))
-    # random.shuffle(indices)
-    # sampler_train = torch.utils.data.sampler.SubsetRandomSampler(indices[:150])
-    # sampler_val = torch.utils.data.sampler.SubsetRandomSampler(indices[150:])
+    if cfg_dataset.debug_mode:
+        indices = list(range(300))
+        random.shuffle(indices)
+        sampler_train = torch.utils.data.sampler.SubsetRandomSampler(
+            indices[:150]
+        )
+    else:
+        sampler_train = torch.utils.data.sampler.SubsetRandomSampler(
+            list(range(len(train_data)))
+        )
 
     train_loader = torch.utils.data.DataLoader(
         train_data,
         batch_size=cfg.batch_size,
-        # sampler=sampler_train,
-        shuffle=True,
+        sampler=sampler_train,
+        # shuffle=True,
         num_workers=cfg.workers,
         pin_memory=False,
     )
@@ -135,9 +141,9 @@ def run_train(cfg):
     # training loop
     for epoch in range(cfg.epochs):
         lr_scheduler.step()
-        if cfg.use_drop_prob:
-            drop_prob = cfg.drop_path_prob * epoch / cfg.epochs
-            model.drop_path_prob(drop_prob)
+        # if cfg.use_drop_prob:
+        #     drop_prob = cfg.drop_path_prob * epoch / cfg.epochs
+        #     model.drop_path_prob(drop_prob)
 
         # training
         score_train = train(

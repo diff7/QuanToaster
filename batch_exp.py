@@ -11,9 +11,14 @@ from augment_sr import run_train as run_train_sr
 from utils import get_run_path
 from omegaconf import OmegaConf as omg
 
+from validate_sr import get_model, dataset_loop
+import utils
+
 """
 EXAMPLE: python batch_exp.py -t SR -k penalty -v 0.01 0.05 0.1 0.5 0.7 -d gumbel_plus -r 3 -g 3
 """
+
+VAL_CFG_PATH = "./sr_models/valsets4x.yaml"
 
 functions = {
     "SR": [run_search_sr, run_train_sr],
@@ -117,6 +122,18 @@ def run_batch():
             run_search(cfg)
             print(f"TRAINING: {str(key).upper()}:{str(val).upper()}")
             run_train(cfg)
+
+            with open(cfg.train.genotype_path, "r") as f:
+                genotype = utils.from_str(f.read())
+
+            weights_path = os.path.join(cfg.train.save, "best.pth.tar")
+
+            save_dir = os.path.join(run_path, "FINAL_VAL")
+            os.makedirs(save_dir, exist_ok=True)
+            logger = utils.get_logger(save_dir + "/validation_log.txt")
+            valid_cfg = omg.load(VAL_CFG_PATH)
+            model = get_model(weights_path, cfg.train.gpu, genotype)
+            dataset_loop(valid_cfg, model, logger, save_dir, cfg.train.gpu)
 
 
 if __name__ == "__main__":

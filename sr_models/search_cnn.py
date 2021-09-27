@@ -120,7 +120,7 @@ class SearchCNNController(nn.Module):
     def get_max(self, alpha, keep_weight=False):
         # get ones on the place of max values
         # alpha is 1d vector here
-        values = alpha[:-1].max()
+        values = alpha.max()
         ones = (values == alpha).type(torch.int)
 
         if keep_weight:

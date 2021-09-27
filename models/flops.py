@@ -112,3 +112,44 @@ class BaseConv(nn.Module):
                 sum_memory += m.memory_size.item()
 
         return sum_flops, sum_memory
+
+
+# TODO: verify the accuracy
+def count_upsample_flops(mode, shape):
+
+    shape_product = torch.prod(torch.tensor(shape)[1:])
+    """
+    Source ::
+    https://github.com/Lyken17/pytorch-OpCounter/
+
+    """
+
+    if mode not in (
+        "nearest",
+        "linear",
+        "bilinear",
+        "bicubic",
+    ):  # "trilinear"
+        print(f"Flops count for {mode} upsample is not implemented")
+        return 0
+
+    if mode == "nearest":
+        return 0
+
+    if mode == "linear":
+        total_ops = shape_product * 5  # 2 muls + 3 add
+    elif mode == "bilinear":
+        # https://en.wikipedia.org/wiki/Bilinear_interpolation
+        total_ops = shape_product * 11  # 6 muls + 5 adds
+    elif mode == "bicubic":
+        # https://en.wikipedia.org/wiki/Bicubic_interpolation
+        # Product matrix [4x4] x [4x4] x [4x4]
+        ops_solve_A = 224  # 128 muls + 96 adds
+        ops_solve_p = 35  # 16 muls + 12 adds + 4 muls + 3 adds
+        total_ops = shape_product * (ops_solve_A + ops_solve_p)
+    elif mode == "trilinear":
+        # https://en.wikipedia.org/wiki/Trilinear_interpolation
+        # can viewed as 2 bilinear + 1 linear
+        total_ops = shape_product * (13 * 2 + 5)
+
+    return total_ops

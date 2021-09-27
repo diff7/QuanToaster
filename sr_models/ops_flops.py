@@ -335,7 +335,7 @@ class SimpleConv(BaseConv):
     ):
         super().__init__()
         self.net = nn.Sequential(
-            nn.BatchNorm2d(C_out, affine=affine),
+            # nn.BatchNorm2d(C_out, affine=affine),
             self.conv_func(
                 C_in,
                 C_out,
@@ -363,7 +363,7 @@ class FacConv(BaseConv):
     ):
         super().__init__()
         self.net = nn.Sequential(
-            nn.BatchNorm2d(C_out, affine=affine),
+            # nn.BatchNorm2d(C_out, affine=affine),
             self.conv_func(
                 C_in,
                 C_in * growth,
@@ -391,7 +391,6 @@ class FacConv(BaseConv):
 class DilConv(BaseConv):
     """(Dilated) depthwise separable conv
     ReLU - (Dilated) depthwise separable - Pointwise - BN
-
     If dilation == 2, 3x3 conv => 5x5 receptive field
                       5x5 conv => 9x9 receptive field
     """
@@ -408,7 +407,6 @@ class DilConv(BaseConv):
     ):
         super().__init__()
         self.net = nn.Sequential(
-            nn.BatchNorm2d(C_out, affine=affine),
             self.conv_func(
                 C_in,
                 C_in,
@@ -431,10 +429,11 @@ class DilConv(BaseConv):
                 bias=False,
             ),
             nn.ReLU(),
+            # nn.BatchNorm2d(C_out, affine=affine),
         )
 
     def forward(self, x):
-        return x
+        return self.net(x)
 
 
 class SepConv(BaseConv):
@@ -549,7 +548,7 @@ class MixedOp(nn.Module):
             # avoid zero connection at the first node
             if first and primitive == "zero":
                 continue
-            print(primitive, "channels:", C)
+            # print(primitive, "channels:", C)
             func = OPS[primitive](C, stride, affine=False)
             self._ops.append(AssertWrapper(func, channels=C))
 
@@ -563,12 +562,14 @@ class MixedOp(nn.Module):
         return sum(w * op(x) for w, op in zip(weights, self._ops))
 
     def fetch_weighted_flops(self, weights):
-        # s = 0
-        # print("weigts", weights.shape)
+        # s = 0.0
         # for w, op in zip(weights, self._ops):
+
         #     si = w * op.fetch_info()[0]
-        #     print(op.func_name, "W", w, f"FLOPS {si:.2e}")
-        #     print()
+        #     print(op.func_name, "W", w.item(), f"FLOPS {si:.2e}")
+        #     if "Dil" in op.func_name:
+        #         print(op.func_name, "W", w.item(), f"FLOPS {si:.2e}")
+        #         print()
         #     s += si
         # return s
         return sum(w * op.fetch_info()[0] for w, op in zip(weights, self._ops))

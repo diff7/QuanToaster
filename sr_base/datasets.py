@@ -42,8 +42,10 @@ class PatchDataset(torch.utils.data.dataset.Dataset):
         super(PatchDataset, self).__init__()
         if train:
             folder_type = "train/"
-        else:
+        elif train == False:
             folder_type = "valid/"
+        else:
+            folder_type = ""
 
         folder_path_hr = os.path.join(cfg.data_processed_hr, folder_type)
         folder_path_lr = os.path.join(cfg.data_processed_lr, folder_type)
@@ -51,15 +53,16 @@ class PatchDataset(torch.utils.data.dataset.Dataset):
         lr_files = os.listdir(folder_path_lr)
         hr_files = os.listdir(folder_path_hr)
 
-        if (cfg.subset is not None) and train:
-            print("FILTERING A SUBSET")
-            with open(cfg.subset, "r") as f:
-                subset = f.read()
-                subset = subset.split("\n")
+        if "subset" in cfg:
+            if (cfg.subset is not None) and train:
+                print("FILTERING A SUBSET")
+                with open(cfg.subset, "r") as f:
+                    subset = f.read()
+                    subset = subset.split("\n")
 
-            subset = [s.split("/")[-1] for s in subset]
-            hr_files = fitler_subset(hr_files, subset)
-            lr_files = fitler_subset(lr_files, subset)
+                subset = [s.split("/")[-1] for s in subset]
+                hr_files = fitler_subset(hr_files, subset)
+                lr_files = fitler_subset(lr_files, subset)
 
         self.input_filenames = [
             os.path.join(folder_path_lr, x)

@@ -27,7 +27,7 @@ PRIMITIVES = [
 
 
 PRIMITIVES_SR = [
-    "skip_connect",  # identity
+    # "skip_connect",  # identity
     "sep_conv_3x3",
     "decenc_3x3",
     "decenc_5x5",
@@ -59,7 +59,7 @@ PRIMITIVES_SR = [
     # "bs_up_bicubic",
     # "bs_up_nearest",
     # "bs_up_bilinear",
-    "none",
+    # "none",
 ]
 
 
@@ -163,13 +163,13 @@ def parse(alpha, k):
 def parse_sr(alpha):
 
     gene = []
-    assert PRIMITIVES_SR[-1] == "none"  # assume last PRIMITIVE is 'none'
+    # assert PRIMITIVES_SR[-1] == "none"  # assume last PRIMITIVE is 'none'
 
     # 1) Convert the mixed op to discrete edge (single op) by choosing top-1 weight edge
     # 2) Choose top-k edges per node by edge score (top-1 weight in edge)
     for i, edges in enumerate(alpha):
 
-        func_idx = edges[:-1].argmax()  # ignore 'none'
+        func_idx = edges.argmax()  # ignore 'none'
         prim = PRIMITIVES_SR[func_idx]
         node_gene = [(prim, i)]
         gene.append(node_gene)
