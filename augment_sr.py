@@ -10,7 +10,7 @@ from omegaconf import OmegaConf as omg
 
 from sr_models.augment_cnn import AugmentCNN
 import utils
-from sr_base.datasets import CropDataset
+from sr_base.datasets import CropDataset, PatchDataset
 from genotypes import from_str
 
 
@@ -59,8 +59,8 @@ def run_train(cfg):
     device = cfg.gpu
     torch.cuda.set_device(device)
     cfg_dataset.subset = None
-    train_data = CropDataset(cfg_dataset, train=True)
-    val_data = CropDataset(cfg_dataset, train=False)
+    train_data = PatchDataset(cfg_dataset, train=True)
+    val_data = PatchDataset(cfg_dataset, train=False)
 
     if cfg_dataset.debug_mode:
         indices = list(range(300))

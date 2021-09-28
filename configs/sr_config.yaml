@@ -10,7 +10,7 @@ dataset:
   batch_size: 32
   crop_size: 32
   files_list: '/home/dev/data_main/SR/train_sets_txt/short'
-  debug_mode: false # run on a small porion of data
+  debug_mode: true # run on a small porion of data
   
 
 search:
@@ -64,10 +64,10 @@ train:
   batch_size : 32 # batch size
   lr : 1e-3 # lr for weights
   momentum : 0.9 # momentum
-  weight_decay : 0 # weight decay
+  weight_decay : 5е-4 # weight decay
   grad_clip : 5 # gradient clipping for weights
   print_freq : 200 # print frequency
-  epochs : 15 # # of training epochs
+  epochs : 1 # # of training epochs
   seed : 2 # random seed
   workers : 4 # of workers
   genotype_path: /home/dev/data_main/LOGS/SR_DARTS/single_path/trail_1/SEARCH_batch experiment_penalty_0_trail_1-2021-09-22-18/best_arch.gen
