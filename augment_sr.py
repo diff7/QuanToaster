@@ -122,7 +122,7 @@ def run_train(cfg):
         model.parameters(),
         cfg.lr,
         ##momentum=cfg.momentum,
-        weight_decay=float(cfg.weight_decay),
+        weight_decay=cfg.weight_decay,
     )
 
     scheduler = {
