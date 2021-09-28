@@ -66,7 +66,7 @@ class SearchArch(nn.Module):
             #     s_cur += states[0]
             # states.append(s_cur)
 
-        s_skip = self.dag[-1](state_zero, w_dag[:-1])
+        s_skip = self.dag[-1](state_zero, w_dag[-1])
         self.assertion_in(s_cur.shape)
 
         out = self.pixelup(s_cur)
