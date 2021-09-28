@@ -215,7 +215,6 @@ def train(
     for step, (X, y, _, _) in enumerate(train_loader):
         X, y = X.to(device, non_blocking=True), y.to(device, non_blocking=True)
         N = X.size(0)
-        print(X.shape, y.shape)
         optimizer.zero_grad()
         preds = model(X)
         loss = criterion(preds, y)
