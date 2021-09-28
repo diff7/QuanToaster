@@ -1,3 +1,4 @@
+import os
 import torch
 import random
 from omegaconf import OmegaConf as omg
@@ -37,7 +38,7 @@ def run_val(model, cfg_val, save_dir, device):
     )
 
     score_val = validate(val_loader, model, device, save_dir)
-    random_image = torch.randn(1, 3, 256, 256).cuda(device)
+    random_image = torch.randn(1, 3, 32, 32).cuda(device)
     _ = model(random_image)
     flops_32 = model.fetch_flops()
 
@@ -84,9 +85,12 @@ def validate(valid_loader, model, device, save_dir):
 
 def dataset_loop(valid_cfg, model, logger, save_dir, device):
     for dataset in valid_cfg:
-
+        os.makedirs(os.path.join(save_dir, str(dataset)), exist_ok=True)
         score_val, flops_32, flops_256, mb_params = run_val(
-            model, valid_cfg[dataset], save_dir + "_" + str(dataset), device
+            model,
+            valid_cfg[dataset],
+            os.path.join(save_dir, str(dataset)),
+            device,
         )
         logger.info("\n{}:".format(str(dataset)))
         logger.info("Model size = {:.3f} MB".format(mb_params))
@@ -103,6 +107,7 @@ if __name__ == "__main__":
     weights_path = "/home/dev/data_main/LOGS/SR_DARTS/single_path_soft_with_dil/trail_2/TUNE_batch experiment_penalty_0.01_trail_2-2021-09-25-00/best.pth.tar"
     log_dir = "/home/dev/data_main/LOGS/VAL_LOGS"
     save_dir = os.path.join(log_dir, run_name)
+    os.makedirs(save_dir)
     channels = 3
     repeat_factor = 16
     device = 0
