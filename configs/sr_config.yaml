@@ -10,7 +10,7 @@ dataset:
   batch_size: 32
   crop_size: 32
   files_list: '/home/dev/data_main/SR/train_sets_txt/short'
-  debug_mode: true # run on a small porion of data
+  debug_mode: false # run on a small porion of data
   
 
 search:
@@ -59,7 +59,7 @@ train:
   run_name: 'DEBUG'
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
   gpu: 2
-  lr_scheduler: cosine
+  lr_scheduler: linear
   use_drop_prob: false
   batch_size : 32 # batch size
   lr : 1e-3 # lr for weights
