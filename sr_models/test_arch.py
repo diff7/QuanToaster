@@ -18,7 +18,7 @@ class ManualCNN(nn.Module):
         self.cv3 = ops_sr.OPS["DWS_5x5"](self.c_fixed, 1, True)
         self.cv4 = ops_sr.OPS["decenc_3x3_4"](self.c_fixed, 1, True)
         self.cv5 = ops_sr.OPS["DWS_3x3"](self.c_fixed, 1, True)
-        self.cv6 = nn.Sequential(ops_sr.OPS["decenc_3x3_4"](self.c_fixed, 1, True), ops_sr.DropPath_()) 
+        self.cv6 = nn.Sequential(ops_sr.OPS["DWS_3x3"](self.c_fixed, 1, True), ops_sr.DropPath_()) 
 
         self.pixelup = nn.Sequential(
             nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.ReLU()
@@ -30,13 +30,13 @@ class ManualCNN(nn.Module):
         x1 = self.cv1(x0)
         x2 = self.cv2(x1)
         x3 = self.cv3(x2)
-        x4 = self.cv4(x3)
+        #x4 = self.cv4(x3)
 
         out = self.pixelup(x3)
 
-        x_residual = self.cv5(x0)
+        x_residual = self.cv6(x0)
         x_residual = self.pixelup(x_residual)
-        return x_residual #+ out
+        return x_residual + out
 
     def drop_path_prob(self, p):
         """Set drop path probability"""
