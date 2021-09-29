@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import random
 import logging
+import copy
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from omegaconf import OmegaConf as omg
@@ -18,7 +19,7 @@ from genotypes import from_str
 def train_setup(cfg):
 
     # INIT FOLDERS & cfg
-    cfg_dataset = cfg.dataset
+    cfg_dataset = copy.copy(cfg.dataset)
     repeat_factor = cfg.search.repeat_factor
     channels = cfg.search.channels
     cfg = cfg.train

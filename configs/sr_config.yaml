@@ -4,7 +4,7 @@ dataset:
   val_folder: '/valid/'
   train_folder: '/train/'
   scale: 4
-  subset: #/home/dev/data_main/CORESETS/vmlinuz.txt
+  subset: /home/dev/data_main/CORESETS/vmlinuz.txt
   workers: 10
   train_portion: 0.5
   batch_size: 32
