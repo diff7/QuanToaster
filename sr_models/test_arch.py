@@ -13,14 +13,10 @@ class ManualCNN(nn.Module):
         self.c_fixed = c_init * repeat_factor
         self.repeat_factor = repeat_factor
 
-        self.simple_3x3 = ops_sr.OPS["simple_3x3"](self.c_fixed, 1, True)
-        self.simple_5x5 = ops_sr.OPS["simple_5x5"](self.c_fixed, 1, True)
-        self.conv_3x1_1x3_growth2 = ops_sr.OPS["conv_3x1_1x3_growth2"](
-            self.c_fixed, 1, True
-        )
-        self.simple_3x3_grouped_3 = ops_sr.OPS["simple_3x3_grouped_3"](
-            self.c_fixed, 1, True
-        )
+        self.cv1 = ops_sr.OPS["decenc_3x3"](self.c_fixed, 1, True)
+        self.cv2 = ops_sr.OPS["decenc_3x3"](self.c_fixed, 1, True)
+        self.cv3 = ops_sr.OPS["decenc_3x3"](self.c_fixed, 1, True)
+        self.cv4 = ops_sr.OPS["decenc_3x3"](self.c_fixed, 1, True)
 
         self.pixelup = nn.Sequential(
             nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.ReLU()
@@ -28,13 +24,15 @@ class ManualCNN(nn.Module):
 
     def forward(self, x0):
         x0 = torch.repeat_interleave(x0, self.repeat_factor, 1)
-        x1 = self.simple_3x3(x0)
-        x2 = self.simple_5x5(x1)
-        x3 = self.simple_3x3_grouped_3(x2)
-        x4 = self.conv_3x1_1x3_growth2(x3)
 
-        out = self.pixelup(x4)
-        x_residual = self.pixelup(x0)
+        x1 = self.cv1(x0)
+        x2 = self.cv2(x1)
+        x3 = self.cv3(x2)
+
+        out = self.pixelup(x3)
+
+        x_residual = self.cv4(x0)
+        x_residual = self.pixelup(x_residual)
         return out + x_residual
 
 

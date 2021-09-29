@@ -6,7 +6,7 @@ import random
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from omegaconf import OmegaConf as omg
-
+from sr_models import ManualCNN
 
 from sr_models.augment_cnn import AugmentCNN
 import utils
@@ -99,7 +99,7 @@ def run_train(cfg):
     writer.add_text(tag="tune/arch/", text_string=str(genotype))
     print(genotype)
 
-    # model = FromGENE(cfg.channels, cfg.repeat_factor)
+    model = ManualCNN(cfg.channels, cfg.repeat_factor)
     # model = ESPCN(4)
     model = AugmentCNN(
         cfg.channels,
