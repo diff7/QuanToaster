@@ -99,13 +99,13 @@ def run_train(cfg):
     writer.add_text(tag="tune/arch/", text_string=str(genotype))
     print(genotype)
 
-    #model = ManualCNN(cfg.channels, cfg.repeat_factor)
+    model = ManualCNN(cfg.channels, cfg.repeat_factor)
     #model = ESPCN(4)
-    model = AugmentCNN(
-        cfg.channels,
-        cfg.repeat_factor,
-        genotype,
-    )
+    # model = AugmentCNN(
+    #     cfg.channels,
+    #     cfg.repeat_factor,
+    #     genotype,
+    # )
 
     model.to(device)
 
