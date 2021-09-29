@@ -27,7 +27,7 @@ search:
 
   channels: 3
   repeat_factor: 16
-  n_nodes: 4
+  n_nodes: 10
   lr_scheduler: cosine
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
   im_dir: 'arch_images'
@@ -37,7 +37,7 @@ search:
   w_weight_decay: 3e-6 # weight decay for weights
   w_grad_clip: 5 # gradient clipping for weights
   print_freq: 60 # print frequency
-  epochs: 2 # n of training epochs
+  epochs: 25 # n of training epochs
   temperature_start: 1e1
   temp_red: 0.6
   layers: 4 # of layers 8 is default
@@ -68,7 +68,7 @@ train:
   weight_decay : 0 #0.0005 # weight decay
   grad_clip : 5 # gradient clipping for weights
   print_freq : 200 # print frequency
-  epochs : 2 # # of training epochs
+  epochs : 20 # # of training epochs
   seed : 2 # random seed
   workers : 4 # of workers
   genotype_path: /home/dev/data_main/LOGS/SR_DARTS/single_path/trail_1/SEARCH_batch experiment_penalty_0_trail_1-2021-09-22-18/best_arch.gen
