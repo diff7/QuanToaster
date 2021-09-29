@@ -359,7 +359,7 @@ class DWS(BaseConv):
         return self.net(x)
 
 
-class DilConvResid(BaseConv):
+class SepConvResid(BaseConv):
     """(Dilated) depthwise separable conv
     ReLU - (Dilated) depthwise separable - Pointwise - BN
     If dilation == 2, 3x3 conv => 5x5 receptive field
