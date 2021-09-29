@@ -7,6 +7,10 @@ from sr_models.flops import count_upsample_flops
 import genotypes as gt
 
 
+# check without skip no drop path
+# check with SGD
+# lower exp is sinlge path
+
 OPS = {
     "none": lambda C, stride, affine: Zero(stride, zero=0),
     "skip_connect": lambda C, stride, affine: Identity(),
