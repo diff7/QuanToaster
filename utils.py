@@ -71,7 +71,7 @@ def get_data(dataset, data_path, cutout_length, validation):
 def get_logger(file_path):
     """Make python logger"""
     # [!] Since tensorboardX use default logger (e.g. logging.info()), we should use custom logger
-    logger = logging.getLogger("darts")
+    logger = logging.getLogger(file_path.split('/')[-1])
     log_format = "%(asctime)s | %(message)s"
     formatter = logging.Formatter(log_format, datefmt="%m/%d %I:%M:%S %p")
     file_handler = logging.FileHandler(file_path)
@@ -83,7 +83,7 @@ def get_logger(file_path):
     logger.addHandler(stream_handler)
     logger.setLevel(logging.INFO)
 
-    return logger
+    return logger, file_handler
 
 
 def param_size(model):

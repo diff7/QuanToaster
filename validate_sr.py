@@ -1,6 +1,7 @@
 import os
 import torch
 import random
+import logging
 from omegaconf import OmegaConf as omg
 from genotypes import from_str
 from sr_models.augment_cnn import AugmentCNN
