@@ -110,7 +110,7 @@ def plot_sr(genotype, file_path, caption=None):
 
     # intermediate nodes
     n_nodes = len(genotype)
-    for i in range(n_nodes):
+    for i in range(n_nodes-1):
         g.node(str(i + 1), fillcolor="lightblue")
 
     for i, edges in enumerate(genotype):
@@ -123,7 +123,8 @@ def plot_sr(genotype, file_path, caption=None):
             v = str(i + 1)
             g.edge(u, v, label=op, fillcolor="gray")
 
-    g.edge(str(1), str(n_nodes - 1), label="sum", fillcolor="gray")
+    # SKIP NODE
+    g.edge(str(1), str(n_nodes), label="sum", fillcolor="gray")
     # output node
     g.node("Pixel shuffle", fillcolor="palegoldenrod")
     for i in range(n_nodes - 1, n_nodes):
