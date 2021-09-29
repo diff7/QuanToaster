@@ -141,7 +141,7 @@ def run_train(cfg):
     for epoch in range(cfg.epochs):
         lr_scheduler.step()
         if cfg.use_drop_prob:
-            drop_prob = cfg.drop_path_prob * epoch / cfg.epochs
+            drop_prob = cfg.drop_path_prob * (epoch+1) / cfg.epochs
             print('DROP PATH', drop_prob)
             model.drop_path_prob(drop_prob)
 
