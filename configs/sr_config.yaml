@@ -60,7 +60,8 @@ train:
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
   gpu: 0
   lr_scheduler: cosine
-  use_drop_prob: false
+  use_drop_prob: true
+  drop_path_prob : 0.3
   batch_size : 32 # batch size
   lr : 1e-3 # lr for weights
   momentum : 0.9 # momentum

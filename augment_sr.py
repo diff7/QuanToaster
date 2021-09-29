@@ -140,9 +140,9 @@ def run_train(cfg):
     # training loop
     for epoch in range(cfg.epochs):
         lr_scheduler.step()
-        # if cfg.use_drop_prob:
-        #     drop_prob = cfg.drop_path_prob * epoch / cfg.epochs
-        #     model.drop_path_prob(drop_prob)
+        if cfg.use_drop_prob:
+            drop_prob = cfg.drop_path_prob * epoch / cfg.epochs
+            model.drop_path_prob(drop_prob)
 
         # training
         score_train = train(
