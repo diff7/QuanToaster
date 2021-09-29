@@ -18,7 +18,7 @@ class ManualCNN(nn.Module):
         self.cv3 = ops_sr.OPS["decenc_3x3"](self.c_fixed, 1, True)
         self.cv4 = ops_sr.OPS["decenc_5x5"](self.c_fixed, 1, True)
         self.cv5 = ops_sr.OPS["decenc_5x5"](self.c_fixed, 1, True)
-        self.cv6 = ops_sr.OPS["decenc_5x5"](self.c_fixed, 1, True)
+        self.cv6 = ops_sr.OPS["growth4_3x3"](self.c_fixed, 1, True)
 
         self.pixelup = nn.Sequential(
             nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.ReLU()

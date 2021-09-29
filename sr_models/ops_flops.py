@@ -241,7 +241,7 @@ class DecEnc(BaseConv):
         dilation=1,
         groups=1,
         affine=False,
-        reduce=16,
+        reduce=4,
     ):
         super().__init__()
         self.net = nn.Sequential(
