@@ -6,7 +6,7 @@ import random
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from omegaconf import OmegaConf as omg
-from sr_models import ManualCNN
+from sr_models.test_arch import ManualCNN
 
 from sr_models.augment_cnn import AugmentCNN
 import utils
