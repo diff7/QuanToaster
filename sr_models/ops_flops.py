@@ -441,6 +441,7 @@ class FacConv(BaseConv):
         return F.relu(self.net(x) + x)
 
 def drop_path_(x, drop_prob, training):
+    print('drop')
     if training and drop_prob > 0.0:
         keep_prob = 1.0 - drop_prob
         # per data point mask; assuming x in cuda.
@@ -466,7 +467,7 @@ class DropPath_(BaseConv):
         drop_path_(x, self.p, self.training)
 
         return x
-        
+
 class Identity(BaseConv):
     def __init__(self):
         super().__init__()
