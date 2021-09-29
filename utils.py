@@ -83,7 +83,7 @@ def get_logger(file_path):
     logger.addHandler(stream_handler)
     logger.setLevel(logging.INFO)
 
-    return logger, file_handler
+    return logger
 
 
 def param_size(model):
