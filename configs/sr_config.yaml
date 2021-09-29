@@ -58,7 +58,7 @@ search:
 train:
   run_name: 'DEBUG'
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
-  gpu: 2
+  gpu: 0
   lr_scheduler: cosine
   use_drop_prob: false
   batch_size : 32 # batch size

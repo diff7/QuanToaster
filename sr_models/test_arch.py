@@ -31,13 +31,12 @@ class ManualCNN(nn.Module):
         x2 = self.cv2(x1)
         x3 = self.cv3(x2)
         x4 = self.cv4(x3)
-        x5 = self.cv5(x4)
 
-        out = self.pixelup(x5 + x1 + x2 + x3 + x4)
+        out = self.pixelup(x4)
 
-        # x_residual = self.cv4(x0)
-        # x_residual = self.pixelup(x_residual)
-        return out  # + x_residual
+        x_residual = self.cv5(x0)
+        x_residual = self.pixelup(x_residual)
+        return out + x_residual
 
 
 class FromGENE(nn.Module):
