@@ -350,7 +350,7 @@ class DWS(BaseConv):
             ),
             nn.PReLU(),
             self.conv_func(
-                C_in * 4, C_in * 4, 3, 1, 0, bias=False, groups=C_in * 4
+                C_in * 4, C_in, 3, 1, 0, bias=False, groups=C_in * 4
             ),
             nn.ReLU(),
         )
