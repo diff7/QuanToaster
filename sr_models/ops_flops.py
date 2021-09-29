@@ -43,15 +43,22 @@ OPS = {
     "double_conv_resid_3x3": lambda C, stride, affine: DoubleConvResid(
         C, C, 5, stride, 1, affine=affine
     ),
-    "DWS": lambda C, stride, affine: DWS(C, C, 5, stride, 1, affine=affine),
+    "DWS_3x3": lambda C, stride, affine: DWS(C, C, 3, stride, 1, affine=affine),
+    "DWS_5x5": lambda C, stride, affine: DWS(C, C, 5, stride, 2, affine=affine),
     "growth2_3x3": lambda C, stride, affine: GrowthConv(
         C, C, 3, stride, 1, groups=1, affine=affine, growth=2
     ),
-    "decenc_3x3": lambda C, stride, affine: DecEnc(
-        C, C, 3, stride, 1, groups=1, affine=affine
+    "decenc_3x3_4": lambda C, stride, affine: DecEnc(
+        C, C, 3, stride, 1, groups=1, reduce=4, affine=affine
     ),
-    "decenc_5x5": lambda C, stride, affine: DecEnc(
-        C, C, 5, stride, 2, groups=1, affine=affine
+    "decenc_5x5_4": lambda C, stride, affine: DecEnc(
+        C, C, 5, stride, 2, groups=1, reduce=4, affine=affine
+    ),
+    "decenc_3x3_8": lambda C, stride, affine: DecEnc(
+        C, C, 3, stride, 1, groups=1, reduce=8, affine=affine
+    ),
+    "decenc_5x5_8": lambda C, stride, affine: DecEnc(
+        C, C, 5, stride, 2, groups=1, reduce=8, affine=affine
     ),
     "growth4_3x3": lambda C, stride, affine: GrowthConv(
         C, C, 3, stride, 1, groups=1, affine=affine, growth=4
@@ -303,7 +310,6 @@ class DoubleConvResid(BaseConv):
     ):
         super().__init__()
         self.net = nn.Sequential(
-            # nn.BatchNorm2d(C_out, affine=affine),
             self.conv_func(
                 C_in,
                 C_out,
@@ -334,7 +340,7 @@ class DoubleConvResid(BaseConv):
 
 class DWS(BaseConv):
     def __init__(
-        self, C_in, C_out, kernel_length, stride, padding, affine=True, growth=1
+        self, C_in, C_out, kernel_size, stride, padding, affine=True, growth=1
     ):
         super().__init__()
 
@@ -349,7 +355,9 @@ class DWS(BaseConv):
                 bias=False,
             ),
             nn.PReLU(),
-            self.conv_func(C_in * 4, C_in, 3, 1, 1, bias=False, groups=C_in),
+            self.conv_func(
+                C_in * 4, C_in, kernel_size, 1, padding, bias=False, groups=C_in
+            ),
             nn.ReLU(),
         )
 
@@ -358,12 +366,6 @@ class DWS(BaseConv):
 
 
 class SepConvResid(BaseConv):
-    """(Dilated) depthwise separable conv
-    ReLU - (Dilated) depthwise separable - Pointwise - BN
-    If dilation == 2, 3x3 conv => 5x5 receptive field
-                      5x5 conv => 9x9 receptive field
-    """
-
     def __init__(
         self,
         C_in,
@@ -398,7 +400,6 @@ class SepConvResid(BaseConv):
                 bias=False,
             ),
             nn.ReLU(),
-            # nn.BatchNorm2d(C_out, affine=affine),
         )
 
     def forward(self, x):

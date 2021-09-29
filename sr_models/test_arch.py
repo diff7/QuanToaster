@@ -13,12 +13,12 @@ class ManualCNN(nn.Module):
         self.c_fixed = c_init * repeat_factor
         self.repeat_factor = repeat_factor
 
-        self.cv1 = ops_sr.OPS["DWS"](self.c_fixed, 1, True)
-        self.cv2 = ops_sr.OPS["DWS"](self.c_fixed, 1, True)
-        self.cv3 = ops_sr.OPS["DWS"](self.c_fixed, 1, True)
-        self.cv4 = ops_sr.OPS["DWS"](self.c_fixed, 1, True)
-        self.cv5 = ops_sr.OPS["DWS"](self.c_fixed, 1, True)
-        self.cv6 = ops_sr.OPS["DWS"](self.c_fixed, 1, True)
+        self.cv1 = ops_sr.OPS["DWS_3x3"](self.c_fixed, 1, True)
+        self.cv2 = ops_sr.OPS["DWS_3x3"](self.c_fixed, 1, True)
+        self.cv3 = ops_sr.OPS["DWS_5x5"](self.c_fixed, 1, True)
+        self.cv4 = ops_sr.OPS["decenc_3x3_4"](self.c_fixed, 1, True)
+        self.cv5 = ops_sr.OPS["DWS_3x3"](self.c_fixed, 1, True)
+        self.cv6 = ops_sr.OPS["decenc_3x3"](self.c_fixed, 1, True)
 
         self.pixelup = nn.Sequential(
             nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.ReLU()
@@ -34,9 +34,9 @@ class ManualCNN(nn.Module):
 
         out = self.pixelup(x3)
 
-        # x_residual = self.cv5(x0)
-        # x_residual = self.pixelup(x_residual)
-        return out  # + x_residual
+        x_residual = self.cv5(x0)
+        x_residual = self.pixelup(x_residual)
+        return out + x_residual
 
 
 class FromGENE(nn.Module):
