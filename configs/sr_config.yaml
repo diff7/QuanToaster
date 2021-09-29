@@ -61,7 +61,7 @@ train:
   gpu: 0
   lr_scheduler: cosine
   use_drop_prob: true
-  drop_path_prob : 0.3
+  drop_path_prob : 0.7
   batch_size : 32 # batch size
   lr : 1e-3 # lr for weights
   momentum : 0.9 # momentum
