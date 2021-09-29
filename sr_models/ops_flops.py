@@ -247,7 +247,7 @@ class GrowthConv(BaseConv):
         )
 
     def forward(self, x):
-        return self.net(x) + x
+        return self.net(x)
 
 
 class DecEnc(BaseConv):
@@ -314,7 +314,7 @@ class DecEnc(BaseConv):
         )
 
     def forward(self, x):
-        return self.net(x) + x
+        return self.net(x)
 
 
 class SimpleConv(BaseConv):
@@ -350,7 +350,7 @@ class SimpleConv(BaseConv):
         )
 
     def forward(self, x):
-        return self.net(x) + x
+        return self.net(x)
 
 
 class FacConv(BaseConv):
@@ -385,7 +385,7 @@ class FacConv(BaseConv):
         )
 
     def forward(self, x):
-        return self.net(x) + x
+        return self.net(x)
 
 
 class DilConv(BaseConv):
@@ -465,7 +465,7 @@ class SepConv(BaseConv):
         )
 
     def forward(self, x):
-        return self.net(x) + x
+        return self.net(x)
 
 
 class Identity(BaseConv):
