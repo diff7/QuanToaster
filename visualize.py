@@ -124,7 +124,7 @@ def plot_sr(genotype, file_path, caption=None):
             g.edge(u, v, label=op, fillcolor="gray")
 
     # SKIP NODE
-    g.edge("Input", i+1, label=str(genotype[-1][0]), fillcolor="gray")
+    g.edge("Input", str(i+1), label=str(genotype[-1][0]), fillcolor="gray")
     # output node
     g.node("Pixel shuffle", fillcolor="palegoldenrod")
     for i in range(n_nodes - 1, n_nodes):
