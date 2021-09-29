@@ -36,7 +36,13 @@ class ManualCNN(nn.Module):
 
         x_residual = self.cv5(x0)
         x_residual = self.pixelup(x_residual)
-        return x_residual
+        return x_residual + out
+
+    def drop_path_prob(self, p):
+        """Set drop path probability"""
+        for module in self.modules():
+            if isinstance(module, ops_sr.DropPath_):
+                module.p = p
 
 
 class FromGENE(nn.Module):
