@@ -27,7 +27,7 @@ search:
 
   channels: 3
   repeat_factor: 16
-  n_nodes: 10
+  n_nodes: 5
   lr_scheduler: cosine
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
   im_dir: 'arch_images'
