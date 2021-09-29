@@ -33,7 +33,7 @@ class ManualCNN(nn.Module):
         x4 = self.cv4(x3)
         x5 = self.cv5(x4)
 
-        out = self.pixelup(x5)
+        out = self.pixelup(x5 + x1 + x2 + x3 + x4)
 
         # x_residual = self.cv4(x0)
         # x_residual = self.pixelup(x_residual)
