@@ -45,7 +45,7 @@ OPS = {
         C, C, 5, stride, 2, affine=affine
     ),
     "double_conv_resid_3x3": lambda C, stride, affine: DoubleConvResid(
-        C, C, 5, stride, 1, affine=affine
+        C, C, 3, stride, 1, affine=affine
     ),
     "DWS_3x3": lambda C, stride, affine: DWS(C, C, 3, stride, 1, affine=affine),
     "DWS_5x5": lambda C, stride, affine: DWS(C, C, 5, stride, 2, affine=affine),
