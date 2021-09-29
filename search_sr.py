@@ -217,7 +217,7 @@ def run_search(cfg):
         logger.info("Best Genotype = {}".format(best_genotype))
 
     # FINISH TRAINING
-    del logger
+    logger.close()
     del model
 
 

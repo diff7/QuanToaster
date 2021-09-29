@@ -188,7 +188,7 @@ def run_train(cfg):
     logger.info("Final best PSNR = {:.4%}".format(best_score))
 
     # FINISH TRAINING
-    del logger
+    logger.close()
     del model
 
 
