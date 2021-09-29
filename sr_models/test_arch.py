@@ -17,7 +17,7 @@ class ManualCNN(nn.Module):
         self.cv2 = ops_sr.OPS["DWS_3x3"](self.c_fixed, 1, True)
         self.cv3 = ops_sr.OPS["DWS_5x5"](self.c_fixed, 1, True)
         self.cv4 = ops_sr.OPS["decenc_3x3_4"](self.c_fixed, 1, True)
-        self.cv5 = ops_sr.OPS["DWS_3x3"](self.c_fixed, 1, True)
+        self.cv5 = nn.Sequential(ops_sr.OPS["DWS_3x3"](self.c_fixed, 1, True), ops_sr.DropPath_()) 
         self.cv6 = nn.Sequential(ops_sr.OPS["DWS_3x3"](self.c_fixed, 1, True), ops_sr.DropPath_()) 
 
         self.pixelup = nn.Sequential(
@@ -29,7 +29,7 @@ class ManualCNN(nn.Module):
 
         x1 = self.cv1(x0)
         x2 = self.cv2(x1)
-        x3 = self.cv3(x2)
+        x3 = self.cv5(x2)
         #x4 = self.cv4(x3)
 
         out = self.pixelup(x3)
