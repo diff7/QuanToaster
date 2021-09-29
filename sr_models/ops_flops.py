@@ -242,12 +242,12 @@ class GrowthConv(BaseConv):
                 groups,
                 bias=affine,
             ),
-            # nn.ReLU(),
+            nn.ReLU(),
             # nn.BatchNorm2d(C_out, affine=affine),
         )
 
     def forward(self, x):
-        return self.net(x) + x
+        return nn.Reself.net(x) + x
 
 
 class DecEnc(BaseConv):
@@ -309,7 +309,7 @@ class DecEnc(BaseConv):
                 groups,
                 bias=affine,
             ),
-            # nn.ReLU(),
+            nn.ReLU(),
             # nn.BatchNorm2d(C_out, affine=affine),
         )
 
@@ -346,7 +346,7 @@ class SimpleConv(BaseConv):
                 groups,
                 bias=affine,
             ),
-            # nn.ReLU(),
+            nn.ReLU(),
         )
 
     def forward(self, x):
@@ -381,7 +381,7 @@ class FacConv(BaseConv):
                 (0, padding),
                 bias=False,
             ),
-            # nn.ReLU(),
+            nn.ReLU(),
         )
 
     def forward(self, x):
