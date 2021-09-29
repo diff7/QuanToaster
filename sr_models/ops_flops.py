@@ -247,7 +247,7 @@ class GrowthConv(BaseConv):
         )
 
     def forward(self, x):
-        return nn.Reself.net(x) + x
+        return self.net(x) + x
 
 
 class DecEnc(BaseConv):
