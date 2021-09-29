@@ -4,6 +4,7 @@ from types import new_class
 import torch
 import torch.nn as nn
 import random
+import logging
 import numpy as np
 import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
@@ -217,7 +218,7 @@ def run_search(cfg):
         logger.info("Best Genotype = {}".format(best_genotype))
 
     # FINISH TRAINING
-    logger.close()
+    logging.shutdown()
     del model
 
 

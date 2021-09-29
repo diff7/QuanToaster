@@ -3,6 +3,7 @@ import os
 import torch
 import torch.nn as nn
 import random
+import logging
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from omegaconf import OmegaConf as omg
@@ -188,7 +189,7 @@ def run_train(cfg):
     logger.info("Final best PSNR = {:.4%}".format(best_score))
 
     # FINISH TRAINING
-    logger.close()
+    logging.shutdown()
     del model
 
 
