@@ -36,7 +36,7 @@ class ManualCNN(nn.Module):
 
         x_residual = self.cv6(x0)
         x_residual = self.pixelup(x_residual)
-        return  out
+        return  out + x_residual
 
     def drop_path_prob(self, p):
         """Set drop path probability"""
