@@ -21,33 +21,37 @@ class AugmentCNN(nn.Module):
 
         self.c_fixed = c_init * repeat_factor
         self.repeat_factor = repeat_factor
-
-        self.dag = gt.to_dag_sr(self.c_fixed, genotype.normal)
+        self.dag = nn.Sequential([gt.to_dag_sr(self.c_fixed, genotype.normal)]*2)
         self.dag_len = len(self.dag)
 
         self.pixelup = nn.Sequential(
             nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.PReLU()
         )
+        
+        self.space_to_depth = torch.nn.functional.pixel_unshuffle
 
     def forward(self, x):
 
-        state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
-        self.assertion_in(state_zero.shape)
+        for i, block in enumerate(self.dag):
+            if i == 0:
+                state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
+                self.assertion_in(state_zero.shape)
 
-        s_cur = state_zero
-        states = []
-        for i, op in enumerate(self.dag[:-1]):
-            s_cur = op(s_cur)
-            # skip between first and the last nodes
-            # if i == self.n_nodes - 2:
-            #     s_cur += states[0]
-            # states.append(s_cur)
+            else:
+                state_zero = self.space_to_depth(x, int(self.repeat_factor ** (1 / 2)))
 
-        s_skip = self.dag[-1](state_zero)
-        self.assertion_in(s_cur.shape)
-        out = self.pixelup(s_cur)
-        x_residual = self.pixelup(s_skip)
-        return nn.out + x_residual
+            s_cur = state_zero    
+            for i, op in enumerate(block[:-1]):
+                s_cur = op(s_cur)
+        
+            s_skip = block[-1](state_zero)
+            self.assertion_in(s_cur.shape)
+            out = self.pixelup(s_cur)
+            x_residual = self.pixelup(s_skip)
+
+            x = out + x_residual
+
+        return x
 
     def drop_path_prob(self, p):
         """Set drop path probability"""
