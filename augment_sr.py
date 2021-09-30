@@ -61,8 +61,8 @@ def run_train(cfg):
     device = cfg.gpu
     torch.cuda.set_device(device)
     cfg_dataset.subset = None
-    train_data = CropDataset(cfg_dataset, train=True)
-    val_data = CropDataset(cfg_dataset, train=False)
+    train_data = PatchDataset(cfg_dataset, train=True)
+    val_data = PatchDataset(cfg_dataset, train=False)
 
     if cfg_dataset.debug_mode:
         indices = list(range(300))
@@ -120,7 +120,7 @@ def run_train(cfg):
     )
 
     # weights optimizer
-    optimizer = torch.optim.Adam(
+    optimizer = torch.optim.SGD(
         model.parameters(),
         cfg.lr,
         ##momentum=cfg.momentum,
