@@ -50,7 +50,7 @@ class AugmentCNN(nn.Module):
             out = self.pixelup(s_cur)
             x_residual = self.pixelup(s_skip)
 
-            x = (x + x_residual)/2
+            x = (out + x_residual)/2
 
         return x
 
