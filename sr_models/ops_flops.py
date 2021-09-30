@@ -52,6 +52,9 @@ OPS = {
     "growth2_3x3": lambda C, stride, affine: GrowthConv(
         C, C, 3, stride, 1, groups=1, affine=affine, growth=2
     ),
+    "growth2_5x5": lambda C, stride, affine: GrowthConv(
+        C, C, 5, stride, 2, groups=1, affine=affine, growth=2
+    ),
     "decenc_3x3_4": lambda C, stride, affine: DecEnc(
         C, C, 3, stride, 1, groups=1, reduce=4, affine=affine
     ),
@@ -231,12 +234,12 @@ class GrowthConv(BaseConv):
                 groups,
                 bias=affine,
             ),
-            #nn.ReLU(),
+            nn.ReLU(),
             # nn.BatchNorm2d(C_out, affine=affine),
         )
 
     def forward(self, x):
-        return F.relu(self.net(x) + x)
+        return self.net(x)
 
 
 class DecEnc(BaseConv):
@@ -288,12 +291,12 @@ class DecEnc(BaseConv):
                 groups,
                 bias=affine,
             ),
-            #nn.ReLU(),
+            nn.ReLU(),
             # nn.BatchNorm2d(C_out, affine=affine),
         )
 
     def forward(self, x):
-        return F.relu(self.net(x) + x)
+        return self.net(x)
 
 
 class DoubleConvResid(BaseConv):
@@ -335,7 +338,7 @@ class DoubleConvResid(BaseConv):
                 groups,
                 bias=affine,
             ),
-            #nn.ReLU(),
+            # nn.ReLU(),
         )
 
     def forward(self, x):
@@ -369,7 +372,7 @@ class DWS(BaseConv):
         return self.net(x)
 
 
-class SepConvResid(BaseConv):
+class SepConv(BaseConv):
     def __init__(
         self,
         C_in,
@@ -403,11 +406,11 @@ class SepConvResid(BaseConv):
                 groups=C_in,
                 bias=False,
             ),
-            #nn.ReLU(),
+            nn.ReLU(),
         )
 
     def forward(self, x):
-        return F.relu(self.net(x) + x)
+        return self.net(x)
 
 
 class FacConv(BaseConv):
@@ -438,11 +441,12 @@ class FacConv(BaseConv):
                 (0, padding),
                 bias=False,
             ),
-            # nn.ReLU(),
+            nn.ReLU(),
         )
 
     def forward(self, x):
-        return F.relu(self.net(x) + x)
+        return self.net(x)
+
 
 def drop_path_(x, drop_prob, training):
     if training and drop_prob > 0.0:
@@ -470,6 +474,7 @@ class DropPath_(BaseConv):
         drop_path_(x, self.p, self.training)
 
         return x
+
 
 class Identity(BaseConv):
     def __init__(self):

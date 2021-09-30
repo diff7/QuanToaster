@@ -47,7 +47,7 @@ class AugmentCNN(nn.Module):
         self.assertion_in(s_cur.shape)
         out = self.pixelup(s_cur)
         x_residual = self.pixelup(s_skip)
-        return out + x_residual
+        return nn.out + x_residual
 
     def drop_path_prob(self, p):
         """Set drop path probability"""
