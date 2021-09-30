@@ -81,7 +81,7 @@ class SearchArch(nn.Module):
         out = self.pixelup(s_cur)
         x_residual = self.pixelup(s_skip)
 
-        return (out + x_residual)/2
+        return (out + x_residual)
 
     def fetch_weighted_flops_and_memory(self, w_dag):
         total_flops = 0
