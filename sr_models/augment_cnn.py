@@ -36,18 +36,18 @@ class AugmentCNN(nn.Module):
 
         s_cur = state_zero
         states = []
-        for i, op in enumerate(self.dag[:-1]):
+        for i, op in enumerate(self.dag):
             s_cur = op(s_cur)
             # skip between first and the last nodes
             # if i == self.n_nodes - 2:
             #     s_cur += states[0]
             # states.append(s_cur)
 
-        s_skip = self.dag[-1](state_zero)
+        # s_skip = self.dag[-1](state_zero)
         self.assertion_in(s_cur.shape)
         out = self.pixelup(s_cur)
-        x_residual = self.pixelup(s_skip)
-        return out + x_residual
+        # x_residual = self.pixelup(s_skip)
+        return out  # + x_residual
 
     def drop_path_prob(self, p):
         """Set drop path probability"""

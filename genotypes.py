@@ -28,8 +28,8 @@ PRIMITIVES = [
 
 PRIMITIVES_SR = [
     # "skip_connect",  # identity
-    # "conv_5x1_1x5",
-    # "conv_3x1_1x3",
+    "conv_5x1_1x5",
+    "conv_3x1_1x3",
     "simple_3x3",
     "simple_1x1",
     "simple_5x5",
@@ -41,12 +41,12 @@ PRIMITIVES_SR = [
     "double_conv_resid_3x3",
     "DWS_3x3",
     "DWS_5x5",
-    # "growth2_3x3",
+    "growth2_3x3",
     "decenc_3x3_4",
     "decenc_5x5_4",
     "decenc_3x3_8",
     "decenc_5x5_8",
-    # "growth4_3x3",
+    "growth4_3x3",
     # "bs_up_bicubic_residual",
     # "bs_up_nearest_residual",
     # "bs_up_bilinear_residual",

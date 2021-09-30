@@ -59,20 +59,20 @@ class SearchArch(nn.Module):
         s_cur = state_zero
 
         states = []
-        for i, (edge, alphas) in enumerate(zip(self.dag[:-1], w_dag[:-1])):
+        for i, (edge, alphas) in enumerate(zip(self.dag, w_dag)):
             s_cur = edge(s_cur, alphas)
             # skip between first and the last nodes
             # if i == self.n_nodes - 2:
             #     s_cur += states[0]
             # states.append(s_cur)
 
-        s_skip = self.dag[-1](state_zero, w_dag[-1])
+        # s_skip = self.dag[-1](state_zero, w_dag[-1])
         self.assertion_in(s_cur.shape)
 
         out = self.pixelup(s_cur)
-        x_residual = self.pixelup(s_skip)
+        # x_residual = self.pixelup(s_skip)
 
-        return out + x_residual
+        return out  # + x_residual
 
     def fetch_weighted_flops_and_memory(self, w_dag):
         total_flops = 0
