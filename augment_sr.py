@@ -78,8 +78,8 @@ def run_train(cfg):
     train_loader = torch.utils.data.DataLoader(
         train_data,
         batch_size=cfg.batch_size,
-        sampler=sampler_train,
-        # shuffle=True,
+        # sampler=sampler_train,
+        shuffle=True,
         num_workers=cfg.workers,
         pin_memory=False,
     )
