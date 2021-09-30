@@ -153,10 +153,7 @@ class CropDataset(torch.utils.data.dataset.Dataset):
     def downscale(self, image):
         if self.train:
             size_lr = self.crop_size
-            size_hr = self.crop_size * self.scale
-            return image.resize((size_hr, size_hr)), image.resize(
-                (size_lr, size_lr)
-            )
+            return image, image.resize((size_lr, size_lr))
         else:
             width, height = image.size
             width, height = width // self.scale, height // self.scale
