@@ -133,7 +133,7 @@ def run_batch():
             os.makedirs(save_dir, exist_ok=True)
             logger.info(genotype)
             valid_cfg = omg.load(VAL_CFG_PATH)
-            model = get_model(weights_path, cfg.train.gpu, genotype)
+            model = get_model(weights_path, cfg.train.gpu, genotype, cfg.train.blocks)
             dataset_loop(valid_cfg, model, logger, save_dir, cfg.train.gpu)
 
 

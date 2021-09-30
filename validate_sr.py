@@ -10,7 +10,7 @@ from sr_base.datasets import PatchDataset
 from genotypes import from_str
 
 
-def get_model(weights_path, device, genotype, channels=3, repeat_factor=16):
+def get_model(weights_path, device, genotype, channels=3, repeat_factor=16,  blocks=4):
     model = AugmentCNN(
         channels,
         repeat_factor,

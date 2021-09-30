@@ -107,6 +107,7 @@ def run_train(cfg):
         cfg.channels,
         cfg.repeat_factor,
         genotype,
+        cfg.blocks
     )
 
     model.to(device)

@@ -9,7 +9,7 @@ import genotypes as gt
 class AugmentCNN(nn.Module):
     """Augmented CNN model"""
 
-    def __init__(self, c_init, repeat_factor, genotype):
+    def __init__(self, c_init, repeat_factor, genotype, blokcs=4):
 
         """
         Args:
@@ -21,7 +21,9 @@ class AugmentCNN(nn.Module):
 
         self.c_fixed = c_init * repeat_factor
         self.repeat_factor = repeat_factor
-        self.dag = nn.Sequential(gt.to_dag_sr(self.c_fixed, genotype.normal),gt.to_dag_sr(self.c_fixed, genotype.normal))
+
+        net = [gt.to_dag_sr(self.c_fixed, genotype.normal)]*blokcs
+        self.dag = nn.Sequential(*net)
         self.dag_len = len(self.dag)
 
         self.pixelup = nn.Sequential(
@@ -48,7 +50,7 @@ class AugmentCNN(nn.Module):
             out = self.pixelup(s_cur)
             x_residual = self.pixelup(s_skip)
 
-            x = (out + x_residual)/2
+            x = (x + x_residual)/2
 
         return x
 
