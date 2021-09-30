@@ -72,7 +72,7 @@ class SearchCNNController(nn.Module):
 
         self.net = SearchCNN(n_nodes, c_in, repeat_factor, 1)
 
-    def forward(self, x, temperature=1, stable=False)
+    def forward(self, x, temperature=1, stable=False):
 
         if stable:
             func = self.softmax
