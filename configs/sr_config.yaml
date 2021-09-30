@@ -56,11 +56,11 @@ search:
   
   
 train:
-  run_name: 'DEBUG'
+  run_name: 'ESPCN_new_set'
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
   gpu: 0
   lr_scheduler: cosine
-  use_drop_prob: true
+  use_drop_prob: false
   drop_path_prob : 0.0
   batch_size : 32 # batch size
   lr : 1e-3 # lr for weights
