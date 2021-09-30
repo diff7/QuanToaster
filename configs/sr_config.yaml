@@ -23,11 +23,11 @@ search:
   l1_lambda: 1
   use_soft_edge: false
   alpha_selector: softmax #softmax #softmax #softmax #gumbel2k #softmax 
-  warm_up: 0
+  warm_up: 15
 
   channels: 3
   repeat_factor: 16
-  n_nodes: 10
+  n_nodes: 5
   lr_scheduler: cosine
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
   im_dir: 'arch_images'
