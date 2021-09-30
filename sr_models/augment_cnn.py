@@ -21,7 +21,7 @@ class AugmentCNN(nn.Module):
 
         self.c_fixed = c_init * repeat_factor
         self.repeat_factor = repeat_factor
-        self.dag = nn.Sequential([gt.to_dag_sr(self.c_fixed, genotype.normal)]*2)
+        self.dag = nn.Sequential(gt.to_dag_sr(self.c_fixed, genotype.normal),gt.to_dag_sr(self.c_fixed, genotype.normal))
         self.dag_len = len(self.dag)
 
         self.pixelup = nn.Sequential(

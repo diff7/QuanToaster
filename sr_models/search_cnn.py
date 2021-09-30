@@ -48,8 +48,8 @@ class SearchCNNController(nn.Module):
             if "alpha" in n:
                 self._alphas.append((n, p))
 
-        self.net = nn.Sequential([SearchArch(n_nodes, c_in, repeat_factor, first=False),
-                                  SearchArch(n_nodes, c_in, repeat_factor, first=False)])
+        self.net = nn.Sequential(SearchArch(n_nodes, c_in, repeat_factor, first=False),
+                                  SearchArch(n_nodes, c_in, repeat_factor, first=False))
 
     def forward(self, x, temperature=1, stable=False):
 
