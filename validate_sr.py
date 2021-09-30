@@ -15,6 +15,7 @@ def get_model(weights_path, device, genotype, channels=3, repeat_factor=16,  blo
         channels,
         repeat_factor,
         genotype,
+        blocks
     )
 
     model_ = torch.load(weights_path, map_location="cpu")
