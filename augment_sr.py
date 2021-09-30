@@ -218,7 +218,7 @@ def train(
         loss = criterion(preds, y)
         loss.backward()
         # gradient clipping
-        nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
+        # nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
         optimizer.step()
 
         psnr = utils.calc_psnr(preds, y)
