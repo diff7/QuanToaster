@@ -57,7 +57,7 @@ train:
   run_name: 'MANUAL SET'
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
   gpu: 0
-  blokcs: 4
+  blocks: 4
   lr_scheduler: linear
   use_drop_prob: false
   drop_path_prob : 0.0
