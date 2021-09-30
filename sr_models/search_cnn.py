@@ -70,7 +70,7 @@ class SearchCNNController(nn.Module):
             if "alpha" in n:
                 self._alphas.append((n, p))
 
-        self.net = SearchCNN(n_nodes, c_in, repeat_factor, 1)
+        self.net = SearchCNN(n_nodes, c_in, repeat_factor, 3)
 
     def forward(self, x, temperature=1, stable=False):
 
