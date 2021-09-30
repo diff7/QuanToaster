@@ -120,12 +120,7 @@ def run_train(cfg):
     )
 
     # weights optimizer
-    optimizer = torch.optim.Adam(
-        model.parameters(),
-        cfg.lr,
-        ##momentum=cfg.momentum,
-        weight_decay=cfg.weight_decay,
-    )
+    optimizer = torch.optim.Adam(model.parameters())
 
     scheduler = {
         "cosine": torch.optim.lr_scheduler.CosineAnnealingLR(
@@ -310,7 +305,7 @@ def validate(
         cfg.save, x_path[indx], y_path[indx], preds[indx], epoch, writer
     )
 
-    return psnr_meter.avg
+    return val_psnr_meter.avg
 
 
 if __name__ == "__main__":
