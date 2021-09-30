@@ -65,4 +65,4 @@ class AugmentCNN(nn.Module):
         ), f"Input size {size_in}, does not match fixed channels {self.c_fixed}"
 
     def fetch_flops(self):
-        return sum(op.fetch_info()[0] for op in self.dag)
+        return sum(sum(op.fetch_info()[0] for op in block) for block in self.dag)

@@ -19,7 +19,6 @@ def get_model(weights_path, device, genotype, channels=3, repeat_factor=16):
 
     model_ = torch.load(weights_path, map_location="cpu")
     model.load_state_dict(model_.state_dict())
-    print("### DEBUG")
     model.to(device)
     return model
 
