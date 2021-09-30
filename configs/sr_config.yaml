@@ -56,7 +56,7 @@ search:
   
   
 train:
-  run_name: 'ESPCN_new_set'
+  run_name: 'MANUAL SET'
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
   gpu: 2
   lr_scheduler: linear
