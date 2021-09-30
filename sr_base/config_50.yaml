@@ -20,7 +20,7 @@ save_model: '/home/dev/data_main/LOGS/SR_ESPCN/baseline/trial_02/'
 load_weiths: #'/home/dev/work_main/2021/crcnn/resutls/epoch_25.909.pth'
 
 device: 1
-seed: 1
+seed: 777
 lr: 1e-3
 batch_size: 32
 num_workers: 10
