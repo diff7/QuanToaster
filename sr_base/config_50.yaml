@@ -15,7 +15,7 @@ stride: 60
 
 subset: #'/home/dev/work_main/2021/RAW_SELECTION/subset_1.0%_KCenters.txt'
 rank_items: false
-
+save_model: '/home/dev/data_main/LOGS/SR_ESPCN/baseline/trial_02/'
 # TRANING
 load_weiths: #'/home/dev/work_main/2021/crcnn/resutls/epoch_25.909.pth'
 
