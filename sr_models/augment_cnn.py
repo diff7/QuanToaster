@@ -27,7 +27,6 @@ class AugmentCNN(nn.Module):
         self.pixelup = nn.Sequential(
             nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.PReLU()
         )
-        
         self.space_to_depth = torch.nn.functional.pixel_unshuffle
 
     def forward(self, x):
@@ -49,7 +48,7 @@ class AugmentCNN(nn.Module):
             out = self.pixelup(s_cur)
             x_residual = self.pixelup(s_skip)
 
-            x = out + x_residual
+            x = (out + x_residual)/2
 
         return x
 
