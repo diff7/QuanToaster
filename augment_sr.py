@@ -8,7 +8,7 @@ import copy
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from omegaconf import OmegaConf as omg
-from sr_models.test_arch import ManualCNN
+from sr_models.test_arch import ManualCNN, ESPCN
 
 from sr_models.augment_cnn import AugmentCNN
 import utils
@@ -61,8 +61,8 @@ def run_train(cfg):
     device = cfg.gpu
     torch.cuda.set_device(device)
     cfg_dataset.subset = None
-    train_data = PatchDataset(cfg_dataset, train=True)
-    val_data = PatchDataset(cfg_dataset, train=False)
+    train_data = CropDataset(cfg_dataset, train=True)
+    val_data = CropDataset(cfg_dataset, train=False)
 
     if cfg_dataset.debug_mode:
         indices = list(range(300))
@@ -101,13 +101,13 @@ def run_train(cfg):
     writer.add_text(tag="tune/arch/", text_string=str(genotype))
     print(genotype)
 
-    # model = ManualCNN(cfg.channels, cfg.repeat_factor)
-    # model = ESPCN(4)
-    model = AugmentCNN(
-        cfg.channels,
-        cfg.repeat_factor,
-        genotype,
-    )
+    ## model = ManualCNN(cfg.channels, cfg.repeat_factor)
+    model = ESPCN(4)
+    # model = AugmentCNN(
+    #     cfg.channels,
+    #     cfg.repeat_factor,
+    #     genotype,
+    # )
 
     model.to(device)
 
@@ -143,8 +143,8 @@ def run_train(cfg):
     for epoch in range(cfg.epochs):
         lr_scheduler.step()
         if cfg.use_drop_prob:
-            drop_prob = cfg.drop_path_prob * (1-epoch/cfg.epochs)
-            print('DROP PATH', drop_prob)
+            drop_prob = cfg.drop_path_prob * (1 - epoch / cfg.epochs)
+            print("DROP PATH", drop_prob)
             model.drop_path_prob(drop_prob)
 
         # training
