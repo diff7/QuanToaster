@@ -259,7 +259,7 @@ def train(
 def validate(
     valid_loader, model, criterion, epoch, cur_step, writer, logger, device, cfg
 ):
-    psnr_meter = utils.AverageMeter()
+    val_psnr_meter = utils.AverageMeter()
     loss_meter = utils.AverageMeter()
 
     model.eval()
@@ -277,11 +277,11 @@ def validate(
             N = X.size(0)
 
             preds = model(X).clamp(0.0, 1.0)
-            loss = criterion(preds, y)
+            loss = criterion(preds.detach(), y)
 
             psnr = utils.calc_psnr(preds, y)
             loss_meter.update(loss.item(), N)
-            psnr_meter.update(psnr.item(), N)
+            val_psnr_meter.update(psnr.item(), N)
 
         if step % cfg.print_freq == 0 or step == len(valid_loader) - 1:
             logger.info(
@@ -292,16 +292,16 @@ def validate(
                     step,
                     len(valid_loader) - 1,
                     losses=loss_meter,
-                    score=psnr_meter,
+                    score=val_psnr_meter,
                 )
             )
 
     writer.add_scalar("tune/val/loss", loss_meter.avg, cur_step)
-    writer.add_scalar("tune/val/psnr", psnr_meter.avg, cur_step)
+    writer.add_scalar("tune/val/psnr", val_psnr_meter.avg, cur_step)
 
     logger.info(
         "Valid: [{:3d}/{}] Final PSNR{:.3f}".format(
-            epoch + 1, cfg.epochs, psnr_meter.avg
+            epoch + 1, cfg.epochs, val_psnr_meter.avg
         )
     )
 
