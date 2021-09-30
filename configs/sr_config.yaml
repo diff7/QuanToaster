@@ -30,10 +30,10 @@ search:
   lr_scheduler: cosine
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
   im_dir: 'arch_images'
-  w_lr: 1e-3 # lr for weights
-  w_lr_min: 0.001 # minimum lr for weights
+  w_lr: 1e-2 # lr for weights
+  w_lr_min: 0.0001 # minimum lr for weights
   w_momentum: 0.9 # momentum for weights
-  w_weight_decay: 3e-6 # weight decay for weights
+  w_weight_decay: 3e-7 # weight decay for weights
   w_grad_clip: 5 # gradient clipping for weights
   print_freq: 60 # print frequency
   epochs: 20 # n of training epochs
