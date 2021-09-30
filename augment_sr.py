@@ -120,7 +120,7 @@ def run_train(cfg):
     )
 
     # weights optimizer
-    optimizer = torch.optim.Adam(
+    optimizer = torch.optim.SGD(
         model.parameters(),
         cfg.lr,
         ##momentum=cfg.momentum,
