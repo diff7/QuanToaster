@@ -60,7 +60,9 @@ def run_train(cfg):
     # set default gpu device id
     device = cfg.gpu
     torch.cuda.set_device(device)
-    #cfg_dataset.subset = None
+    
+    #TODO fix here and passing params from search config too
+    cfg_dataset.subset = None
     train_data = PatchDataset(cfg_dataset, train=True)
     val_data = PatchDataset(cfg_dataset, train=False)
 
