@@ -12,6 +12,28 @@ import logging
 from models.gumbel_top2 import gumbel_top2k
 
 
+class SearchCNN(nn.Module):
+    def __init__(self, n_nodes, c_in, repeat_factor, num_blocks):
+        super().__init__()
+
+        self.net = nn.ModuleList()
+        for i in range(num_blocks):
+            self.net.append(SearchArch(n_nodes, c_in, repeat_factor, first = i==0 ))
+
+    def forward(self, x, weight_alphas):
+        for block in self.net:
+            x = block(x, weight_alphas)
+        return x
+    
+    def fetch_weighted_flops_and_memory(self, weight_alpha):
+        flop = 0
+        mem = 0 
+        for block in self.net:
+            f, m = block.fetch_weighted_flops_and_memory(weight_alpha)
+            flop+=f
+            mem+=m
+        return flop, mem
+
 class SearchCNNController(nn.Module):
     """SearchCNN controller supporting multi-gpu"""
 
@@ -48,7 +70,7 @@ class SearchCNNController(nn.Module):
             if "alpha" in n:
                 self._alphas.append((n, p))
 
-        self.net = nn.Sequential([SearchArch(n_nodes, c_in, repeat_factor)] * 2)
+        self.net = SearchCNN(n_nodes, c_in, repeat_factor, 1)
 
     def forward(self, x, temperature=1, stable=False):
 

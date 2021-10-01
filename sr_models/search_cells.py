@@ -21,7 +21,7 @@ class SearchArch(nn.Module):
     Each edge is mixed and continuous relaxed.
     """
 
-    def __init__(self, n_nodes, c_init, repeat_factor):
+    def __init__(self, n_nodes, c_init, repeat_factor, first=True):
         """
         Args:
             n_nodes: # of intermediate n_nodes
@@ -34,6 +34,7 @@ class SearchArch(nn.Module):
         self.c_fixed = c_init * repeat_factor  # 3x16 = 48
         self.repeat_factor = repeat_factor
         self.c_init = c_init
+        self.first = first
 
         # Used for soft edge experiments to stabilize training after warm up
         assert is_square(repeat_factor), "Repeat factor should be a square of N"
@@ -48,23 +49,27 @@ class SearchArch(nn.Module):
             nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.PReLU()
         )
 
+        self.space_to_depth = torch.nn.functional.pixel_unshuffle
+
     def assertion_in(self, size_in):
         assert int(size_in[1]) == int(
             self.c_fixed
         ), f"Input size {size_in}, does not match fixed channels {self.c_fixed}"
 
     def forward(self, x, w_dag):
-        state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
+        if self.first:
+            state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
+        else:
+            state_zero = self.space_to_depth(
+            x, int(self.repeat_factor ** (1 / 2))
+        )
+
         self.assertion_in(state_zero.shape)
         s_cur = state_zero
 
         states = []
         for i, (edge, alphas) in enumerate(zip(self.dag[:-1], w_dag[:-1])):
             s_cur = edge(s_cur, alphas)
-            # skip between first and the last nodes
-            # if i == self.n_nodes - 2:
-            #     s_cur += states[0]
-            # states.append(s_cur)
 
         s_skip = self.dag[-1](state_zero, w_dag[-1])
         self.assertion_in(s_cur.shape)
@@ -72,7 +77,7 @@ class SearchArch(nn.Module):
         out = self.pixelup(s_cur)
         x_residual = self.pixelup(s_skip)
 
-        return out + x_residual
+        return (out + x_residual)/2
 
     def fetch_weighted_flops_and_memory(self, w_dag):
         total_flops = 0

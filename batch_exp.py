@@ -128,12 +128,13 @@ def run_batch():
 
             weights_path = os.path.join(cfg.train.save, "best.pth.tar")
 
+            # VALIDATE:
             logger = utils.get_logger(run_path + "/validation_log.txt")
             save_dir = os.path.join(run_path, "FINAL_VAL")
             os.makedirs(save_dir, exist_ok=True)
             logger.info(genotype)
             valid_cfg = omg.load(VAL_CFG_PATH)
-            model = get_model(weights_path, cfg.train.gpu, genotype)
+            model = get_model(weights_path, cfg.train.gpu, genotype, blocks=cfg.train.blocks)
             dataset_loop(valid_cfg, model, logger, save_dir, cfg.train.gpu)
 
 

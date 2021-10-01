@@ -62,8 +62,8 @@ train:
   lr_scheduler: linear
   use_drop_prob: false
   drop_path_prob : 0.0
-  batch_size : 64 # batch size
-  lr : 1e-2 # lr for weights
+  batch_size : 32 # batch size
+  lr : 1e-3 # lr for weights
   momentum : 0.9 # momentum
   weight_decay : 0.00005 # weight decay
   grad_clip : 5 # gradient clipping for weights
@@ -71,4 +71,4 @@ train:
   epochs : 15 # # of training epochs
   seed : 777 # random seed
   workers : 8 # of workers
-  genotype_path: /home/dev/data_main/LOGS/SR_DARTS/5nodes_x_3blocks_gumbel/trail_1/SEARCH_batch experiment_penalty_0_trail_1-2021-09-30-22/best_arch.gen  
+  genotype_path: /home/dev/data_main/LOGS/SR_DARTS/single_path/trail_1/SEARCH_batch experiment_penalty_0_trail_1-2021-09-22-18/best_arch.gen
