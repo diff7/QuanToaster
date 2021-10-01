@@ -5,11 +5,11 @@ import torchvision.transforms as transforms
 from PIL import Image
 
 
-from imgproc import center_crop
-from imgproc import image2tensor
-from imgproc import random_crop
-from imgproc import random_horizontally_flip
-from imgproc import random_rotate
+from sr_base.imgproc import center_crop
+from sr_base.imgproc import image2tensor
+from sr_base.imgproc import random_crop
+from sr_base.imgproc import random_horizontally_flip
+from sr_base.imgproc import random_rotate
 
 
 def check_image_file(filename):
