@@ -36,7 +36,7 @@ class AugmentCNN(nn.Module):
             if i == 0:
                 state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
                 self.assertion_in(state_zero.shape)
-                first_state = state_zero
+                first_state = self.pixelup(state_zero)
 
             else:
                 state_zero = self.space_to_depth(
