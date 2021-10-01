@@ -342,7 +342,7 @@ class DoubleConvResid(BaseConv):
         )
 
     def forward(self, x):
-        return F.relu(self.net(x) + x)
+        return F.relu(self.net(x))
 
 
 class DWS(BaseConv):
