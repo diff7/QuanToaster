@@ -10,7 +10,7 @@ dataset:
   batch_size: 32
   crop_size: 32
   files_list: '/home/dev/data_main/SR/train_sets_txt/short'
-  debug_mode: true # run on a small porion of data
+  debug_mode: false # run on a small porion of data
   
 
 search:
