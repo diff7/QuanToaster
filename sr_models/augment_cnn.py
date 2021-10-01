@@ -61,9 +61,9 @@ class AugmentCNN(nn.Module):
             out = self.pixelup(s_cur)
             x_residual = self.pixelup(s_skip)
 
-            x = out  # + x_residual) / 2
+            x = (out + x_residual) / 2
 
-        return x
+        return self.cnn_out(x + first_state)
 
     def drop_path_prob(self, p):
         """Set drop path probability"""
