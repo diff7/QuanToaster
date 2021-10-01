@@ -33,6 +33,17 @@ class AugmentCNN(nn.Module):
         self.cnn_out = nn.Sequential(
             nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=False)
         )
+
+        self.skip_cnn = nn.ModuleList()
+
+        for _ in range(blocks):
+            self.skip_cnn.append(
+                nn.Sequential(
+                    nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=False)
+                ),
+                nn.ReLU(),
+            )
+
         # self.cnn_repeat = nn.Sequential(
         #     nn.Conv2d(
         #         c_init, self.c_fixed, kernel_size=3, padding=1, bias=False
@@ -53,7 +64,7 @@ class AugmentCNN(nn.Module):
                 )
 
             s_cur = state_zero
-            for i, op in enumerate(block[:-1]):
+            for op in block[:-1]:
                 s_cur = op(s_cur)
 
             s_skip = block[-1](state_zero)
@@ -61,8 +72,7 @@ class AugmentCNN(nn.Module):
             out = self.pixelup(s_cur)
             x_residual = self.pixelup(s_skip)
 
-            x = (out + x_residual) / 2
-
+            x = self.skip_cnn[i](out + x_residual)
         return self.cnn_out(x + first_state)
 
     def drop_path_prob(self, p):

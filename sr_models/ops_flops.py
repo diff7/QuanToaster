@@ -338,11 +338,11 @@ class DoubleConvResid(BaseConv):
                 groups,
                 bias=affine,
             ),
-            # nn.ReLU(),
+            nn.ReLU(),
         )
 
     def forward(self, x):
-        return F.relu(self.net(x))
+        return self.net(x)
 
 
 class DWS(BaseConv):
