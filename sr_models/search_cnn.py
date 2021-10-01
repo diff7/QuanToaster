@@ -38,7 +38,7 @@ class SearchCNN(nn.Module):
 
         for block in self.net:
             x = block(x, weight_alphas)
-        return self.cnn_out(x+first_state)
+        return x+first_state
 
     def fetch_weighted_flops_and_memory(self, weight_alpha):
         flop = 0
