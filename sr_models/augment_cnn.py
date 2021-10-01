@@ -22,7 +22,7 @@ class AugmentCNN(nn.Module):
         self.c_fixed = c_init * repeat_factor
         self.repeat_factor = repeat_factor
 
-        net = [gt.to_dag_sr(self.c_fixed, genotype.normal)]*blocks
+        net = [gt.to_dag_sr(self.c_fixed, genotype.normal)] * blocks
         self.dag = nn.Sequential(*net)
         self.dag_len = len(self.dag)
 
@@ -38,26 +38,21 @@ class AugmentCNN(nn.Module):
                 state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
                 self.assertion_in(state_zero.shape)
 
-<<<<<<< HEAD
-        s_cur = state_zero
-        states = []
-        for i, op in enumerate(self.dag[:-1]):
-            s_cur = op(s_cur)
-=======
             else:
-                state_zero = self.space_to_depth(x, int(self.repeat_factor ** (1 / 2)))
->>>>>>> 9b329519f012cb954e7ed9fb578dd5bca276448a
+                state_zero = self.space_to_depth(
+                    x, int(self.repeat_factor ** (1 / 2))
+                )
 
-            s_cur = state_zero    
+            s_cur = state_zero
             for i, op in enumerate(block[:-1]):
                 s_cur = op(s_cur)
-        
+
             s_skip = block[-1](state_zero)
             self.assertion_in(s_cur.shape)
             out = self.pixelup(s_cur)
             x_residual = self.pixelup(s_skip)
 
-            x = (out + x_residual)/2
+            x = (out + x_residual) / 2
 
         return x
 
@@ -73,4 +68,6 @@ class AugmentCNN(nn.Module):
         ), f"Input size {size_in}, does not match fixed channels {self.c_fixed}"
 
     def fetch_flops(self):
-        return sum(sum(op.fetch_info()[0] for op in block) for block in self.dag)
+        return sum(
+            sum(op.fetch_info()[0] for op in block) for block in self.dag
+        )
