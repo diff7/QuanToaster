@@ -339,7 +339,6 @@ class DoubleConvResid(BaseConv):
                 bias=affine,
             ),
             # nn.ReLU(),
-            nn.BatchNorm2d(C_out, affine=affine),
         )
 
     def forward(self, x):
