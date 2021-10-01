@@ -61,6 +61,7 @@ class SearchCNNController(nn.Module):
         n_nodes=4,
         device_ids=None,
         alpha_selector="softmax",
+        blocks=1
     ):
         super().__init__()
         self.n_nodes = n_nodes
@@ -86,7 +87,7 @@ class SearchCNNController(nn.Module):
             if "alpha" in n:
                 self._alphas.append((n, p))
 
-        self.net = SearchCNN(n_nodes, c_in, repeat_factor, 2)
+        self.net = SearchCNN(n_nodes, c_in, repeat_factor, blocks)
 
     def forward(self, x, temperature=1, stable=False):
 
