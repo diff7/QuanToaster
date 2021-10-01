@@ -58,6 +58,12 @@ OPS = {
     "decenc_3x3_4": lambda C, stride, affine: DecEnc(
         C, C, 3, stride, 1, groups=1, reduce=4, affine=affine
     ),
+    "decenc_3x3_2": lambda C, stride, affine: DecEnc(
+        C, C, 3, stride, 1, groups=1, reduce=2, affine=affine
+    ),
+    "decenc_5x5_2": lambda C, stride, affine: DecEnc(
+        C, C, 5, stride, 2, groups=1, reduce=2, affine=affine
+    ),
     "decenc_5x5_4": lambda C, stride, affine: DecEnc(
         C, C, 5, stride, 2, groups=1, reduce=4, affine=affine
     ),

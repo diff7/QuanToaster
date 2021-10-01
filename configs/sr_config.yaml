@@ -1,6 +1,6 @@
 dataset:
-  data_processed_hr: '/home/dev/data_main/DIV2K/processed_50_espcn/HR'
-  data_processed_lr: '/home/dev/data_main/DIV2K/processed_50_espcn/LR'
+  data_processed_hr: '/home/dev/data_main/DIV2K/processed_50_new/HR'
+  data_processed_lr: '/home/dev/data_main/DIV2K/processed_50_new/LR'
   val_folder: '/valid/'
   train_folder: '/train/'
   scale: 4
@@ -58,7 +58,7 @@ search:
 train:
   run_name: 'MANUAL SET'
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
-  gpu: 2
+  gpu: 3
   lr_scheduler: linear
   use_drop_prob: false
   drop_path_prob : 0.0
