@@ -125,7 +125,7 @@ def run_train(cfg):
             optimizer, cfg.epochs
         ),
         "linear": torch.optim.lr_scheduler.StepLR(
-            optimizer, step_size=3, gamma=0.7
+            optimizer, step_size=6, gamma=0.7
         ),
     }
 
