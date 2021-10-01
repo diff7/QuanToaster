@@ -43,9 +43,13 @@ class AugmentCNN(nn.Module):
     def forward(self, x):
         for i, block in enumerate(self.dag):
             if i == 0:
-                state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
-                self.assertion_in(state_zero.shape)
-                first_state = self.pixelup(state_zero)
+                # state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
+                # self.assertion_in(state_zero.shape)
+                # first_state = self.pixelup(state_zero)
+
+                state_zero = self.space_to_depth(
+                    x, int(self.repeat_factor ** (1 / 2))
+                )
 
             else:
                 state_zero = self.space_to_depth(
