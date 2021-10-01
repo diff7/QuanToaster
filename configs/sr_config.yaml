@@ -23,11 +23,11 @@ search:
   l1_lambda: 1
   use_soft_edge: false
   alpha_selector: softmax #softmax #softmax #softmax #gumbel2k #softmax 
-  warm_up: 10
+  warm_up: 0
 
   channels: 3
   repeat_factor: 16
-  n_nodes: 3
+  n_nodes: 5
   lr_scheduler: cosine
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
   im_dir: 'arch_images'
@@ -37,7 +37,7 @@ search:
   w_weight_decay: 3e-6 # weight decay for weights
   w_grad_clip: 5 # gradient clipping for weights
   print_freq: 60 # print frequency
-  epochs: 1 # n of training epochs
+  epochs: 15 # n of training epochs
   temperature_start: 1e1
   temp_red: 0.6
   layers: 4 # of layers 8 is default
@@ -66,10 +66,11 @@ train:
   batch_size : 32 # batch size
   lr : 1e-3 # lr for weights
   momentum : 0.9 # momentum
-  weight_decay : 0.00005 # weight decay
+  weight_d
+ecay : 0.00005 # weight decay
   grad_clip : 5 # gradient clipping for weights
   print_freq : 200 # print frequency
-  epochs : 1 # # of training epochs
-  seed : 7 # random seed
+  epochs : 35 # # of training epochs
+  seed : 777 # random seed
   workers : 8 # of workers
-  genotype_path:  /home/dev/data_main/LOGS/SR_DARTS/5nodes_x_3blocks_gumbel/trail_1/SEARCH_batch experiment_penalty_0_trail_1-2021-09-30-22/best_arch.gen 
+  genotype_path:  /home/dev/data_main/LOGS/SR_DARTS/5nodes_x_3blocks_gumbel/trail_1/SEARCH_batch experiment_penalty_0_trail_1-2021-09-30-22/best_arch.gen
