@@ -19,7 +19,7 @@ class SearchCNN(nn.Module):
         self.repeat_factor = repeat_factor
         self.net = nn.ModuleList()
         self.cnn_out = nn.Sequential(
-            nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=True), nn.ReLU()
+            nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=True)
         )
 
         self.pixelup = nn.Sequential(
@@ -38,7 +38,7 @@ class SearchCNN(nn.Module):
 
         for block in self.net:
             x = block(x, weight_alphas)
-        return x+first_state
+        return self.cnn_out(x+first_state)
 
     def fetch_weighted_flops_and_memory(self, weight_alpha):
         flop = 0
