@@ -51,7 +51,7 @@ class SearchCNN(nn.Module):
 
 
 class SearchCNNController(nn.Module):
-    """SearchCNN controller supporting multi-gpu"""
+    """SearchCNN controller"""
 
     def __init__(
         self,
@@ -87,7 +87,7 @@ class SearchCNNController(nn.Module):
             if "alpha" in n:
                 self._alphas.append((n, p))
 
-        self.net = SearchCNN(n_nodes, c_in, repeat_factor, blocks)
+        self.net = SearchArch(n_nodes, c_in, repeat_factor, first= True) #SearchCNN(n_nodes, c_in, repeat_factor, blocks)
 
     def forward(self, x, temperature=1, stable=False):
 
