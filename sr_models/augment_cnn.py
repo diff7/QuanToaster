@@ -27,7 +27,7 @@ class AugmentCNN(nn.Module):
         self.dag_len = len(self.dag)
 
         self.pixelup = nn.Sequential(
-            nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.PReLU()
+            nn.PixelShuffle(int(repeat_factor ** (1 / 2)))
         )
         self.space_to_depth = torch.nn.functional.pixel_unshuffle
         self.cnn_out = nn.Sequential(
@@ -64,9 +64,9 @@ class AugmentCNN(nn.Module):
             self.assertion_in(s_cur.shape)
 
             out = self.pixelup(s_cur)
-            x_residual = self.pixelup(s_skip)
+            res = self.pixelup(s_skip)
 
-            x = (out + x_residual)/2
+            x = (out + res)/2
         return self.cnn_out(x + first_state)
 
     def drop_path_prob(self, p):

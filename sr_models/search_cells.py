@@ -45,7 +45,7 @@ class SearchArch(nn.Module):
         for _ in range(self.n_nodes):
             self.dag.append(ops.MixedOp(self.c_fixed, 1))
 
-        self.pixelup = nn.Sequential(  # 4
+        self.pixelup = nn.Sequential(  
             nn.PixelShuffle(int(repeat_factor ** (1 / 2)))
         )
 
@@ -75,9 +75,9 @@ class SearchArch(nn.Module):
         self.assertion_in(s_cur.shape)
 
         out = self.pixelup(s_cur)
-        x_residual = self.pixelup(s_skip)
+        res = self.pixelup(s_skip)
 
-        return (out + x_residual)/2
+        return (out + res)/2
 
     def fetch_weighted_flops_and_memory(self, w_dag):
         total_flops = 0
