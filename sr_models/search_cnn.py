@@ -19,11 +19,11 @@ class SearchCNN(nn.Module):
         self.repeat_factor = repeat_factor
         self.net = nn.ModuleList()
         self.cnn_out = nn.Sequential(
-            nn.Conv2d(48, 48, kernel_size=3, padding=1, bias=True), nn.ReLU()
+            nn.Conv2d(48, 48, kernel_size=3, padding=1, bias=True)
         )
 
         self.pixelup = nn.Sequential(
-            nn.PixelShuffle(int(repeat_factor ** (1 / 2)))
+            nn.PixelShuffle(int(repeat_factor ** (1 / 2)),nn.ReLU())
         )
 
         for i in range(num_blocks):
