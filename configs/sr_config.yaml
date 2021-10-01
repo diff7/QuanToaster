@@ -8,7 +8,7 @@ dataset:
   workers: 10
   train_portion: 0.5
   batch_size: 32
-  crop_size: 60
+  crop_size: 32
   files_list: '/home/dev/data_main/SR/train_sets_txt/short'
   debug_mode: false # run on a small porion of data
   
