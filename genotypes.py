@@ -28,12 +28,12 @@ PRIMITIVES = [
 
 PRIMITIVES_SR = [
     # "skip_connect",  # identity
-    "conv_5x1_1x5",
-    "conv_3x1_1x3",
-    "simple_3x3",
-    "simple_1x1",
+    # "conv_5x1_1x5",
+    # "conv_3x1_1x3",
+    #"simple_3x3",
+    #"simple_1x1",
     "simple_5x5",
-    "simple_1x1_grouped_full",
+    #"simple_1x1_grouped_full",
     # "simple_3x3_grouped_full",
     # "simple_5x5_grouped_full",
 
