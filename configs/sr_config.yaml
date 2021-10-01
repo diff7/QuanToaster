@@ -23,7 +23,7 @@ search:
   l1_lambda: 1
   use_soft_edge: false
   alpha_selector: softmax #softmax #softmax #softmax #gumbel2k #softmax 
-  warm_up: 0
+  warm_up: 10
 
   channels: 3
   repeat_factor: 16
