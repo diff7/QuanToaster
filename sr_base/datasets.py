@@ -5,6 +5,13 @@ import torchvision.transforms as transforms
 from PIL import Image
 
 
+from imgproc import center_crop
+from imgproc import image2tensor
+from imgproc import random_crop
+from imgproc import random_horizontally_flip
+from imgproc import random_rotate
+
+
 def check_image_file(filename):
     r"""Filter non image files in directory.
     Args:
@@ -186,3 +193,75 @@ class CropDataset(torch.utils.data.dataset.Dataset):
 
     def __len__(self):
         return len(self.input_filenames)
+
+
+class AugmentLoader(torch.utils.data.dataset.Dataset):
+    """Customize the data set loading function and prepare low/high resolution image data in advance.
+    Args:
+        dataroot         (str): Training data set address.
+        image_size       (int): High resolution image size.
+        upscale_factor   (int): Magnification.
+        mode             (str): Data set loading method, the training data set is for data enhancement,
+                                and the verification data set is not for data enhancement.
+    """
+
+    def __init__(self, cfg, train=True) -> None:
+        # Get the index of all images in the high-resolution folder and low-resolution folder
+        # under the data set address.
+        # Note: The high and low resolution file index should be corresponding.
+        super(AugmentLoader, self).__init__()
+
+        if train:
+            folder_type = "train/"
+        elif train == False:
+            folder_type = "valid/"
+        else:
+            folder_type = ""
+
+        self.mode = train
+
+        folder_path_hr = os.path.join(cfg.data_processed_hr, folder_type)
+        folder_path_lr = os.path.join(cfg.data_processed_lr, folder_type)
+
+        lr_files = os.listdir(folder_path_lr)
+        hr_files = os.listdir(folder_path_hr)
+
+        self.input_filenames = [
+            os.path.join(folder_path_lr, x)
+            for x in lr_files
+            if check_image_file(x)
+        ]
+        self.target_filenames = [
+            os.path.join(folder_path_hr, x)
+            for x in hr_files
+            if check_image_file(x)
+        ]
+
+        self.image_size = cfg.crop_size  # HR image size.
+        self.upscale_factor = cfg.scale
+
+    def __getitem__(self, index):
+        lr = Image.open(self.input_filenames[index])
+        hr = Image.open(self.target_filenames[index])
+
+        # Data enhancement methods.
+        if self.mode == "train":
+            lr, hr = random_crop(lr, hr, self.image_size, self.upscale_factor)
+            lr, hr = random_rotate(lr, hr, 90)
+            lr, hr = random_horizontally_flip(lr, hr, 0.5)
+        else:
+            lr, hr = center_crop(lr, hr, self.image_size, self.upscale_factor)
+
+        # `PIL.Image` image data is converted to `Tensor` format data.
+        lr = image2tensor(lr)
+        hr = image2tensor(hr)
+
+        return (
+            lr,
+            hr,
+            self.input_filenames[index],
+            self.target_filenames[index],
+        )
+
+    def __len__(self) -> int:
+        return len(self.filenames)
