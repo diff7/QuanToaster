@@ -36,6 +36,11 @@ class SearchArch(nn.Module):
         self.c_init = c_init
         self.first = first
 
+        self.skip_cnn = nn.Sequential(
+            nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=False),
+            nn.ReLU(),
+        )
+
         # Used for soft edge experiments to stabilize training after warm up
         assert is_square(repeat_factor), "Repeat factor should be a square of N"
 
@@ -45,7 +50,7 @@ class SearchArch(nn.Module):
         for _ in range(self.n_nodes):
             self.dag.append(ops.MixedOp(self.c_fixed, 1))
 
-        self.pixelup = nn.Sequential(  
+        self.pixelup = nn.Sequential(  # 4
             nn.PixelShuffle(int(repeat_factor ** (1 / 2)))
         )
 
@@ -75,9 +80,9 @@ class SearchArch(nn.Module):
         self.assertion_in(s_cur.shape)
 
         out = self.pixelup(s_cur)
-        res = self.pixelup(s_skip)
+        x_residual = self.pixelup(s_skip)
 
-        return (out + res)/2
+        return self.skip_cnn(out + x_residual)
 
     def fetch_weighted_flops_and_memory(self, w_dag):
         total_flops = 0

@@ -11,7 +11,6 @@ import logging
 
 from models.gumbel_top2 import gumbel_top2k
 
-from sr_models.test_arch import ManualCNN, ESPCN
 
 class SearchCNN(nn.Module):
     def __init__(self, n_nodes, c_in, repeat_factor, num_blocks):
@@ -20,29 +19,26 @@ class SearchCNN(nn.Module):
         self.repeat_factor = repeat_factor
         self.net = nn.ModuleList()
         self.cnn_out = nn.Sequential(
-            nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=True), nn.ReLU()
+            nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=False), nn.ReLU()
         )
 
         self.pixelup = nn.Sequential(
             nn.PixelShuffle(int(repeat_factor ** (1 / 2)))
         )
 
-        self.net  = nn.ModuleList()
         for i in range(num_blocks):
             self.net.append(
                 SearchArch(n_nodes, c_in, repeat_factor, first=i == 0)
             )
-        self.espcn = ESPCN(4)
 
     def forward(self, x, weight_alphas):
 
         state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
         first_state = self.pixelup(state_zero)
 
-        # for block in self.net:
-        #     x = block(x, weight_alphas)
-
-        return self.espcn(x)
+        for block in self.net:
+            x = block(x, weight_alphas)
+        return self.cnn_out(x + first_state)
 
     def fetch_weighted_flops_and_memory(self, weight_alpha):
         flop = 0
@@ -65,7 +61,6 @@ class SearchCNNController(nn.Module):
         n_nodes=4,
         device_ids=None,
         alpha_selector="softmax",
-        blocks=1
     ):
         super().__init__()
         self.n_nodes = n_nodes
@@ -91,7 +86,7 @@ class SearchCNNController(nn.Module):
             if "alpha" in n:
                 self._alphas.append((n, p))
 
-        self.net = SearchCNN(n_nodes, c_in, repeat_factor, blocks)
+        self.net = SearchCNN(n_nodes, c_in, repeat_factor, 2)
 
     def forward(self, x, temperature=1, stable=False):
 
