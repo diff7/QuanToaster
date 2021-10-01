@@ -41,13 +41,13 @@ OPS = {
     
 
      "simple_1x1_grouped_4": lambda C, stride, affine: SimpleConv(
-        C, C, 1, stride, 0, groups=4, affine=affine
+        C, C, 1, stride, 0, groups=3, affine=affine
     ),
     "simple_3x3_grouped_4": lambda C, stride, affine: SimpleConv(
-        C, C, 3, stride, 1, groups=4, affine=affine
+        C, C, 3, stride, 1, groups=3, affine=affine
     ),
     "simple_5x5_grouped_4": lambda C, stride, affine: SimpleConv(
-        C, C, 5, stride, 2, groups=4, affine=affine
+        C, C, 5, stride, 2, groups=3, affine=affine
     ),
    
 
@@ -79,22 +79,22 @@ OPS = {
     ),
 
     "decenc_3x3_4_g4": lambda C, stride, affine: DecEnc(
-        C, C, 3, stride, 1, groups=4, reduce=4, affine=affine
+        C, C, 3, stride, 1, groups=3, reduce=4, affine=affine
     ),
     "decenc_3x3_2_g4": lambda C, stride, affine: DecEnc(
-        C, C, 3, stride, 1, groups=4, reduce=2, affine=affine
+        C, C, 3, stride, 1, groups=3, reduce=2, affine=affine
     ),
     "decenc_5x5_2_g4": lambda C, stride, affine: DecEnc(
-        C, C, 5, stride, 2, groups=4, reduce=2, affine=affine
+        C, C, 5, stride, 2, groups=3, reduce=2, affine=affine
     ),
     "decenc_5x5_4_g4": lambda C, stride, affine: DecEnc(
-        C, C, 5, stride, 2, groups=4, reduce=4, affine=affine
+        C, C, 5, stride, 2, groups=3, reduce=4, affine=affine
     ),
     "decenc_3x3_8_g4": lambda C, stride, affine: DecEnc(
-        C, C, 3, stride, 1, groups=4, reduce=8, affine=affine
+        C, C, 3, stride, 1, groups=3, reduce=8, affine=affine
     ),
     "decenc_5x5_8_g4": lambda C, stride, affine: DecEnc(
-        C, C, 5, stride, 2, groups=4, reduce=8, affine=affine
+        C, C, 5, stride, 2, groups=3, reduce=8, affine=affine
     ),
     
 

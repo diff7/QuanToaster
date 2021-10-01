@@ -38,9 +38,9 @@ PRIMITIVES_SR = [
     "simple_5x5_grouped_full",
     "simple_1x1_grouped_full",
 
-    "simple_1x1_grouped_4",
-    "simple_3x3_grouped_4",
-    "simple_5x5_grouped_4",
+    "simple_1x1_grouped_3",
+    "simple_3x3_grouped_3",
+    "simple_5x5_grouped_3",
     
     "DWS_3x3",
     "DWS_5x5",
@@ -52,11 +52,11 @@ PRIMITIVES_SR = [
     "decenc_5x5_8",
     "decenc_3x3_8",
 
-    "decenc_3x3_4_g4",
-    "decenc_3x3_2_g4",
-    "decenc_5x5_2_g4",
-    "decenc_5x5_8_g4",
-    "decenc_3x3_8_g4",
+    "decenc_3x3_4_g3",
+    "decenc_3x3_2_g3",
+    "decenc_5x5_2_g3",
+    "decenc_5x5_8_g3",
+    "decenc_3x3_8_g3",
 
     # "growth4_3x3",
     # "bs_up_bicubic_residual",
