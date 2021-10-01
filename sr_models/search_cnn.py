@@ -16,6 +16,7 @@ class SearchCNN(nn.Module):
     def __init__(self, n_nodes, c_in, repeat_factor, num_blocks):
         super().__init__()
 
+        self.repeat_factor = repeat_factor
         self.net = nn.ModuleList()
         self.cnn_out = nn.Sequential(
             nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=False), nn.ReLU()
