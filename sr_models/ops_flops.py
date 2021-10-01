@@ -483,7 +483,7 @@ class MixedOp(nn.Module):
             if first and primitive == "zero":
                 continue
             # print(primitive, "channels:", C)
-            func = OPS[primitive](C, stride, affine=False)
+            func = OPS[primitive](C, stride, affine=True)
             self._ops.append(AssertWrapper(func, channels=C))
 
     def forward(self, x, weights):
@@ -496,16 +496,6 @@ class MixedOp(nn.Module):
         return sum(w * op(x) for w, op in zip(weights, self._ops))
 
     def fetch_weighted_flops(self, weights):
-        # s = 0.0
-        # for w, op in zip(weights, self._ops):
-
-        #     si = w * op.fetch_info()[0]
-        #     print(op.func_name, "W", w.item(), f"FLOPS {si:.2e}")
-        #     if "Dil" in op.func_name:
-        #         print(op.func_name, "W", w.item(), f"FLOPS {si:.2e}")
-        #         print()
-        #     s += si
-        # return s
         return sum(w * op.fetch_info()[0] for w, op in zip(weights, self._ops))
 
     def fetch_weighted_memory(self, weights):
