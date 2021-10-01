@@ -23,7 +23,7 @@ class SearchCNN(nn.Module):
         )
 
         self.pixelup = nn.Sequential(
-            nn.PixelShuffle(int(repeat_factor ** (1 / 2))),nn.ReLU()
+            nn.PixelShuffle(int(repeat_factor ** (1 / 2)))
         )
 
         for i in range(num_blocks):
@@ -38,7 +38,7 @@ class SearchCNN(nn.Module):
 
         # for block in self.net:
         #     x = block(x, weight_alphas)
-        return self.pixelup(self.cnn_out(state_zero))+first_state
+        return F.relu(self.pixelup(self.cnn_out(state_zero)))+first_state
 
     def fetch_weighted_flops_and_memory(self, weight_alpha):
         flop = 0
