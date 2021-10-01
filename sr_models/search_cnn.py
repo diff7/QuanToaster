@@ -36,9 +36,9 @@ class SearchCNN(nn.Module):
         state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
         first_state = self.pixelup(state_zero)
 
-        for block in self.net:
-            x = block(x, weight_alphas)
-        return self.cnn_out(x+first_state)
+        # for block in self.net:
+        #     x = block(x, weight_alphas)
+        return self.cnn_out(x)
 
     def fetch_weighted_flops_and_memory(self, weight_alpha):
         flop = 0
@@ -51,7 +51,7 @@ class SearchCNN(nn.Module):
 
 
 class SearchCNNController(nn.Module):
-    """SearchCNN controller"""
+    """SearchCNN controller supporting multi-gpu"""
 
     def __init__(
         self,
@@ -87,7 +87,7 @@ class SearchCNNController(nn.Module):
             if "alpha" in n:
                 self._alphas.append((n, p))
 
-        self.net = SearchArch(n_nodes, c_in, repeat_factor, first= True) #SearchCNN(n_nodes, c_in, repeat_factor, blocks)
+        self.net = SearchCNN(n_nodes, c_in, repeat_factor, blocks)
 
     def forward(self, x, temperature=1, stable=False):
 
