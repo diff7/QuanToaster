@@ -119,6 +119,6 @@ if __name__ == "__main__":
     logger = utils.get_logger(save_dir + "/validation_log.txt")
     logger.info(genotype)
     model = get_model(
-        weights_path, device, genotype, channels=3, repeat_factor=16, blocks = 2
+        weights_path, device, genotype, channels=3, repeat_factor=16, blocks = 4
     )
     dataset_loop(valid_cfg, model, logger, save_dir, device)
