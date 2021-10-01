@@ -36,6 +36,11 @@ class SearchArch(nn.Module):
         self.c_init = c_init
         self.first = first
 
+        self.skip_cnn = nn.Sequential(
+            nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=False),
+            nn.ReLU(),
+        )
+
         # Used for soft edge experiments to stabilize training after warm up
         assert is_square(repeat_factor), "Repeat factor should be a square of N"
 
@@ -46,7 +51,7 @@ class SearchArch(nn.Module):
             self.dag.append(ops.MixedOp(self.c_fixed, 1))
 
         self.pixelup = nn.Sequential(  # 4
-            nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.PReLU()
+            nn.PixelShuffle(int(repeat_factor ** (1 / 2)))
         )
 
         self.space_to_depth = torch.nn.functional.pixel_unshuffle
@@ -61,8 +66,8 @@ class SearchArch(nn.Module):
             state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
         else:
             state_zero = self.space_to_depth(
-            x, int(self.repeat_factor ** (1 / 2))
-        )
+                x, int(self.repeat_factor ** (1 / 2))
+            )
 
         self.assertion_in(state_zero.shape)
         s_cur = state_zero
@@ -77,7 +82,7 @@ class SearchArch(nn.Module):
         out = self.pixelup(s_cur)
         x_residual = self.pixelup(s_skip)
 
-        return (out + x_residual)/2
+        return self.skip_cnn(out + x_residual)
 
     def fetch_weighted_flops_and_memory(self, w_dag):
         total_flops = 0

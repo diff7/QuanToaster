@@ -27,7 +27,7 @@ class AugmentCNN(nn.Module):
         self.dag_len = len(self.dag)
 
         self.pixelup = nn.Sequential(
-            nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.PReLU()
+            nn.PixelShuffle(int(repeat_factor ** (1 / 2)))
         )
         self.space_to_depth = torch.nn.functional.pixel_unshuffle
         self.cnn_out = nn.Sequential(
@@ -43,13 +43,6 @@ class AugmentCNN(nn.Module):
                     nn.ReLU(),
                 )
             )
-
-        # self.cnn_repeat = nn.Sequential(
-        #     nn.Conv2d(
-        #         c_init, self.c_fixed, kernel_size=3, padding=1, bias=False
-        #     ),
-        #     nn.ReLU(),
-        # )
 
     def forward(self, x):
         for i, block in enumerate(self.dag):
