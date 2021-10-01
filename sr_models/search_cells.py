@@ -46,7 +46,7 @@ class SearchArch(nn.Module):
             self.dag.append(ops.MixedOp(self.c_fixed, 1))
 
         self.pixelup = nn.Sequential(  
-            nn.PixelShuffle(int(repeat_factor ** (1 / 2))),nn.ReLU()
+            nn.PixelShuffle(int(repeat_factor ** (1 / 2)))
         )
 
         self.space_to_depth = torch.nn.functional.pixel_unshuffle
