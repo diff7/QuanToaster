@@ -66,8 +66,7 @@ train:
   batch_size : 32 # batch size
   lr : 1e-3 # lr for weights
   momentum : 0.9 # momentum
-  weight_d
-ecay : 0.00005 # weight decay
+  weight_decay : 0.00005 # weight decay
   grad_clip : 5 # gradient clipping for weights
   print_freq : 200 # print frequency
   epochs : 35 # # of training epochs
