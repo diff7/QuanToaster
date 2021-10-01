@@ -29,7 +29,7 @@ OPS = {
     "simple_5x5": lambda C, stride, affine: SimpleConv(
         C, C, 5, stride, 2, affine=affine
     ),
-    "simple_1x1_grouped": lambda C, stride, affine: SimpleConv(
+    "simple_1x1_grouped_full": lambda C, stride, affine: SimpleConv(
         C, C, 1, stride, 0, groups=C, affine=affine
     ),
     "simple_3x3_grouped_full": lambda C, stride, affine: SimpleConv(
@@ -38,15 +38,19 @@ OPS = {
     "simple_5x5_grouped_full": lambda C, stride, affine: SimpleConv(
         C, C, 5, stride, 2, groups=C, affine=affine
     ),
-    "simple_1x1_grouped_full": lambda C, stride, affine: SimpleConv(
-        C, C, 1, stride, 0, groups=3, affine=affine
+    
+
+     "simple_1x1_grouped_4": lambda C, stride, affine: SimpleConv(
+        C, C, 1, stride, 0, groups=4, affine=affine
     ),
-    "double_conv_resid_5x5": lambda C, stride, affine: DoubleConvResid(
-        C, C, 5, stride, 2, affine=affine
+    "simple_3x3_grouped_4": lambda C, stride, affine: SimpleConv(
+        C, C, 3, stride, 1, groups=4, affine=affine
     ),
-    "double_conv_resid_3x3": lambda C, stride, affine: DoubleConvResid(
-        C, C, 3, stride, 1, affine=affine
+    "simple_5x5_grouped_4": lambda C, stride, affine: SimpleConv(
+        C, C, 5, stride, 2, groups=4, affine=affine
     ),
+   
+
     "DWS_3x3": lambda C, stride, affine: DWS(C, C, 3, stride, 1, affine=affine),
     "DWS_5x5": lambda C, stride, affine: DWS(C, C, 5, stride, 2, affine=affine),
     "growth2_3x3": lambda C, stride, affine: GrowthConv(
@@ -73,9 +77,27 @@ OPS = {
     "decenc_5x5_8": lambda C, stride, affine: DecEnc(
         C, C, 5, stride, 2, groups=1, reduce=8, affine=affine
     ),
-    "growth4_3x3": lambda C, stride, affine: GrowthConv(
-        C, C, 3, stride, 1, groups=1, affine=affine, growth=4
+
+    "decenc_3x3_4_g4": lambda C, stride, affine: DecEnc(
+        C, C, 3, stride, 1, groups=4, reduce=4, affine=affine
     ),
+    "decenc_3x3_2_g4": lambda C, stride, affine: DecEnc(
+        C, C, 3, stride, 1, groups=4, reduce=2, affine=affine
+    ),
+    "decenc_5x5_2_g4": lambda C, stride, affine: DecEnc(
+        C, C, 5, stride, 2, groups=4, reduce=2, affine=affine
+    ),
+    "decenc_5x5_4_g4": lambda C, stride, affine: DecEnc(
+        C, C, 5, stride, 2, groups=4, reduce=4, affine=affine
+    ),
+    "decenc_3x3_8_g4": lambda C, stride, affine: DecEnc(
+        C, C, 3, stride, 1, groups=4, reduce=8, affine=affine
+    ),
+    "decenc_5x5_8_g4": lambda C, stride, affine: DecEnc(
+        C, C, 5, stride, 2, groups=4, reduce=8, affine=affine
+    ),
+    
+
     "bs_up_bicubic_residual": lambda C, stride, affine: BSup(
         "bicubic",
         C,
@@ -305,52 +327,6 @@ class DecEnc(BaseConv):
         return self.net(x)
 
 
-class DoubleConvResid(BaseConv):
-    """Standard conv
-    ReLU - Conv - BN
-    """
-
-    def __init__(
-        self,
-        C_in,
-        C_out,
-        kernel_size,
-        stride,
-        padding,
-        dilation=1,
-        groups=1,
-        affine=True,
-    ):
-        super().__init__()
-        self.net = nn.Sequential(
-            self.conv_func(
-                C_in,
-                C_out,
-                kernel_size,
-                stride,
-                padding,
-                dilation,
-                groups,
-                bias=affine,
-            ),
-            nn.ReLU(),
-            self.conv_func(
-                C_in,
-                C_out,
-                kernel_size,
-                stride,
-                padding,
-                dilation,
-                groups,
-                bias=affine,
-            ),
-            #nn.ReLU(),
-        )
-
-    def forward(self, x):
-        return F.relu(self.net(x)+x)
-
-
 class DWS(BaseConv):
     def __init__(
         self, C_in, C_out, kernel_size, stride, padding, affine=True, growth=1
@@ -376,48 +352,6 @@ class DWS(BaseConv):
 
     def forward(self, x):
         return self.net(x)
-
-
-class SepConv(BaseConv):
-    def __init__(
-        self,
-        C_in,
-        C_out,
-        kernel_size,
-        stride,
-        padding,
-        dilation,
-        affine=True,
-    ):
-        super().__init__()
-        self.net = nn.Sequential(
-            self.conv_func(
-                C_in,
-                C_in,
-                kernel_size,
-                stride,
-                padding,
-                dilation=dilation,
-                groups=C_in,
-                bias=False,
-            ),
-            nn.PReLU(),
-            self.conv_func(
-                C_in,
-                C_out,
-                kernel_size,
-                stride,
-                padding,
-                dilation=dilation,
-                groups=C_in,
-                bias=False,
-            ),
-            nn.ReLU(),
-        )
-
-    def forward(self, x):
-        return self.net(x)
-
 
 class FacConv(BaseConv):
     """Factorized conv
