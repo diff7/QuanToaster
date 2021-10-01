@@ -103,7 +103,7 @@ def dataset_loop(valid_cfg, model, logger, save_dir, device):
 if __name__ == "__main__":
     CFG_PATH = "./sr_models/valsets4x.yaml"
     valid_cfg = omg.load(CFG_PATH)
-    run_name = "TEST"
+    run_name = "TEST_2"
     genotype_path = "/home/dev/data_main/LOGS/SR_DARTS/5nodes_x_3blocks_gumbel/trail_1/SEARCH_batch experiment_penalty_0_trail_1-2021-09-30-22/best_arch.gen"
     weights_path = "/home/dev/data_main/LOGS/SR_DARTS/5nodes_x_3blocks_gumbel/trail_1/SEARCH_batch experiment_penalty_0_trail_1-2021-09-30-22/best.pth.tar"
     log_dir = "/home/dev/data_main/LOGS/VAL_LOGS"
