@@ -54,7 +54,7 @@ class AugmentCNN(nn.Module):
 
             x = (out + x_residual) / 2
 
-        return x  # + first_state
+        return x + first_state
 
     def drop_path_prob(self, p):
         """Set drop path probability"""
