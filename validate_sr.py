@@ -108,7 +108,7 @@ if __name__ == "__main__":
     weights_path = "/home/dev/data_main/LOGS/SR_DARTS/5nodes_x_3blocks_gumbel/trail_1/SEARCH_batch experiment_penalty_0_trail_1-2021-09-30-22/best.pth.tar"
     log_dir = "/home/dev/data_main/LOGS/VAL_LOGS"
     save_dir = os.path.join(log_dir, run_name)
-    os.makedirs(save_dir)
+    os.makedirs(save_dir, exist_ok=True)
     channels = 3
     repeat_factor = 16
     device = 0
