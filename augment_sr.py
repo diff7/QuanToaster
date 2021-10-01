@@ -209,7 +209,7 @@ def train(
     model.train()
 
     for step, (X, y, _, _) in enumerate(train_loader):
-        print("SHAPES: ", X.shape, y.shape)
+        # print("SHAPES: ", X.shape, y.shape)
         X, y = X.to(device, non_blocking=True), y.to(device, non_blocking=True)
         N = X.size(0)
         optimizer.zero_grad()
