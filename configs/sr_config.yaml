@@ -1,6 +1,6 @@
 dataset:
-  data_processed_hr: '/home/dev/data_main/DIV2K/processed/HR'
-  data_processed_lr: '/home/dev/data_main/DIV2K/processed/LR'
+  data_processed_hr: '/home/dev/data_main/DIV2K/processed_128/HR'
+  data_processed_lr: '/home/dev/data_main/DIV2K/processed_128/LR'
   val_folder: '/valid/'
   train_folder: '/train/'
   scale: 4
