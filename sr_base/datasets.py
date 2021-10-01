@@ -264,4 +264,4 @@ class AugmentLoader(torch.utils.data.dataset.Dataset):
         )
 
     def __len__(self) -> int:
-        return len(self.filenames)
+        return len(self.input_filenames)
