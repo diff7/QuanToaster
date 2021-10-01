@@ -32,7 +32,7 @@ class SearchCNN(nn.Module):
             self.net.append(
                 SearchArch(n_nodes, c_in, repeat_factor, first=i == 0)
             )
-        self.net = ESPCN(4)
+        self.espcn = ESPCN(4)
 
     def forward(self, x, weight_alphas):
 
@@ -42,7 +42,7 @@ class SearchCNN(nn.Module):
         # for block in self.net:
         #     x = block(x, weight_alphas)
 
-        return self.net(x)
+        return self.espcn(x)
 
     def fetch_weighted_flops_and_memory(self, weight_alpha):
         flop = 0
