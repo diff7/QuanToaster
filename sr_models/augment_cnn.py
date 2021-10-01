@@ -30,9 +30,9 @@ class AugmentCNN(nn.Module):
             nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.PReLU()
         )
         self.space_to_depth = torch.nn.functional.pixel_unshuffle
-        # self.cnn_out = nn.Sequential(
-        #     nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=False)
-        # )
+        self.cnn_out = nn.Sequential(
+            nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=False)
+        )
         # self.cnn_repeat = nn.Sequential(
         #     nn.Conv2d(
         #         c_init, self.c_fixed, kernel_size=3, padding=1, bias=False
@@ -43,13 +43,9 @@ class AugmentCNN(nn.Module):
     def forward(self, x):
         for i, block in enumerate(self.dag):
             if i == 0:
-                # state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
-                # self.assertion_in(state_zero.shape)
-                # first_state = self.pixelup(state_zero)
-
-                state_zero = self.space_to_depth(
-                    x, int(self.repeat_factor ** (1 / 2))
-                )
+                state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
+                self.assertion_in(state_zero.shape)
+                first_state = self.pixelup(state_zero)
 
             else:
                 state_zero = self.space_to_depth(
