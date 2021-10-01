@@ -60,8 +60,8 @@ def run_train(cfg):
     # set default gpu device id
     device = cfg.gpu
     torch.cuda.set_device(device)
-    
-    #TODO fix here and passing params from search config too
+
+    # TODO fix here and passing params from search config too
     cfg_dataset.subset = None
     train_data = PatchDataset(cfg_dataset, train=True)
     val_data = PatchDataset(cfg_dataset, train=False)
@@ -103,14 +103,9 @@ def run_train(cfg):
     writer.add_text(tag="tune/arch/", text_string=str(genotype))
     print(genotype)
 
-    #model = ManualCNN(cfg.channels, cfg.repeat_factor)
+    # model = ManualCNN(cfg.channels, cfg.repeat_factor)
     # model = ESPCN(4)
-    model = AugmentCNN(
-        cfg.channels,
-        cfg.repeat_factor,
-        genotype,
-        cfg.blocks
-    )
+    model = AugmentCNN(cfg.channels, cfg.repeat_factor, genotype, cfg.blocks)
 
     model.to(device)
 
@@ -123,7 +118,7 @@ def run_train(cfg):
     )
 
     # weights optimizer
-    optimizer = torch.optim.Adam(model.parameters())
+    optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
 
     scheduler = {
         "cosine": torch.optim.lr_scheduler.CosineAnnealingLR(
