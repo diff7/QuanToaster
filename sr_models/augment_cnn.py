@@ -31,7 +31,7 @@ class AugmentCNN(nn.Module):
         )
         self.space_to_depth = torch.nn.functional.pixel_unshuffle
         self.cnn_out = nn.Sequential(
-            nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=False)
+            nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=False), nn.ReLU()
         )
 
         self.skip_cnn = nn.ModuleList()
@@ -62,6 +62,7 @@ class AugmentCNN(nn.Module):
 
             s_skip = block[-1](state_zero)
             self.assertion_in(s_cur.shape)
+
             out = self.pixelup(s_cur)
             x_residual = self.pixelup(s_skip)
 
