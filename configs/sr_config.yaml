@@ -26,7 +26,7 @@ search:
   warm_up: 0
 
   channels: 3
-  repeat_factor: 16
+  repeat_factor: 25
   n_nodes: 5
   lr_scheduler: cosine
   log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
