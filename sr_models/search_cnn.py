@@ -11,6 +11,7 @@ import logging
 
 from models.gumbel_top2 import gumbel_top2k
 
+from sr_models.test_arch import ManualCNN, ESPCN
 
 class SearchCNN(nn.Module):
     def __init__(self, n_nodes, c_in, repeat_factor, num_blocks):
@@ -19,26 +20,29 @@ class SearchCNN(nn.Module):
         self.repeat_factor = repeat_factor
         self.net = nn.ModuleList()
         self.cnn_out = nn.Sequential(
-            nn.Conv2d(48, 48, kernel_size=3, padding=1, bias=True),nn.ReLU(),  nn.Conv2d(48, 48, kernel_size=3, padding=1, bias=True), nn.ReLU(),  nn.Conv2d(48, 48, kernel_size=3, padding=1, bias=True), nn.ReLU()
+            nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=True), nn.ReLU()
         )
 
         self.pixelup = nn.Sequential(
             nn.PixelShuffle(int(repeat_factor ** (1 / 2)))
         )
 
+        self.net  = nn.ModuleList()
         for i in range(num_blocks):
             self.net.append(
                 SearchArch(n_nodes, c_in, repeat_factor, first=i == 0)
             )
+        self.net = ESPCN(4)
 
     def forward(self, x, weight_alphas):
 
         state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
         first_state = self.pixelup(state_zero)
 
-        # for block in self.net:
-        #     x = block(x, weight_alphas)
-        return self.pixelup(self.cnn_out(state_zero))
+        for block in self.net:
+            x = block(x, weight_alphas)
+
+        return self.net(x)
 
     def fetch_weighted_flops_and_memory(self, weight_alpha):
         flop = 0
