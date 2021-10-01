@@ -253,8 +253,8 @@ class AugmentLoader(torch.utils.data.dataset.Dataset):
             lr, hr = center_crop(lr, hr, self.image_size, self.upscale_factor)
 
         # `PIL.Image` image data is converted to `Tensor` format data.
-        lr = image2tensor(lr)
-        hr = image2tensor(hr)
+        lr = image2tensor(lr) / 255
+        hr = image2tensor(hr) / 255
 
         return (
             lr,
