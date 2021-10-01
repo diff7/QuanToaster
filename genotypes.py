@@ -42,8 +42,6 @@ PRIMITIVES_SR = [
     "simple_3x3_grouped_4",
     "simple_5x5_grouped_4",
     
-    "double_conv_resid_5x5",
-    "double_conv_resid_3x3",
     "DWS_3x3",
     "DWS_5x5",
     "growth2_5x5",
