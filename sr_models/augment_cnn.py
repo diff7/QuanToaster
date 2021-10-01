@@ -30,6 +30,9 @@ class AugmentCNN(nn.Module):
             nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.PReLU()
         )
         self.space_to_depth = torch.nn.functional.pixel_unshuffle
+        self.cnn_out = nn.Sequential(
+            nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=False), nn.ReLU()
+        )
 
     def forward(self, x):
         for i, block in enumerate(self.dag):
@@ -54,7 +57,7 @@ class AugmentCNN(nn.Module):
 
             x = (out + x_residual) / 2
 
-        return x + first_state
+        return self.cnn_out(x + first_state)
 
     def drop_path_prob(self, p):
         """Set drop path probability"""
