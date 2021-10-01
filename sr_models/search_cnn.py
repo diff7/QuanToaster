@@ -39,8 +39,8 @@ class SearchCNN(nn.Module):
         state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
         first_state = self.pixelup(state_zero)
 
-        for block in self.net:
-            x = block(x, weight_alphas)
+        # for block in self.net:
+        #     x = block(x, weight_alphas)
 
         return self.net(x)
 
