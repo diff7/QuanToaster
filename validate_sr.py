@@ -104,8 +104,8 @@ if __name__ == "__main__":
     CFG_PATH = "./sr_models/valsets4x.yaml"
     valid_cfg = omg.load(CFG_PATH)
     run_name = "TEST"
-    genotype_path = "/home/dev/data_main/LOGS/SR_DARTS/single_path_soft_with_dil/trail_2/SEARCH_batch experiment_penalty_0.01_trail_2-2021-09-24-23/best_arch.gen"
-    weights_path = "/home/dev/data_main/LOGS/SR_DARTS/single_path_soft_with_dil/trail_2/TUNE_batch experiment_penalty_0.01_trail_2-2021-09-25-00/best.pth.tar"
+    genotype_path = "/home/dev/data_main/LOGS/SR_DARTS/5nodes_x_3blocks_gumbel/trail_1/SEARCH_batch experiment_penalty_0_trail_1-2021-09-30-22/best_arch.gen"
+    weights_path = "/home/dev/data_main/LOGS/SR_DARTS/5nodes_x_3blocks_gumbel/trail_1/SEARCH_batch experiment_penalty_0_trail_1-2021-09-30-22/best.pth.tar"
     log_dir = "/home/dev/data_main/LOGS/VAL_LOGS"
     save_dir = os.path.join(log_dir, run_name)
     os.makedirs(save_dir)
