@@ -64,7 +64,7 @@ train:
   drop_path_prob : 0.0
   blocks: 3
   batch_size : 64 # batch size
-  lr : 1e-2 # lr for weights
+  lr : 1e-3 # lr for weights
   momentum : 0.9 # momentum
   weight_decay : 0.00005 # weight decay
   grad_clip : 5 # gradient clipping for weights
