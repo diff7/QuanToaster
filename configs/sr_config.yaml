@@ -63,7 +63,7 @@ train:
   use_drop_prob: false
   drop_path_prob : 0.0
   blocks: 3
-  batch_size : 64 # batch size
+  batch_size : 32 # batch size
   lr : 1e-3 # lr for weights
   momentum : 0.9 # momentum
   weight_decay : 0.00005 # weight decay
