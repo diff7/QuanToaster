@@ -23,8 +23,8 @@ class SearchCNN(nn.Module):
         )
 
         self.pixelup = nn.Sequential(
-            nn.PixelShuffle(int(repeat_factor ** (1 / 2)),nn.ReLU()
-        ))
+            nn.PixelShuffle(int(repeat_factor ** (1 / 2))),nn.ReLU()
+        )
 
         for i in range(num_blocks):
             self.net.append(
