@@ -62,6 +62,7 @@ train:
   lr_scheduler: linear
   use_drop_prob: false
   drop_path_prob : 0.0
+  blocks: 3
   batch_size : 64 # batch size
   lr : 1e-2 # lr for weights
   momentum : 0.9 # momentum
