@@ -31,18 +31,10 @@ class AugmentCNN(nn.Module):
         )
         self.space_to_depth = torch.nn.functional.pixel_unshuffle
         self.cnn_out = nn.Sequential(
-            nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=False), nn.ReLU()
+            nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=True), nn.ReLU()
         )
 
-        # self.skip_cnn = nn.ModuleList()
 
-        # for _ in range(blocks):
-        #     self.skip_cnn.append(
-        #         nn.Sequential(
-        #             nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=False),
-        #             nn.ReLU(),
-        #         )
-        #     )
 
     def forward(self, x):
         for i, block in enumerate(self.dag):
