@@ -7,10 +7,10 @@ from augment import run_train
 from utils import get_run_path
 from omegaconf import OmegaConf as omg
 import traceback
-
+ 
 """
 EXAMPLE: python batch_exp.py -k penalty -v 0.01 0.05 0.1 0.5 0.7 -d gumbel_plus -r 3 -g 3
-python batch_exp.py -k penalty -v 0.0 -d test_repr -r 1 -g 1
+python batch_exp.py -k penalty -v 0.0 -d original_darts -r 1 -g 0
 """
 parser = argparse.ArgumentParser()
 
@@ -101,7 +101,7 @@ def run_batch(cfg):
 
 
 if __name__ == "__main__":
-    CFG_PATH = "./configs/config.yaml"
+    CFG_PATH = "./configs/config_initial_reprod.yaml"
     cfg = omg.load(CFG_PATH)
     try:
         run_batch(cfg)

@@ -87,9 +87,6 @@ class Architect:
         with torch.no_grad():
             for alpha, da, h in zip(self.net.alphas(), dalpha, hessian):
                 alpha.grad = da - xi * h
-        with torch.no_grad():
-            for alpha, da in zip(self.net.alphas(), dalpha):
-                alpha.grad = da
 
     def compute_hessian(self, dw, trn_X, trn_y):
         """

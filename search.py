@@ -20,9 +20,8 @@ def train_setup(cfg):
     # INIT FOLDERS & cfg
 
     cfg = cfg.search
-    cfg.save = utils.get_run_path(cfg.log_dir, "SEARCH_" + cfg.run_name)
-
-    logger = utils.get_logger(cfg.save + "/log.txt")
+    cfg.save_path = utils.get_run_path(cfg.log_dir, "SEARCH_" + cfg.run_name)
+    logger = utils.get_logger(cfg.save_path + "/log.txt")
 
     # FIX SEED
     np.random.seed(cfg.seed)
@@ -32,14 +31,14 @@ def train_setup(cfg):
     torch.cuda.manual_seed_all(cfg.seed)
     torch.backends.cudnn.benchmark = True
 
-    writer = SummaryWriter(log_dir=os.path.join(cfg.save, "board"))
+    writer = SummaryWriter(log_dir=os.path.join(cfg.save_path, "board"))
 
     writer.add_hparams(
         hparam_dict={str(k): str(cfg[k]) for k in cfg},
         metric_dict={"search/train/loss": 0},
     )
 
-    with open(os.path.join(cfg.save, "config.txt"), "w") as f:
+    with open(os.path.join(cfg.save_path, "config.txt"), "w") as f:
         for k, v in cfg.items():
             f.write(f"{str(k)}:{str(v)}\n")
 
@@ -54,7 +53,7 @@ def run_search(cfg):
     device = cfg.gpu
     torch.cuda.set_device(device)
 
-    # set seed
+
     loaders, input_channels, n_classes = get_data_loaders(cfg)
     train_loader, train_loader_alpha, val_loader = loaders
     net_crit = nn.CrossEntropyLoss().to(device)
@@ -173,7 +172,7 @@ def run_search(cfg):
             best_top1 = top1_val
             best_flops = best_current_flops
             best_genotype = genotype
-            with open(os.path.join(cfg.save, "best_arch.gen"), "w") as f:
+            with open(os.path.join(cfg.save_path, "best_arch.gen"), "w") as f:
                 f.write(str(genotype))
 
             writer.add_scalar("search/best_val", best_top1, epoch)
@@ -191,7 +190,7 @@ def run_search(cfg):
                 best=True,
             )
 
-            utils.save_checkpoint(model, cfg.save, is_best)
+            utils.save_checkpoint(model, cfg.save_path, is_best)
             print("")
 
         writer.add_scalars(
@@ -210,7 +209,7 @@ def log_genotype(
     genotype, cfg, epoch, cur_step, writer, best_current_flops, best=False
 ):
     # genotype as a image
-    plot_path = os.path.join(cfg.save, cfg.im_dir, "EP{:02d}".format(epoch + 1))
+    plot_path = os.path.join(cfg.save_path, cfg.im_dir, "EP{:02d}".format(epoch + 1))
     caption = "Epoch {}   FLOPS {:.02E}".format(epoch + 1, best_current_flops)
 
     im_normal = plot(genotype.normal, plot_path + "-normal", caption)
@@ -284,6 +283,7 @@ def train(
                 architect.backward(
                     trn_X, trn_y, val_X, val_y, lr, w_optim, flops_loss
                 )
+                alpha_optim.step()
             else:
 
                 preds, (flops, mem) = model(val_X, temperature)
@@ -429,12 +429,12 @@ def get_data_loaders(cfg):
     train_sampler = torch.utils.data.sampler.SubsetRandomSampler(
         indices[:split]
     )
-    if cfg.debug_mode:
+    if cfg.debug_mode or True:
         train_sampler_alpha = torch.utils.data.sampler.SubsetRandomSampler(
-            indices[:split]
+            indices[split:]
         )
         valid_sampler_selection = torch.utils.data.sampler.SubsetRandomSampler(
-            indices[:split]
+            indices[split:]
         )
     else:
         train_sampler_alpha = torch.utils.data.sampler.SubsetRandomSampler(

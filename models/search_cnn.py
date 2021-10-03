@@ -17,7 +17,7 @@ class SearchCNN(nn.Module):
     """Search CNN model"""
 
     def __init__(
-        self, C_in, C, n_classes, n_layers, n_nodes=4, stem_multiplier=3
+        self, C_in, C, n_classes, n_layers, n_nodes=4, stem_multiplier=3,  use_soft_edge=False
     ):
         """
         Args:
@@ -61,12 +61,22 @@ class SearchCNN(nn.Module):
         self.gap = nn.AdaptiveAvgPool2d(1)
         self.linear = nn.Linear(C_p, n_classes)
 
-        self.edge_n = nn.ParameterList()
-        self.edge_r = nn.ParameterList()
+        
+#         print(list(self.named_parameters())[-8:])
 
-        for i in range(n_nodes):
-            self.edge_n.append(nn.Parameter(torch.ones(i + 2)))
-            self.edge_r.append(nn.Parameter(torch.ones(i + 2)))
+        if use_soft_edge:
+            self.edge_n = nn.ParameterList()
+            self.edge_r = nn.ParameterList()
+            for i in range(n_nodes):
+                self.edge_n.append(nn.Parameter(torch.ones(i + 2)))
+                self.edge_r.append(nn.Parameter(torch.ones(i + 2)))
+        else:
+            self.edge_n = []
+            self.edge_r = []
+            for i in range(n_nodes):
+                self.edge_n.append(torch.ones(i + 2))
+                self.edge_r.append(torch.ones(i + 2))
+            
 
     def forward(self, x, weights_normal, weights_reduce):
         s0 = s1 = self.stem(x)
@@ -117,7 +127,7 @@ class SearchCNNController(nn.Module):
         self.device_ids = device_ids
 
         # initialize architect parameters: alphas
-        self.n_ops = len(gt.PRIMITIVES_SR)
+        self.n_ops = len(gt.PRIMITIVES)
 
         self.alpha_normal = nn.ParameterList()
         self.alpha_reduce = nn.ParameterList()
@@ -132,12 +142,8 @@ class SearchCNNController(nn.Module):
         self.use_soft_edge = use_soft_edge
 
         for i in range(n_nodes):
-            self.alpha_normal.append(
-                nn.Parameter(torch.ones(i + 2, self.n_ops) / self.n_ops)
-            )
-            self.alpha_reduce.append(
-                nn.Parameter(torch.ones(i + 2, self.n_ops) / self.n_ops)
-            )
+            self.alpha_normal.append(nn.Parameter(1e-3*torch.randn(i+2, self.n_ops)))
+            self.alpha_reduce.append(nn.Parameter(1e-3*torch.randn(i+2, self.n_ops)))
 
         # setup alphas list
         self._alphas = []
@@ -146,7 +152,7 @@ class SearchCNNController(nn.Module):
                 self._alphas.append((n, p))
 
         self.net = SearchCNN(
-            C_in, C, n_classes, n_layers, n_nodes, stem_multiplier
+            C_in, C, n_classes, n_layers, n_nodes, stem_multiplier,  use_soft_edge
         )
 
     def forward(self, x, temperature=1, stable=False):
