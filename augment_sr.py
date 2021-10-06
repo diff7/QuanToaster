@@ -62,8 +62,8 @@ def run_train(cfg):
     torch.cuda.set_device(device)
 
     # TODO fix here and passing params from search config too
-    #cfg_dataset.subset = None
-    train_data = PatchDataset(cfg_dataset, train=True)
+    # cfg_dataset.subset = None
+    train_data = AugmentLoader(cfg_dataset, train=True)
     val_data = PatchDataset(cfg_dataset, train=False)
 
     if cfg_dataset.debug_mode:
@@ -104,8 +104,8 @@ def run_train(cfg):
     print(genotype)
 
     # model = ManualCNN(cfg.channels, cfg.repeat_factor)
-    # model = ESPCN(4)
-    model = AugmentCNN(cfg.channels, cfg.repeat_factor, genotype, cfg.blocks)
+    model = ESPCN(4)
+    # model = AugmentCNN(cfg.channels, cfg.repeat_factor, genotype, cfg.blocks)
 
     model.to(device)
 

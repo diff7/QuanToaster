@@ -503,45 +503,44 @@ class MixedOp(nn.Module):
 
 
 if __name__ == "__main__":
-    random_image = torch.randn(3, 48, 32, 32)
+    random_image = torch.randn(3, 48, 256, 256)
 
     C = 48
     # Keep stride 1 for all but GrowCo
     stride = 1
 
     PRIMITIVES_SR = [
-        "skip_connect",  # identity
-        "sep_conv_3x3",
-        "sep_conv_5x5",
-        "dil_conv_3x3",
-        "dil_conv_5x5",
-        "conv_7x1_1x7",
-        "conv_3x1_1x3",
-        "decenc_3x3",
-        "decenc_5x5",
-        "conv_3x1_1x3_growth2",
-        "conv_3x1_1x3_growth4",
-        "conv_7x1_1x7_growth2",
-        "conv_7x1_1x7_growth4",
-        "simple_5x5",
-        "simple_3x3",
-        "simple_1x1",
-        "simple_5x5_grouped_full",
-        "simple_3x3_grouped_full",
-        "simple_1x1_grouped_full",
-        "simple_5x5_grouped_3",
-        "simple_3x3_grouped_3",
-        "growth2_3x3",
-        "growth4_3x3",
-        "growth2_3x3_grouped_full",
-        "growth4_3x3_grouped_full",
-        # "bs_up_bicubic_residual",
-        # "bs_up_nearest_residual",
-        # "bs_up_bilinear_residual",
-        # "bs_up_bicubic",
-        # "bs_up_nearest",
-        # "bs_up_bilinear",
-        "none",
+      "skip_connect",  # identity
+      "conv_5x1_1x5",
+      "conv_3x1_1x3",
+    "simple_3x3",
+    "simple_1x1",
+    "simple_5x5",
+    "simple_1x1_grouped_full",
+    "simple_3x3_grouped_full",
+    "simple_5x5_grouped_full",
+
+    "simple_1x1_grouped_3",
+    "simple_3x3_grouped_3",
+    "simple_5x5_grouped_3",
+    
+    "DWS_3x3",
+    "DWS_5x5",
+    "growth2_5x5",
+    "growth2_3x3",
+    "decenc_3x3_4",
+    "decenc_3x3_2",
+    "decenc_5x5_2",
+    "decenc_5x5_8",
+    "decenc_3x3_8",
+
+    "decenc_3x3_4_g3",
+    "decenc_3x3_2_g3",
+    "decenc_5x5_2_g3",
+    "decenc_5x5_8_g3",
+    "decenc_3x3_8_g3",
+    #"growth4_3x3",
+       # "none",
     ]
 
     names = []

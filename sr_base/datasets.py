@@ -147,7 +147,7 @@ class CropDataset(torch.utils.data.dataset.Dataset):
             [transforms.ToTensor()]  # Note - to tensor divides by 255
         )
 
-    def crop_image(self, image):
+    def random_crop_image(self, image):
         width, height = image.size
         crop_size = self.crop_size * self.scale
         x_start = random.randint(0, width - crop_size)
@@ -177,9 +177,9 @@ class CropDataset(torch.utils.data.dataset.Dataset):
             Low resolution image, high resolution image.
         """
 
-        hr = Image.open(self.files_paths[index])
+        hr = Image.open(self.files_paths[index]).convert("RGB")
         if self.train == True:
-            hr = self.crop_image(hr)
+            hr = self.random_crop_image(hr)
 
         hr, lr = self.downscale(hr)
         hr_img = self.transforms(hr)
@@ -247,7 +247,7 @@ class AugmentLoader(torch.utils.data.dataset.Dataset):
         # Data enhancement methods.
         if self.mode == "train":
             lr, hr = random_crop(lr, hr, self.image_size, self.upscale_factor)
-            lr, hr = random_rotate(lr, hr, 90)
+            lr, hr = random_rotate(lr, hr, 30)
             lr, hr = random_horizontally_flip(lr, hr, 0.5)
         else:
             lr, hr = center_crop(lr, hr, self.image_size, self.upscale_factor)
