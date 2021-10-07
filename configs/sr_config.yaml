@@ -29,7 +29,7 @@ search:
   repeat_factor: 16
   n_nodes: 5
   lr_scheduler: cosine
-  log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
+  log_dir: /home/dev/data/logs
   im_dir: 'arch_images'
   w_lr: 1e-3 # lr for weights
   w_lr_min: 0.001 # minimum lr for weights
@@ -57,7 +57,7 @@ search:
   
 train:
   run_name: 'MANUAL SET'
-  log_dir: '/home/dev/data_main/LOGS/SR_DARTS/'
+  log_dir: /home/dev/data/logs
   gpu: 2
   lr_scheduler: linear
   use_drop_prob: false
