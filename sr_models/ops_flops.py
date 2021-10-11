@@ -23,6 +23,9 @@ OPS = {
     "simple_3x3": lambda C, stride, affine: SimpleConv(
         C, C, 3, stride, 1, affine=affine
     ),
+    "simple_9x9": lambda C, stride, affine: SimpleConv(
+        C, C, 9, stride, 4, affine=affine
+    ),
     "simple_1x1": lambda C, stride, affine: SimpleConv(
         C, C, 1, stride, 0, affine=affine
     ),
@@ -38,9 +41,7 @@ OPS = {
     "simple_5x5_grouped_full": lambda C, stride, affine: SimpleConv(
         C, C, 5, stride, 2, groups=C, affine=affine
     ),
-    
-
-     "simple_1x1_grouped_3": lambda C, stride, affine: SimpleConv(
+    "simple_1x1_grouped_3": lambda C, stride, affine: SimpleConv(
         C, C, 1, stride, 0, groups=3, affine=affine
     ),
     "simple_3x3_grouped_3": lambda C, stride, affine: SimpleConv(
@@ -49,8 +50,6 @@ OPS = {
     "simple_5x5_grouped_3": lambda C, stride, affine: SimpleConv(
         C, C, 5, stride, 2, groups=3, affine=affine
     ),
-   
-
     "DWS_3x3": lambda C, stride, affine: DWS(C, C, 3, stride, 1, affine=affine),
     "DWS_5x5": lambda C, stride, affine: DWS(C, C, 5, stride, 2, affine=affine),
     "growth2_3x3": lambda C, stride, affine: GrowthConv(
@@ -77,7 +76,6 @@ OPS = {
     "decenc_5x5_8": lambda C, stride, affine: DecEnc(
         C, C, 5, stride, 2, groups=1, reduce=8, affine=affine
     ),
-
     "decenc_3x3_4_g3": lambda C, stride, affine: DecEnc(
         C, C, 3, stride, 1, groups=3, reduce=4, affine=affine
     ),
@@ -96,8 +94,6 @@ OPS = {
     "decenc_5x5_8_g3": lambda C, stride, affine: DecEnc(
         C, C, 5, stride, 2, groups=3, reduce=8, affine=affine
     ),
-    
-
     "bs_up_bicubic_residual": lambda C, stride, affine: BSup(
         "bicubic",
         C,
@@ -217,6 +213,7 @@ class SimpleConv(BaseConv):
                 groups,
                 bias=affine,
             ),
+            # nn.BatchNorm2d(C_out, affine=True),
             nn.ReLU(),
         )
 
@@ -251,7 +248,7 @@ class GrowthConv(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.PReLU(),
+            nn.ReLU(),
             self.conv_func(
                 C_in * growth,
                 C_out,
@@ -263,7 +260,7 @@ class GrowthConv(BaseConv):
                 bias=affine,
             ),
             nn.ReLU(),
-            # nn.BatchNorm2d(C_out, affine=affine),
+            # nn.BatchNorm2d(C_out, affine=True),
         )
 
     def forward(self, x):
@@ -297,7 +294,7 @@ class DecEnc(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.PReLU(),
+            nn.ReLU(),
             self.conv_func(
                 C_in // reduce,
                 C_in // reduce,
@@ -308,7 +305,7 @@ class DecEnc(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.PReLU(),
+            nn.ReLU(),
             self.conv_func(
                 C_in // reduce,
                 C_in,
@@ -320,7 +317,7 @@ class DecEnc(BaseConv):
                 bias=affine,
             ),
             nn.ReLU(),
-            # nn.BatchNorm2d(C_out, affine=affine),
+            # nn.BatchNorm2d(C_out, affine=True),
         )
 
     def forward(self, x):
@@ -343,15 +340,17 @@ class DWS(BaseConv):
                 0,
                 bias=False,
             ),
-            nn.PReLU(),
+            nn.ReLU(),
             self.conv_func(
                 C_in * 4, C_in, kernel_size, 1, padding, bias=False, groups=C_in
             ),
+            # nn.BatchNorm2d(C_out, affine=True),
             nn.ReLU(),
         )
 
     def forward(self, x):
         return self.net(x)
+
 
 class FacConv(BaseConv):
     """Factorized conv
@@ -372,7 +371,7 @@ class FacConv(BaseConv):
                 (padding, 0),
                 bias=False,
             ),
-            nn.PReLU(),
+            nn.ReLU(),
             self.conv_func(
                 C_in * growth,
                 C_out,
@@ -382,6 +381,7 @@ class FacConv(BaseConv):
                 bias=False,
             ),
             nn.ReLU(),
+            # nn.BatchNorm2d(C_out, affine=True),
         )
 
     def forward(self, x):
@@ -510,43 +510,40 @@ if __name__ == "__main__":
     stride = 1
 
     PRIMITIVES_SR = [
-      "skip_connect",  # identity
-      "conv_5x1_1x5",
-      "conv_3x1_1x3",
-    "simple_3x3",
-    "simple_1x1",
-    "simple_5x5",
-    "simple_1x1_grouped_full",
-    "simple_3x3_grouped_full",
-    "simple_5x5_grouped_full",
-
-    "simple_1x1_grouped_3",
-    "simple_3x3_grouped_3",
-    "simple_5x5_grouped_3",
-    
-    "DWS_3x3",
-    "DWS_5x5",
-    "growth2_5x5",
-    "growth2_3x3",
-    "decenc_3x3_4",
-    "decenc_3x3_2",
-    "decenc_5x5_2",
-    "decenc_5x5_8",
-    "decenc_3x3_8",
-
-    "decenc_3x3_4_g3",
-    "decenc_3x3_2_g3",
-    "decenc_5x5_2_g3",
-    "decenc_5x5_8_g3",
-    "decenc_3x3_8_g3",
-    #"growth4_3x3",
-       # "none",
+        "skip_connect",  # identity
+        "conv_5x1_1x5",
+        "conv_3x1_1x3",
+        "simple_3x3",
+        "simple_1x1",
+        "simple_5x5",
+        "simple_1x1_grouped_full",
+        "simple_3x3_grouped_full",
+        "simple_5x5_grouped_full",
+        "simple_1x1_grouped_3",
+        "simple_3x3_grouped_3",
+        "simple_5x5_grouped_3",
+        "DWS_3x3",
+        "DWS_5x5",
+        "growth2_5x5",
+        "growth2_3x3",
+        "decenc_3x3_4",
+        "decenc_3x3_2",
+        "decenc_5x5_2",
+        "decenc_5x5_8",
+        "decenc_3x3_8",
+        "decenc_3x3_4_g3",
+        "decenc_3x3_2_g3",
+        "decenc_5x5_2_g3",
+        "decenc_5x5_8_g3",
+        "decenc_3x3_8_g3",
+        # "growth4_3x3",
+        # "none",
     ]
 
     names = []
     flops = []
     for i, primitive in enumerate(PRIMITIVES_SR):
-        func = OPS[primitive](C, stride, affine=True)
+        func = OPS[primitive](C, stride, affine=False)
         conv = AssertWrapper(func, channels=C)
 
         x = conv(random_image)

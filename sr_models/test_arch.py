@@ -38,7 +38,7 @@ class ManualCNN(nn.Module):
 
         x_residual = self.cv5(x0)
         x_residual = self.pixelup(x_residual)
-        return out  + x_residual
+        return out + x_residual
 
     def drop_path_prob(self, p):
         """Set drop path probability"""
@@ -116,7 +116,7 @@ class ESPCN(BaseConv):
     def forward(self, inputs):
         out = self.feature_maps(inputs)
         out = self.sub_pixel(out)
-        return out
+        return out, [out]
 
 
 # BEST ARCH

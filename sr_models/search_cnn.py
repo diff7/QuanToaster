@@ -19,7 +19,7 @@ class SearchCNN(nn.Module):
         self.repeat_factor = repeat_factor
         self.net = nn.ModuleList()
         self.cnn_out = nn.Sequential(
-            nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=True), nn.Sigmoid()
+            nn.Conv2d(3, 3, kernel_size=3, padding=1, bias=True)
         )
 
         self.pixelup = nn.Sequential(
@@ -61,7 +61,7 @@ class SearchCNNController(nn.Module):
         n_nodes=4,
         device_ids=None,
         alpha_selector="softmax",
-        blocks=2
+        blocks=2,
     ):
         super().__init__()
         self.n_nodes = n_nodes

@@ -10,13 +10,10 @@ from sr_base.datasets import PatchDataset
 from genotypes import from_str
 
 
-def get_model(weights_path, device, genotype, channels=3, repeat_factor=16,  blocks=4):
-    model = AugmentCNN(
-        channels,
-        repeat_factor,
-        genotype,
-        blocks
-    )
+def get_model(
+    weights_path, device, genotype, channels=3, repeat_factor=16, blocks=4
+):
+    model = AugmentCNN(channels, repeat_factor, genotype, blocks)
 
     model_ = torch.load(weights_path, map_location="cpu")
     model.load_state_dict(model_.state_dict())
@@ -104,9 +101,9 @@ if __name__ == "__main__":
     CFG_PATH = "./sr_models/valsets4x.yaml"
     valid_cfg = omg.load(CFG_PATH)
     run_name = "TEST_2"
-    genotype_path = "/home/dev/data_main/LOGS/SR_DARTS/5nodes_x_3blocks_gumbel/trail_1/SEARCH_batch experiment_penalty_0_trail_1-2021-09-30-22/best_arch.gen"
-    weights_path = "/home/dev/data_main/LOGS/SR_DARTS/TUNE_MANUAL SET-2021-10-01-11/best.pth.tar"
-    log_dir = "/home/dev/data_main/LOGS/VAL_LOGS"
+    genotype_path = "./genotype_example_sr.gen"
+    weights_path = "/home/dev/data/logs/TUNE_TEST-2021-10-09-22/best.pth.tar"
+    log_dir = "/home/dev/data/logs/VAL_LOGS"
     save_dir = os.path.join(log_dir, run_name)
     os.makedirs(save_dir, exist_ok=True)
     channels = 3
@@ -119,6 +116,6 @@ if __name__ == "__main__":
     logger = utils.get_logger(save_dir + "/validation_log.txt")
     logger.info(genotype)
     model = get_model(
-        weights_path, device, genotype, channels=3, repeat_factor=16, blocks = 3
+        weights_path, device, genotype, channels=3, repeat_factor=16, blocks=3
     )
     dataset_loop(valid_cfg, model, logger, save_dir, device)

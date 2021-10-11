@@ -12,7 +12,11 @@ from sr_models.test_arch import ManualCNN, ESPCN
 
 from sr_models.augment_cnn import AugmentCNN
 import utils
-from sr_base.datasets import CropDataset, PatchDataset, AugmentLoader
+from sr_base.datasets import (
+    CropDataset,
+    PatchDataset,
+    AugmentLoader,
+)
 from genotypes import from_str
 
 
@@ -63,8 +67,8 @@ def run_train(cfg):
 
     # TODO fix here and passing params from search config too
     # cfg_dataset.subset = None
-    train_data = PatchDataset(cfg_dataset, train=True)
-    val_data = PatchDataset(cfg_dataset, train=False)
+    train_data = CropDataset(cfg_dataset, train=True)
+    val_data = CropDataset(cfg_dataset, train=False)
 
     if cfg_dataset.debug_mode:
         indices = list(range(300))
@@ -80,8 +84,8 @@ def run_train(cfg):
     train_loader = torch.utils.data.DataLoader(
         train_data,
         batch_size=cfg.batch_size,
-        # sampler=sampler_train,
-        shuffle=True,
+        sampler=sampler_train,
+        # shuffle=True,
         num_workers=cfg.workers,
         pin_memory=False,
     )
@@ -104,8 +108,8 @@ def run_train(cfg):
     print(genotype)
 
     # model = ManualCNN(cfg.channels, cfg.repeat_factor)
-    model = ESPCN(4)
-    # model = AugmentCNN(cfg.channels, cfg.repeat_factor, genotype, cfg.blocks)
+    # model = ESPCN(4)
+    model = AugmentCNN(cfg.channels, cfg.repeat_factor, genotype, cfg.blocks)
 
     model.to(device)
 
@@ -118,14 +122,17 @@ def run_train(cfg):
     )
 
     # weights optimizer
-    optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
-
+    optimizer = torch.optim.Adam(
+        model.parameters(),
+        lr=cfg.lr,
+        # weight_decay=cfg.weight_decay,
+    )
     scheduler = {
         "cosine": torch.optim.lr_scheduler.CosineAnnealingLR(
             optimizer, cfg.epochs
         ),
         "linear": torch.optim.lr_scheduler.StepLR(
-            optimizer, step_size=6, gamma=0.7
+            optimizer, step_size=3, gamma=0.7
         ),
     }
 
@@ -134,7 +141,6 @@ def run_train(cfg):
     best_score = 0.0
     # training loop
     for epoch in range(cfg.epochs):
-        lr_scheduler.step()
         if cfg.use_drop_prob:
             drop_prob = cfg.drop_path_prob * (1 - epoch / cfg.epochs)
             print("DROP PATH", drop_prob)
@@ -152,7 +158,7 @@ def run_train(cfg):
             device,
             cfg,
         )
-
+        lr_scheduler.step()
         # validation
         cur_step = (epoch + 1) * len(train_loader)
         score_val = validate(
@@ -215,14 +221,15 @@ def train(
         optimizer.zero_grad()
         preds = model(X)
         loss = criterion(preds, y)
+        loss_meter.update(loss.item(), N)
         loss.backward()
-        # gradient clipping
-        # nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
+
         optimizer.step()
 
         psnr = utils.calc_psnr(preds, y)
-        loss_meter.update(loss.item(), N)
+
         psnr_meter.update(psnr.item(), N)
+        # loss_inter.update(intermediate_l[0].item(), N)
 
         if step % cfg.print_freq == 0 or step == len(train_loader) - 1:
             logger.info(

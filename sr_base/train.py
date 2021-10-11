@@ -59,6 +59,10 @@ def train_one_epoch(
 
             preds = model(inputs)
 
+            # print("SHAPE IN", inputs.shape)
+            # print("SHAPE TAR", labels.shape)
+            # print("SHAPE PRED", preds.shape)
+
             loss = criterion(preds, labels)
 
             epoch_losses.update(loss.detach().item(), len(inputs))

@@ -1,6 +1,6 @@
 dataset:
-  data_processed_hr: '/home/dev/data_main/DIV2K/processed_50_espcn/HR'
-  data_processed_lr: '/home/dev/data_main/DIV2K/processed_50_espcn/LR'
+  data_processed_hr: '/home/dev/data/SR/DIV2K/processed/HR' 
+  data_processed_lr:  '/home/dev/data/SR/DIV2K/processed/HR' 
   val_folder: '/valid/'
   train_folder: '/train/'
   scale: 4
@@ -8,8 +8,8 @@ dataset:
   workers: 10
   train_portion: 0.7
   batch_size: 32
-  crop_size: 32
-  files_list: '/home/dev/data_main/SR/train_sets_txt/short'
+  crop_size: 45 # small image,  60x4=240, pathces are 200x200
+  files_list: /home/dev/data/SR
   debug_mode: false # run on a small porion of data
   
 
@@ -24,7 +24,6 @@ search:
   use_soft_edge: false
   alpha_selector: gumbel #softmax #softmax #softmax #gumbel2k #softmax 
   warm_up: 10
-
   channels: 3
   repeat_factor: 16
   n_nodes: 5
@@ -56,20 +55,18 @@ search:
   
   
 train:
-  run_name: 'MANUAL SET'
+  run_name: 'TEST'
   log_dir: /home/dev/data/logs
   gpu: 2
   lr_scheduler: linear
   use_drop_prob: false
   drop_path_prob : 0.0
-  blocks: 2
+  blocks: 3
   batch_size : 32 # batch size
   lr : 1e-3 # lr for weights
-  momentum : 0.9 # momentum
-  weight_decay : 0.00005 # weight decay
-  grad_clip : 5 # gradient clipping for weights
+  weight_decay : 0 # weight decay
   print_freq : 200 # print frequency
-  epochs : 35 # # of training epochs
+  epochs : 60 # # of training epochs
   seed : 777 # random seed
   workers : 8 # of workers
-  genotype_path:  /home/dev/data_main/LOGS/SR_DARTS/5nodes_x_3blocks_gumbel/trail_1/SEARCH_batch experiment_penalty_0_trail_1-2021-09-30-22/best_arch.gen
+  genotype_path: "./genotype_example_sr.gen"

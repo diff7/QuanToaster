@@ -71,7 +71,7 @@ def get_data(dataset, data_path, cutout_length, validation):
 def get_logger(file_path):
     """Make python logger"""
     # [!] Since tensorboardX use default logger (e.g. logging.info()), we should use custom logger
-    logger = logging.getLogger(file_path.split('/')[-1])
+    logger = logging.getLogger(file_path.split("/")[-1])
     log_format = "%(asctime)s | %(message)s"
     formatter = logging.Formatter(log_format, datefmt="%m/%d %I:%M:%S %p")
     file_handler = logging.FileHandler(file_path)
@@ -147,7 +147,7 @@ def save_checkpoint(state, ckpt_dir, is_best=False):
 
 
 def calc_psnr(img1, img2):
-    return 10.0 * torch.log10(1.0 / torch.mean((img1 - img2) ** 2))
+    return 10.0 * torch.log10(1 / torch.mean((img1 - img2) ** 2))
 
 
 def min_max(m):
@@ -165,6 +165,9 @@ def prepare_images(path_input, path_target, out):
     out_image = out.mul(255.0).cpu().numpy()
 
     out_image = np.clip(out_image, 0.0, 255.0).astype(np.uint8)
+    if out_image.shape[-1] == 1:
+        out_image = out_image.squeeze(-1)
+        out_image = np.stack([out_image, out_image, out_image], axis=2)
     out_image = Image.fromarray(out_image)
 
     return target_img, input_img, out_image

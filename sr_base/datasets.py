@@ -97,8 +97,8 @@ class PatchDataset(torch.utils.data.dataset.Dataset):
             Low resolution image, high resolution image.
         """
 
-        input_img = Image.open(self.input_filenames[index])
-        target_img = Image.open(self.target_filenames[index])
+        input_img = Image.open(self.input_filenames[index]).convert("RGB")
+        target_img = Image.open(self.target_filenames[index]).convert("RGB")
 
         input_img = self.transforms(input_img)
         target_img = self.transforms(target_img)
@@ -157,16 +157,23 @@ class CropDataset(torch.utils.data.dataset.Dataset):
             (x_start, y_start, x_start + crop_size, y_start + crop_size)
         )
 
+    def random_flip(self, img):
+        if random.random() > 0.5:
+            img = img.transpose(method=Image.FLIP_LEFT_RIGHT)
+        return img
+
     def downscale(self, image):
         if self.train:
             size_lr = self.crop_size
-            return image, image.resize((size_lr, size_lr))
+            return image, image.resize((size_lr, size_lr), Image.BICUBIC)
         else:
             width, height = image.size
             width, height = width // self.scale, height // self.scale
             return (
-                image.resize((width * self.scale, height * self.scale)),
-                image.resize((width, height)),
+                image.resize(
+                    (width * self.scale, height * self.scale), Image.BICUBIC
+                ),
+                image.resize((width, height), Image.BICUBIC),
             )
 
     def __getitem__(self, index):
@@ -180,6 +187,7 @@ class CropDataset(torch.utils.data.dataset.Dataset):
         hr = Image.open(self.files_paths[index]).convert("RGB")
         if self.train == True:
             hr = self.random_crop_image(hr)
+            hr = self.random_flip(hr)
 
         hr, lr = self.downscale(hr)
         hr_img = self.transforms(hr)
@@ -241,6 +249,10 @@ class AugmentLoader(torch.utils.data.dataset.Dataset):
         self.upscale_factor = cfg.scale
 
     def __getitem__(self, index):
+
+        # We transform image and train the network only using Y - luminiscense
+        # To produce an image back we improve Y and restore image with previous dimenisons
+
         lr = Image.open(self.input_filenames[index])
         hr = Image.open(self.target_filenames[index])
 
