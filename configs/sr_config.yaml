@@ -1,9 +1,15 @@
 dataset:
-  train_path: '/mnt/data/egorsh/SR/DIV2K/train.h5f' 
-  eval_path:  '/mnt/data/egorsh/SR/DIV2K/val.h5f' 
+  data_processed_hr: '/home/dev/data/SR/DIV2K/processed/HR' 
+  data_processed_lr:  '/home/dev/data/SR/DIV2K/processed/HR' 
+  val_folder: '/valid/'
+  train_folder: '/train/'
+  scale: 4
+  subset: #/home/dev/data_main/CORESETS/vmlinuz.txt
   workers: 10
   train_portion: 0.7
-  batch_size: 16
+  batch_size: 32
+  crop_size: 45 # small image,  60x4=240, pathces are 200x200
+  files_list: /home/dev/data/SR
   debug_mode: false # run on a small porion of data
   
 

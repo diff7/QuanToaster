@@ -12,7 +12,7 @@ from sr_models.test_arch import ManualCNN, ESPCN, SRESPCN, SRResNet
 
 from sr_models.augment_cnn import AugmentCNN
 import utils
-from sr_base.datasets import TrainDataset, EvalDataset
+from sr_base.datasets import TrainDataset, EvalDataset, CropDataset
 
 from genotypes import from_str
 
@@ -66,8 +66,8 @@ def run_train(cfg):
 
     # TODO fix here and passing params from search config too
     # cfg_dataset.subset = None
-    train_data = TrainDataset(cfg_dataset.train_path)
-    val_data = EvalDataset(cfg_dataset.eval_path)
+    train_data = CropDataset(cfg_dataset, train=True)
+    val_data = CropDataset(cfg_dataset, train=False)
 
     if cfg_dataset.debug_mode:
         indices = list(range(300))
