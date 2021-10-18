@@ -6,13 +6,14 @@ import genotypes as gt
 
 
 class Residual(nn.Module):
-      def __init__(self, skip, body):
-            super().__init__()
-            self.skip = skip
-            self.body = body
+    def __init__(self, skip, body):
+        super().__init__()
+        self.skip = skip
+        self.body = body
 
     def forward(self, x):
-        return (self.skip(x) + self.body(x))*0.2 + x
+        return (self.skip(x) + self.body(x)) * 0.2 + x
+
 
 class AugmentCNN(nn.Module):
     """Augmented CNN model"""
@@ -41,7 +42,7 @@ class AugmentCNN(nn.Module):
 
             s = gt.to_dag_sr(self.c_fixed, genotype.skip, gene_type="skip")
             fb.append(Residual(s, b))
-        
+
         self.body = nn.Sequential(*[fb])
         self.tail = gt.to_dag_sr(self.c_fixed, genotype.tail, gene_type="tail")
 
