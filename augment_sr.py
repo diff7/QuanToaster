@@ -21,12 +21,12 @@ def train_setup(cfg):
 
     # INIT FOLDERS & cfg
     cfg_dataset = copy.copy(cfg.dataset)
-    repeat_factor = cfg.search.repeat_factor
+    scale = cfg.search.scale
     channels = cfg.search.channels
     cfg = cfg.train
 
     cfg.channels = channels
-    cfg.repeat_factor = repeat_factor
+    cfg.repeat_factor = scale
 
     cfg.save = utils.get_run_path(cfg.log_dir, "TUNE_" + cfg.run_name)
 
