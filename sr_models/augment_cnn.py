@@ -5,6 +5,15 @@ from sr_models import ops_flops as ops
 import genotypes as gt
 
 
+class Residual(nn.Module):
+      def __init__(self, skip, body):
+            super().__init__()
+            self.skip = skip
+            self.body = body
+
+    def forward(self, x):
+        return (self.skip(x) + self.body(x))*0.2 + x
+
 class AugmentCNN(nn.Module):
     """Augmented CNN model"""
 
@@ -24,11 +33,16 @@ class AugmentCNN(nn.Module):
             self.c_fixed, genotype.normal, gene_type="head"
         )
 
-        self.body = [
-            gt.to_dag_sr(self.c_fixed, genotype.body, gene_type="body")
-        ] * blocks
+        fb = []
+        for _ in range(blocks):
+            b = [
+                gt.to_dag_sr(self.c_fixed, genotype.body, gene_type="body")
+            ] * blocks
 
-        self.skip = gt.to_dag_sr(self.c_fixed, genotype.skip, gene_type="skip")
+            s = gt.to_dag_sr(self.c_fixed, genotype.skip, gene_type="skip")
+            fb.append(Residual(s, b))
+        
+        self.body = nn.Sequential(*[fb])
         self.tail = gt.to_dag_sr(self.c_fixed, genotype.tail, gene_type="tail")
 
         upsample = gt.to_dag_sr(
@@ -39,8 +53,7 @@ class AugmentCNN(nn.Module):
 
     def forward(self, x):
         x = self.head(x)
-        skip = self.skip(x)
-        x = self.body(x) + skip
+        x = self.body(x)
         x = self.upsample(x)
         x = self.tail(x) + x
         return x
