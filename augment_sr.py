@@ -211,7 +211,7 @@ def train(
     writer.add_scalar("tune/train/lr", cur_lr, cur_step)
     model.train()
 
-    for step, X, y in enumerate(train_loader):
+    for step, (X, y) in enumerate(train_loader):
         X, y = X.to(device, non_blocking=True), y.to(device, non_blocking=True)
         N = X.size(0)
         optimizer.zero_grad()
@@ -253,10 +253,7 @@ def validate(
     model.eval()
 
     with torch.no_grad():
-        for step, (
-            X,
-            y,
-        ) in enumerate(valid_loader):
+        for step, (X, y) in enumerate(valid_loader):
             X, y = X.to(device, non_blocking=True), y.to(
                 device, non_blocking=True
             )
