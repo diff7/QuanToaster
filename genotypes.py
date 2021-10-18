@@ -107,6 +107,7 @@ def to_dag_sr(C_fixed, gene, gene_type, c_in=3, c_out=3, scale=4):
             C_out = C_fixed
 
         for op_name, _ in edges:
+            print(gene_type, op_name, C_in, C_out, C_fixed)
             op = ops_sr.OPS[op_name](C_in, C_out, C_fixed, 1, True)
             dag.append(op)
     return nn.Sequential(*dag)

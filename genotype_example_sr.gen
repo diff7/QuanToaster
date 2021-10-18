@@ -1,5 +1,5 @@
 Genotype_SR(head=[[('simple_3x3', 0)],   
-                    [('simple_5x5', 5)]],
+                    [('simple_5x5', 1)]],
 
                     body=[[('simple_3x3', 0)], 
                     [('simple_3x3', 1)],   
