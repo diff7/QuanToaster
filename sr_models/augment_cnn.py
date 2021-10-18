@@ -42,13 +42,13 @@ class AugmentCNN(nn.Module):
             fb.append(Residual(s, b))
 
         self.body = nn.Sequential(*fb)
-        self.tail = gt.to_dag_sr(self.c_fixed, genotype.tail, gene_type="tail")
 
         upsample = gt.to_dag_sr(
             self.c_fixed, genotype.upsample, gene_type="upsample"
         )
 
         self.upsample = nn.Sequential(upsample, nn.PixelShuffle(scale))
+        self.tail = gt.to_dag_sr(self.c_fixed, genotype.tail, gene_type="tail")
 
     def forward(self, x):
         x = self.head(x)
