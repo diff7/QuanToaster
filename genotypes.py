@@ -11,7 +11,7 @@ from models import ops_flops as ops_cls
 
 
 Genotype = namedtuple("Genotype", "normal normal_concat reduce reduce_concat")
-Genotype_SR = namedtuple("Genotype_SR", "head body tail")
+Genotype_SR = namedtuple("Genotype_SR", "head body tail skip")
 
 
 PRIMITIVES = [
