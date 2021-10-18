@@ -2,6 +2,7 @@ import h5py
 import torch
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
+from PIL import Image
 
 
 class TrainDataset(Dataset):
