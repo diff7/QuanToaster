@@ -211,7 +211,7 @@ def train(
     writer.add_scalar("tune/train/lr", cur_lr, cur_step)
     model.train()
 
-    for step, (X, y, _, _) in enumerate(train_loader):
+    for step, X, y in enumerate(train_loader):
         X, y = X.to(device, non_blocking=True), y.to(device, non_blocking=True)
         N = X.size(0)
         optimizer.zero_grad()
@@ -256,8 +256,6 @@ def validate(
         for step, (
             X,
             y,
-            x_path,
-            y_path,
         ) in enumerate(valid_loader):
             X, y = X.to(device, non_blocking=True), y.to(
                 device, non_blocking=True
@@ -293,10 +291,8 @@ def validate(
         )
     )
 
-    indx = random.randint(0, len(x_path) - 1)
-    utils.save_images(
-        cfg.save, x_path[indx], y_path[indx], preds[indx], epoch, writer
-    )
+    indx = random.randint(0, len(preds) - 1)
+    utils.save_images(cfg.save, None, None, preds[indx], epoch, writer)
 
     return val_psnr_meter.avg
 

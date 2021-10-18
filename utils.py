@@ -202,8 +202,14 @@ def min_max(m):
 def prepare_images(path_input, path_target, out):
     out = out.permute(1, 2, 0)
     out = min_max(out)
-    input_img = Image.open(path_input)
-    target_img = Image.open(path_target)
+    if path_input is not None:
+        input_img = Image.open(path_input)
+    else:
+        input_img = None
+    if path_target is not None:
+        target_img = Image.open(path_target)
+    else:
+        path_target = None
 
     out_image = out.mul(255.0).cpu().numpy()
 
@@ -229,18 +235,20 @@ def save_images(
     target, input_img, out_image = prepare_images(path_input, path_target, out)
 
     if logger is not None:
-        logger.add_image(
-            tag=f"target",
-            img_tensor=np.array(target),
-            dataformats="HWC",
-            global_step=cur_iter,
-        )
-        logger.add_image(
-            tag=f"input_img",
-            img_tensor=np.array(input_img),
-            dataformats="HWC",
-            global_step=cur_iter,
-        )
+        if not target is None:
+            logger.add_image(
+                tag=f"target",
+                img_tensor=np.array(target),
+                dataformats="HWC",
+                global_step=cur_iter,
+            )
+        if not input_img is None:
+            logger.add_image(
+                tag=f"input_img",
+                img_tensor=np.array(input_img),
+                dataformats="HWC",
+                global_step=cur_iter,
+            )
         logger.add_image(
             tag=f"out_image",
             img_tensor=np.array(out_image),
