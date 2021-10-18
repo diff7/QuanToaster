@@ -12,7 +12,7 @@ from sr_models.test_arch import ManualCNN, ESPCN, SRESPCN, SRResNet
 
 from sr_models.augment_cnn import AugmentCNN
 import utils
-from sr_models.datasets import TrainDataset, EvalDataset
+from sr_base.datasets import TrainDataset, EvalDataset
 
 from genotypes import from_str
 
