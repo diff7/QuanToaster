@@ -41,7 +41,7 @@ class AugmentCNN(nn.Module):
             s = gt.to_dag_sr(self.c_fixed, genotype.skip, gene_type="skip")
             fb.append(Residual(s, b))
 
-        self.body = nn.Sequential(*[fb])
+        self.body = nn.Sequential(*fb)
         self.tail = gt.to_dag_sr(self.c_fixed, genotype.tail, gene_type="tail")
 
         upsample = gt.to_dag_sr(
