@@ -11,11 +11,7 @@ from omegaconf import OmegaConf as omg
 from sr_models.test_arch import ManualCNN, ESPCN, SRESPCN, SRResNet
 
 from sr_models.augment_cnn import AugmentCNN
-import utils
-from sr_base.datasets import (
-    CropDataset,
-    PatchDataset,
-    AugmentLoader,
+import utils TrainDataset, EvalDataset
 )
 from genotypes import from_str
 
@@ -69,8 +65,8 @@ def run_train(cfg):
 
     # TODO fix here and passing params from search config too
     # cfg_dataset.subset = None
-    train_data = CropDataset(cfg_dataset, train=True)
-    val_data = CropDataset(cfg_dataset, train=False)
+    train_data = TrainDataset(cfg_dataset.train_path, train=True)
+    val_data = EvalDataset(cfg_dataset.eval_path, train=False)
 
     if cfg_dataset.debug_mode:
         indices = list(range(300))

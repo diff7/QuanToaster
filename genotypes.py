@@ -11,7 +11,7 @@ from models import ops_flops as ops_cls
 
 
 Genotype = namedtuple("Genotype", "normal normal_concat reduce reduce_concat")
-Genotype_SR = namedtuple("Genotype_SR", "normal normal_concat")
+Genotype_SR = namedtuple("Genotype_SR", "head body tail")
 
 
 PRIMITIVES = [
@@ -84,20 +84,28 @@ def to_dag(C_in, gene, reduction):
     return dag
 
 
-def to_dag_sr(C_in, gene):
+def to_dag_sr(C_fixed, gene, gene_type, c_in=3, c_out=3, scale=4):
     """generate discrete ops from gene"""
-    dag = nn.ModuleList()
-    for edges in gene:
-        for op_name, s_idx in edges:
-            if op_name == "none":
-                op_name = "zerograd"
-            op = ops_sr.OPS[op_name](C_in, 1, True)
+    dag = []
+    for i, edges in enumerate(gene):
+        if i == 0 and gene_type == "head":
+            C_in = c_in
+        elif i + 1 == len(gene) and gene_type == "tail":
+            C_out = c_out
+        elif i == 0 and gene_type == "tail":
+            C_out = c_out
 
-            # TODO remove later - rebundant
-            op.s_idx = s_idx
+        elif gene_type == "upsample":
+            C_in = C_fixed
+            C_out = 3 * (scale ** 2)
+        else:
+            C_in = C_fixed
+            C_out = C_fixed
 
+        for op_name, _ in edges:
+            op = ops_sr.OPS[gene_type][op_name](C_in, C_out, C_fixed, 1, True)
             dag.append(op)
-    return dag
+    return nn.Sequential(*dag)
 
 
 def from_str(s):

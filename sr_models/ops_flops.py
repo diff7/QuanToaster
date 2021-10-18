@@ -12,118 +12,122 @@ import genotypes as gt
 # lower exp is sinlge path
 
 OPS = {
-    "none": lambda C, stride, affine: Zero(stride, zero=0),
-    "skip_connect": lambda C, stride, affine: Identity(),
-    "conv_5x1_1x5": lambda C, stride, affine: FacConv(
-        C, C, 5, stride, 2, affine=affine
+    "none": lambda C_in, C_out, C_fixed, stride, affine: Zero(stride, zero=0),
+    "skip_connect": lambda C_in, C_out, C_fixed, stride, affine: Identity(),
+    "conv_5x1_1x5": lambda C_in, C_out, C_fixed, stride, affine: FacConv(
+        C_in, C_out, C_fixed, 5, stride, 2, affine=affine
     ),
-    "conv_3x1_1x3": lambda C, stride, affine: FacConv(
-        C, C, 3, stride, 1, affine=affine
+    "conv_3x1_1x3": lambda C_in, C_out, C_fixed, stride, affine: FacConv(
+        C_in, C_out, C_fixed, 3, stride, 1, affine=affine
     ),
-    "simple_3x3": lambda C, stride, affine: SimpleConv(
-        C, C, 3, stride, 1, affine=affine
+    "simple_3x3": lambda C_in, C_out, C_fixed, stride, affine: SimpleConv(
+        C_in, C_out, C_fixed, 3, stride, 1, affine=affine
     ),
-    "simple_9x9": lambda C, stride, affine: SimpleConv(
-        C, C, 9, stride, 4, affine=affine
+    "simple_9x9": lambda C_in, C_out, C_fixed, stride, affine: SimpleConv(
+        C_in, C_out, C_fixed, 9, stride, 4, affine=affine
     ),
-    "simple_1x1": lambda C, stride, affine: SimpleConv(
-        C, C, 1, stride, 0, affine=affine
+    "simple_1x1": lambda C_in, C_out, C_fixed, stride, affine: SimpleConv(
+        C_in, C_out, C_fixed, 1, stride, 0, affine=affine
     ),
-    "simple_5x5": lambda C, stride, affine: SimpleConv(
-        C, C, 5, stride, 2, affine=affine
+    "simple_5x5": lambda C_in, C_out, C_fixed, stride, affine: SimpleConv(
+        C_in, C_out, C_fixed, 5, stride, 2, affine=affine
     ),
-    "simple_1x1_grouped_full": lambda C, stride, affine: SimpleConv(
-        C, C, 1, stride, 0, groups=C, affine=affine
+    "simple_1x1_grouped_full": lambda C_in, C_out, C_fixed, stride, affine: SimpleConv(
+        C_in, C_out, C_fixed, 1, stride, 0, groups=C_out, affine=affine
     ),
-    "simple_3x3_grouped_full": lambda C, stride, affine: SimpleConv(
-        C, C, 3, stride, 1, groups=C, affine=affine
+    "simple_3x3_grouped_full": lambda C_in, C_out, C_fixed, stride, affine: SimpleConv(
+        C_in, C_out, C_fixed, 3, stride, 1, groups=C_out, affine=affine
     ),
-    "simple_5x5_grouped_full": lambda C, stride, affine: SimpleConv(
-        C, C, 5, stride, 2, groups=C, affine=affine
+    "simple_5x5_grouped_full": lambda C_in, C_out, C_fixed, stride, affine: SimpleConv(
+        C_in, C_out, C_fixed, 5, stride, 2, groups=C_out, affine=affine
     ),
-    "simple_1x1_grouped_3": lambda C, stride, affine: SimpleConv(
-        C, C, 1, stride, 0, groups=3, affine=affine
+    "simple_1x1_grouped_3": lambda C_in, C_out, C_fixed, stride, affine: SimpleConv(
+        C_in, C_out, C_fixed, 1, stride, 0, groups=3, affine=affine
     ),
-    "simple_3x3_grouped_3": lambda C, stride, affine: SimpleConv(
-        C, C, 3, stride, 1, groups=3, affine=affine
+    "simple_3x3_grouped_3": lambda C_in, C_out, C_fixed, stride, affine: SimpleConv(
+        C_in, C_out, C_fixed, 3, stride, 1, groups=3, affine=affine
     ),
-    "simple_5x5_grouped_3": lambda C, stride, affine: SimpleConv(
-        C, C, 5, stride, 2, groups=3, affine=affine
+    "simple_5x5_grouped_3": lambda C_in, C_out, C_fixed, stride, affine: SimpleConv(
+        C_in, C_out, C_fixed, 5, stride, 2, groups=3, affine=affine
     ),
-    "DWS_3x3": lambda C, stride, affine: DWS(C, C, 3, stride, 1, affine=affine),
-    "DWS_5x5": lambda C, stride, affine: DWS(C, C, 5, stride, 2, affine=affine),
-    "growth2_3x3": lambda C, stride, affine: GrowthConv(
-        C, C, 3, stride, 1, groups=1, affine=affine, growth=2
+    "DWS_3x3": lambda C_in, C_out, C_fixed, stride, affine: DWS(
+        C_in, C_out, C_fixed, 3, stride, 1, affine=affine
     ),
-    "growth2_5x5": lambda C, stride, affine: GrowthConv(
-        C, C, 5, stride, 2, groups=1, affine=affine, growth=2
+    "DWS_5x5": lambda C_in, C_out, C_fixed, stride, affine: DWS(
+        C_in, C_out, C_fixed, 5, stride, 2, affine=affine
     ),
-    "decenc_3x3_4": lambda C, stride, affine: DecEnc(
-        C, C, 3, stride, 1, groups=1, reduce=4, affine=affine
+    "growth2_3x3": lambda C_in, C_out, C_fixed, stride, affine: GrowthConv(
+        C_in, C_out, C_fixed, 3, stride, 1, groups=1, affine=affine, growth=2
     ),
-    "decenc_3x3_2": lambda C, stride, affine: DecEnc(
-        C, C, 3, stride, 1, groups=1, reduce=2, affine=affine
+    "growth2_5x5": lambda C_in, C_out, C_fixed, stride, affine: GrowthConv(
+        C_in, C_out, C_fixed, 5, stride, 2, groups=1, affine=affine, growth=2
     ),
-    "decenc_5x5_2": lambda C, stride, affine: DecEnc(
-        C, C, 5, stride, 2, groups=1, reduce=2, affine=affine
+    "decenc_3x3_4": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
+        C_in, C_out, C_fixed, 3, stride, 1, groups=1, reduce=4, affine=affine
     ),
-    "decenc_5x5_4": lambda C, stride, affine: DecEnc(
-        C, C, 5, stride, 2, groups=1, reduce=4, affine=affine
+    "decenc_3x3_2": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
+        C_in, C_out, C_fixed, 3, stride, 1, groups=1, reduce=2, affine=affine
     ),
-    "decenc_3x3_8": lambda C, stride, affine: DecEnc(
-        C, C, 3, stride, 1, groups=1, reduce=8, affine=affine
+    "decenc_5x5_2": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
+        C_in, C_out, C_fixed, 5, stride, 2, groups=1, reduce=2, affine=affine
     ),
-    "decenc_5x5_8": lambda C, stride, affine: DecEnc(
-        C, C, 5, stride, 2, groups=1, reduce=8, affine=affine
+    "decenc_5x5_4": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
+        C_in, C_out, C_fixed, 5, stride, 2, groups=1, reduce=4, affine=affine
     ),
-    "decenc_3x3_4_g3": lambda C, stride, affine: DecEnc(
-        C, C, 3, stride, 1, groups=3, reduce=4, affine=affine
+    "decenc_3x3_8": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
+        C_in, C_out, C_fixed, 3, stride, 1, groups=1, reduce=8, affine=affine
     ),
-    "decenc_3x3_2_g3": lambda C, stride, affine: DecEnc(
-        C, C, 3, stride, 1, groups=3, reduce=2, affine=affine
+    "decenc_5x5_8": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
+        C_in, C_out, C_fixed, 5, stride, 2, groups=1, reduce=8, affine=affine
     ),
-    "decenc_5x5_2_g3": lambda C, stride, affine: DecEnc(
-        C, C, 5, stride, 2, groups=3, reduce=2, affine=affine
+    "decenc_3x3_4_g3": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
+        C_in, C_out, C_fixed, 3, stride, 1, groups=3, reduce=4, affine=affine
     ),
-    "decenc_5x5_4_g3": lambda C, stride, affine: DecEnc(
-        C, C, 5, stride, 2, groups=3, reduce=4, affine=affine
+    "decenc_3x3_2_g3": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
+        C_in, C_out, C_fixed, 3, stride, 1, groups=3, reduce=2, affine=affine
     ),
-    "decenc_3x3_8_g3": lambda C, stride, affine: DecEnc(
-        C, C, 3, stride, 1, groups=3, reduce=8, affine=affine
+    "decenc_5x5_2_g3": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
+        C_in, C_out, C_fixed, 5, stride, 2, groups=3, reduce=2, affine=affine
     ),
-    "decenc_5x5_8_g3": lambda C, stride, affine: DecEnc(
-        C, C, 5, stride, 2, groups=3, reduce=8, affine=affine
+    "decenc_5x5_4_g3": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
+        C_in, C_out, C_fixed, 5, stride, 2, groups=3, reduce=4, affine=affine
     ),
-    "bs_up_bicubic_residual": lambda C, stride, affine: BSup(
-        "bicubic",
-        C,
-        residual=True,
+    "decenc_3x3_8_g3": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
+        C_in, C_out, C_fixed, 3, stride, 1, groups=3, reduce=8, affine=affine
     ),
-    "bs_up_nearest_residual": lambda C, stride, affine: BSup(
-        "nearest",
-        C,
-        residual=True,
+    "decenc_5x5_8_g3": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
+        C_in, C_out, C_fixed, 5, stride, 2, groups=3, reduce=8, affine=affine
     ),
-    "bs_up_bilinear_residual": lambda C, stride, affine: BSup(
-        "bilinear",
-        C,
-        residual=True,
-    ),
-    "bs_up_bicubic": lambda C, stride, affine: BSup(
-        "bicubic",
-        C,
-        residual=False,
-    ),
-    "bs_up_nearest": lambda C, stride, affine: BSup(
-        "nearest",
-        C,
-        residual=False,
-    ),
-    "bs_up_bilinear": lambda C, stride, affine: BSup(
-        "bilinear",
-        C,
-        residual=False,
-    ),
+    # "bs_up_bicubic_residual": lambda C, stride, affine: BSup(
+    #     "bicubic",
+    #     C,
+    #     residual=True,
+    # ),
+    # "bs_up_nearest_residual": lambda C, stride, affine: BSup(
+    #     "nearest",
+    #     C,
+    #     residual=True,
+    # ),
+    # "bs_up_bilinear_residual": lambda C, stride, affine: BSup(
+    #     "bilinear",
+    #     C,
+    #     residual=True,
+    # ),
+    # "bs_up_bicubic": lambda C, stride, affine: BSup(
+    #     "bicubic",
+    #     C,
+    #     residual=False,
+    # ),
+    # "bs_up_nearest": lambda C, stride, affine: BSup(
+    #     "nearest",
+    #     C,
+    #     residual=False,
+    # ),
+    # "bs_up_bilinear": lambda C, stride, affine: BSup(
+    #     "bilinear",
+    #     C,
+    #     residual=False,
+    # ),
 }
 
 
@@ -194,6 +198,7 @@ class SimpleConv(BaseConv):
         self,
         C_in,
         C_out,
+        C_fixed,
         kernel_size,
         stride,
         padding,
@@ -228,6 +233,7 @@ class GrowthConv(BaseConv):
         self,
         C_in,
         C_out,
+        C_fixed,
         kernel_size,
         stride,
         padding,
@@ -240,7 +246,7 @@ class GrowthConv(BaseConv):
         self.net = nn.Sequential(
             self.conv_func(
                 C_in,
-                C_in * growth,
+                C_fixed * growth,
                 kernel_size,
                 stride,
                 padding,
@@ -250,7 +256,7 @@ class GrowthConv(BaseConv):
             ),
             nn.GELU(),
             self.conv_func(
-                C_in * growth,
+                C_fixed * growth,
                 C_out,
                 kernel_size,
                 stride,
@@ -274,6 +280,7 @@ class DecEnc(BaseConv):
         self,
         C_in,
         C_out,
+        C_fixed,
         kernel_size,
         stride,
         padding,
@@ -286,7 +293,7 @@ class DecEnc(BaseConv):
         self.net = nn.Sequential(
             self.conv_func(
                 C_in,
-                C_in // reduce,
+                C_fixed // reduce,
                 kernel_size,
                 stride,
                 padding,
@@ -297,7 +304,7 @@ class DecEnc(BaseConv):
             nn.GELU(),
             self.conv_func(
                 C_in // reduce,
-                C_in // reduce,
+                C_fixed // reduce,
                 kernel_size,
                 stride,
                 padding,
@@ -307,8 +314,8 @@ class DecEnc(BaseConv):
             ),
             nn.GELU(),
             self.conv_func(
-                C_in // reduce,
-                C_in,
+                C_fixed // reduce,
+                C_out,
                 kernel_size,
                 stride,
                 padding,
@@ -326,7 +333,15 @@ class DecEnc(BaseConv):
 
 class DWS(BaseConv):
     def __init__(
-        self, C_in, C_out, kernel_size, stride, padding, affine=True, growth=1
+        self,
+        C_in,
+        C_out,
+        C_fixed,
+        kernel_size,
+        stride,
+        padding,
+        affine=True,
+        growth=1,
     ):
         super().__init__()
 
@@ -334,7 +349,7 @@ class DWS(BaseConv):
             # nn.BatchNorm2d(C_out, affine=affine),
             self.conv_func(
                 C_in,
-                C_in * 4,
+                C_fixed * 4,
                 1,
                 1,
                 0,
@@ -342,7 +357,13 @@ class DWS(BaseConv):
             ),
             nn.GELU(),
             self.conv_func(
-                C_in * 4, C_in, kernel_size, 1, padding, bias=False, groups=C_in
+                C_fixed * 4,
+                C_out,
+                kernel_size,
+                1,
+                padding,
+                bias=False,
+                groups=C_in,
             ),
             # nn.BatchNorm2d(C_out, affine=True),
             nn.GELU(),
@@ -358,14 +379,22 @@ class FacConv(BaseConv):
     """
 
     def __init__(
-        self, C_in, C_out, kernel_length, stride, padding, affine=True, growth=1
+        self,
+        C_in,
+        C_out,
+        C_fixed,
+        kernel_length,
+        stride,
+        padding,
+        affine=True,
+        growth=1,
     ):
         super().__init__()
         self.net = nn.Sequential(
             # nn.BatchNorm2d(C_out, affine=affine),
             self.conv_func(
                 C_in,
-                C_in * growth,
+                C_fixed * growth,
                 (kernel_length, 1),
                 stride,
                 (padding, 0),
@@ -373,7 +402,7 @@ class FacConv(BaseConv):
             ),
             nn.GELU(),
             self.conv_func(
-                C_in * growth,
+                C_fixed * growth,
                 C_out,
                 (1, kernel_length),
                 stride,
@@ -475,7 +504,7 @@ class AssertWrapper(nn.Module):
 class MixedOp(nn.Module):
     """Mixed operation"""
 
-    def __init__(self, C, stride, first=False):
+    def __init__(self, C_in, C_out, C_fixed, stride, first=False):
         super().__init__()
         self._ops = nn.ModuleList()
         for primitive in gt.PRIMITIVES_SR:
@@ -483,8 +512,8 @@ class MixedOp(nn.Module):
             if first and primitive == "zero":
                 continue
             # print(primitive, "channels:", C)
-            func = OPS[primitive](C, stride, affine=True)
-            self._ops.append(AssertWrapper(func, channels=C))
+            func = OPS[primitive](C_in, C_out, C_fixed, stride, affine=True)
+            self._ops.append(func)
 
     def forward(self, x, weights):
         """

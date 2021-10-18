@@ -1,5 +1,4 @@
 """ CNN for network augmentation """
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from sr_models import ops_flops as ops
@@ -9,7 +8,7 @@ import genotypes as gt
 class AugmentCNN(nn.Module):
     """Augmented CNN model"""
 
-    def __init__(self, c_init, repeat_factor, genotype, blocks=4):
+    def __init__(self, c_in, scale, genotype, blocks=4):
 
         """
         Args:
@@ -19,66 +18,31 @@ class AugmentCNN(nn.Module):
         """
         super().__init__()
         self.c_fixed = 32  # c_init * repeat_factor
-        self.repeat_factor = repeat_factor
+        self.repeat_factor = c_in * (scale ** 2)
 
-        net = [gt.to_dag_sr(self.c_fixed, genotype.normal)] * blocks
-        self.dag = nn.Sequential(*net)
-        self.dag_len = len(self.dag)
-
-        self.pixelup = nn.Sequential(
-            nn.PixelShuffle(int(repeat_factor ** (1 / 2)))
+        self.head = gt.to_dag_sr(
+            self.c_fixed, genotype.normal, gene_type="head"
         )
 
-        # self.pixelup = nn.Sequential(SubPixelConvBlock(), SubPixelConvBlock())
+        self.body = [
+            gt.to_dag_sr(self.c_fixed, genotype.body, gene_type="body")
+        ] * blocks
 
-        self.space_to_depth = torch.nn.functional.pixel_unshuffle
+        self.skip = gt.to_dag_sr(self.c_fixed, genotype.skip, gene_type="skip")
+        self.tail = gt.to_dag_sr(self.c_fixed, genotype.tail, gene_type="tail")
 
-        self.cnn_in = nn.Sequential(
-            nn.Conv2d(
-                3,
-                self.c_fixed,
-                kernel_size=3,
-                padding=1,
-                bias=True,
-            ),
-            nn.GELU(),
+        upsample = gt.to_dag_sr(
+            self.c_fixed, genotype.upsample, gene_type="upsample"
         )
 
-        self.cnn_out = nn.Sequential(
-            nn.Conv2d(self.c_fixed, 3, kernel_size=3, padding=1, bias=True),
-            nn.PixelShuffle(int(repeat_factor ** (1 / 2))),
-        )
-
-        self.skip_w = nn.ParameterList()
-        for i in range(4):
-            self.skip_w.append(nn.Parameter(torch.ones(1)))
+        self.upsample = nn.Sequential(upsample, nn.PixelShuffle(scale))
 
     def forward(self, x):
-        for i, block in enumerate(self.dag):
-            if i == 0:
-                state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
-                skip_block = self.cnn_in(x)
-                self.assertion_in(skip_block.shape)
-                first_skip = skip_block  # self.pixelup(state_zero)
-
-            else:
-                skip_block = x
-
-            s_cur = skip_block
-
-            for op in block:
-                s_cur = op(s_cur)
-
-            # skip_node = block[-1](skip_block)
-            self.assertion_in(s_cur.shape)
-
-            x = (
-                self.skip_w[0] * s_cur
-                + self.skip_w[1] * skip_node
-                + self.skip_w[2] * skip_block
-            )
-
-        x = self.cnn_out(x + self.skip_w[3] * first_skip)
+        x = self.head(x)
+        skip = self.skip(x)
+        x = self.body(x) + skip
+        x = self.upsample(x)
+        x = self.tail(x) + x
         return x
 
     def drop_path_prob(self, p):
