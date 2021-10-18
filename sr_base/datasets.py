@@ -39,6 +39,28 @@ class EvalDataset(Dataset):
             return len(f["lr"])
 
 
+def check_image_file(filename):
+    r"""Filter non image files in directory.
+    Args:
+        filename (str): File name under path.
+    Returns:
+        Return True if bool(x) is True for any x in the iterable.
+    """
+    return any(
+        filename.endswith(extension)
+        for extension in [
+            "bmp",
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".PNG",
+            ".jpeg",
+            ".JPEG",
+        ]
+    )
+
+
 class CropDataset(torch.utils.data.dataset.Dataset):
     def __init__(self, cfg, train=True):
 
