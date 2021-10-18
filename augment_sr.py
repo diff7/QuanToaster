@@ -26,7 +26,7 @@ def train_setup(cfg):
     cfg = cfg.train
 
     cfg.channels = channels
-    cfg.repeat_factor = scale
+    cfg.scale = scale
 
     cfg.save = utils.get_run_path(cfg.log_dir, "TUNE_" + cfg.run_name)
 
