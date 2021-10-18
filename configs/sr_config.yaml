@@ -9,7 +9,7 @@ dataset:
   train_portion: 0.7
   batch_size: 32
   crop_size: 45 # small image,  60x4=240, pathces are 200x200
-  files_list: /home/dev/data/SR
+  files_list: /home/dev/data_mnt/SR
   debug_mode: false # run on a small porion of data
   
 
