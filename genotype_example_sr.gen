@@ -1,5 +1,3 @@
 Genotype_SR(normal=[[('simple_3x3', 0)], 
-                    [('simple_5x5', 3)],  
-                    [('simple_1x1', 3)],  
-                    
-                    [('simple_5x5', 4)]], normal_concat=range(5, 7))
+                    [('simple_3x3', 1)],   
+                    [('simple_5x5', 5)]], normal_concat=range(5, 7))

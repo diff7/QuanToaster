@@ -1,15 +1,15 @@
 dataset:
-  data_processed_hr: '/home/dev/data/SR/DIV2K/processed/HR' 
-  data_processed_lr:  '/home/dev/data/SR/DIV2K/processed/HR' 
+  data_processed_hr: '/home/dev/data_mnt/SR/DIV2K/processed/HR' 
+  data_processed_lr:  '/home/dev/data_mnt/SR/DIV2K/processed/HR' 
   val_folder: '/valid/'
   train_folder: '/train/'
   scale: 4
   subset: #/home/dev/data_main/CORESETS/vmlinuz.txt
   workers: 10
   train_portion: 0.7
-  batch_size: 32
-  crop_size: 45 # small image,  60x4=240, pathces are 200x200
-  files_list: /home/dev/data/SR
+  batch_size: 16
+  crop_size: 48 # small image,  60x4=240, pathces are 200x200
+  files_list: /home/dev/data_mnt/SR
   debug_mode: false # run on a small porion of data
   
 
@@ -18,7 +18,7 @@ search:
   penalty: 0.0
   use_adjuster: false
   unrolled: false
-  gpu: 3
+  gpu: 2
   use_l1_alpha: false
   l1_lambda: 1
   use_soft_edge: false
@@ -28,7 +28,7 @@ search:
   repeat_factor: 16
   n_nodes: 5
   lr_scheduler: cosine
-  log_dir: /home/dev/data/logs
+  log_dir: /home/dev/data_mnt/logs
   im_dir: 'arch_images'
   w_lr: 1e-3 # lr for weights
   w_lr_min: 0.001 # minimum lr for weights
@@ -55,15 +55,15 @@ search:
   
   
 train:
-  run_name: 'TEST'
-  log_dir: /home/dev/data/logs
-  gpu: 2
+  run_name: 'Stress test'
+  log_dir: /home/dev/data_mnt/logs
+  gpu: 0
   lr_scheduler: linear
   use_drop_prob: false
   drop_path_prob : 0.0
-  blocks: 3
-  batch_size : 32 # batch size
-  lr : 1e-3 # lr for weights
+  blocks: 1
+  batch_size : 16 # batch size
+  lr : 1e-4 # lr for weights
   weight_decay : 0 # weight decay
   print_freq : 200 # print frequency
   epochs : 60 # # of training epochs

@@ -41,6 +41,7 @@ class ConvFlops(nn.Module):
             dilation,
             groups,
             bias,
+            padding_mode="zeros",
         )
         self.kernel = self.to_tuple(kernel)
         self.stride = self.to_tuple(stride)

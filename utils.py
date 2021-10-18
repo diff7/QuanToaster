@@ -1,5 +1,6 @@
 """ Utilities """
 import os
+import math
 import logging
 import shutil
 import torch
@@ -17,10 +18,6 @@ def get_run_path(base_dir, run_name):
     run_dir = os.path.join(base_dir, run_dir)
     os.makedirs(run_dir, exist_ok=True)
     return run_dir
-
-
-def get_sr_data(cfg):
-    pass
 
 
 def get_data(dataset, data_path, cutout_length, validation):
@@ -146,8 +143,54 @@ def save_checkpoint(state, ckpt_dir, is_best=False):
         shutil.copyfile(filename, best_filename)
 
 
-def calc_psnr(img1, img2):
-    return 10.0 * torch.log10(1 / torch.mean((img1 - img2) ** 2))
+def compute_psnr(img1, img2):
+    img1 = tensor2img_np(img1)
+    img2 = tensor2img_np(img2)
+    img1 = rgb2y(img1[4:-4, 4:-4, :])
+    img2 = rgb2y(img2[4:-4, 4:-4, :])
+    return psnr(img1, img2)
+
+
+def psnr(img1, img2):
+    assert img1.dtype == img2.dtype == np.uint8
+    img1 = img1.astype(np.float64)
+    img2 = img2.astype(np.float64)
+    mse = np.mean((img1 - img2) ** 2)
+    if mse == 0:
+        return float("inf")
+    return 20 * math.log10(255.0 / math.sqrt(mse))
+
+
+def tensor2img_np(tensor, out_type=np.uint8, min_max=(0, 1)):
+    tensor = tensor.squeeze(0)
+    tensor = tensor.float().cpu().clamp_(*min_max)  # Clamp is for on hard_tanh
+    tensor = (tensor - min_max[0]) / (min_max[1] - min_max[0])
+    n_dim = tensor.dim()
+    if n_dim == 3:
+        img_np = tensor.numpy()
+        img_np = np.transpose(img_np, (1, 2, 0))
+    elif n_dim == 2:
+        img_np = tensor.numpy()
+    else:
+        raise TypeError(
+            "Only support 4D, 3D and 2D tensor. But receieved tensor with dimension = %d"
+            % n_dim
+        )
+    if out_type == np.uint8:
+        img_np = (
+            img_np * 255.0
+        ).round()  # This is important. Unlike matlab, numpy.unit8() WILL NOT round by default.
+    return img_np.astype(out_type)
+
+
+def rgb2y(img):
+    assert img.dtype == np.uint8
+    in_img_type = img.dtype
+    img.astype(np.float64)
+    img_y = (
+        (np.dot(img[..., :3], [65.481, 128.553, 24.966])) / 255.0 + 16.0
+    ).round()
+    return img_y.astype(in_img_type)
 
 
 def min_max(m):

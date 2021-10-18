@@ -214,7 +214,7 @@ class SimpleConv(BaseConv):
                 bias=affine,
             ),
             # nn.BatchNorm2d(C_out, affine=True),
-            nn.ReLU(),
+            nn.GELU(),
         )
 
     def forward(self, x):
@@ -248,7 +248,7 @@ class GrowthConv(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.ReLU(),
+            nn.GELU(),
             self.conv_func(
                 C_in * growth,
                 C_out,
@@ -259,7 +259,7 @@ class GrowthConv(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.ReLU(),
+            nn.GELU(),
             # nn.BatchNorm2d(C_out, affine=True),
         )
 
@@ -294,7 +294,7 @@ class DecEnc(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.ReLU(),
+            nn.GELU(),
             self.conv_func(
                 C_in // reduce,
                 C_in // reduce,
@@ -305,7 +305,7 @@ class DecEnc(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.ReLU(),
+            nn.GELU(),
             self.conv_func(
                 C_in // reduce,
                 C_in,
@@ -316,7 +316,7 @@ class DecEnc(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.ReLU(),
+            nn.GELU(),
             # nn.BatchNorm2d(C_out, affine=True),
         )
 
@@ -340,12 +340,12 @@ class DWS(BaseConv):
                 0,
                 bias=False,
             ),
-            nn.ReLU(),
+            nn.GELU(),
             self.conv_func(
                 C_in * 4, C_in, kernel_size, 1, padding, bias=False, groups=C_in
             ),
             # nn.BatchNorm2d(C_out, affine=True),
-            nn.ReLU(),
+            nn.GELU(),
         )
 
     def forward(self, x):
@@ -371,7 +371,7 @@ class FacConv(BaseConv):
                 (padding, 0),
                 bias=False,
             ),
-            nn.ReLU(),
+            nn.GELU(),
             self.conv_func(
                 C_in * growth,
                 C_out,
@@ -380,7 +380,7 @@ class FacConv(BaseConv):
                 (0, padding),
                 bias=False,
             ),
-            nn.ReLU(),
+            nn.GELU(),
             # nn.BatchNorm2d(C_out, affine=True),
         )
 
@@ -464,9 +464,9 @@ class AssertWrapper(nn.Module):
     def forward(self, x):
         b, c, w, h = x.shape
         self.assertion_in((b, c, w, h))
-        x = self.func(x)
+        x = self.func(x) + x
         self.assertion_out((b, c, w, h), x.shape)
-        return x
+        return
 
     def fetch_info(self):
         return self.func.fetch_info()
@@ -543,7 +543,7 @@ if __name__ == "__main__":
     names = []
     flops = []
     for i, primitive in enumerate(PRIMITIVES_SR):
-        func = OPS[primitive](C, stride, affine=False)
+        func = OPS[primitive](C, stride, affine=True)
         conv = AssertWrapper(func, channels=C)
 
         x = conv(random_image)

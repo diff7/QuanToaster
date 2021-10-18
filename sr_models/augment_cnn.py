@@ -6,33 +6,6 @@ from sr_models import ops_flops as ops
 import genotypes as gt
 
 
-# class SubPixelConvBlock(nn.Module):
-#     def __init__(
-#         self,
-#         input_nc=3,
-#         output_nc=3,
-#         upscale_factor=2,
-#         kernel_size=3,
-#         stride=1,
-#         bias=True,
-#         pad_type="zero",
-#         norm_type=None,
-#         act_type="prelu",
-#         use_dropout=False,
-#     ):
-#         super(SubPixelConvBlock, self).__init__()
-#         self.conv_block = nn.Conv2d(
-#             48, 48, kernel_size=3, padding=1, bias=False
-#         )
-
-#         self.PS = nn.PixelShuffle(upscale_factor)
-
-#     def forward(self, input):
-#         output = self.conv_block(input)
-#         output = self.PS(output)
-#         return output
-
-
 class AugmentCNN(nn.Module):
     """Augmented CNN model"""
 
@@ -59,48 +32,53 @@ class AugmentCNN(nn.Module):
         # self.pixelup = nn.Sequential(SubPixelConvBlock(), SubPixelConvBlock())
 
         self.space_to_depth = torch.nn.functional.pixel_unshuffle
-        self.cnn_out = nn.Sequential(
-            nn.Conv2d(self.c_fixed, 48, kernel_size=3, padding=1, bias=False),
-            nn.PReLU(),
-        )
+
         self.cnn_in = nn.Sequential(
-            nn.Conv2d(3, self.c_fixed, kernel_size=3, padding=1, bias=False),
-            nn.PReLU(),
+            nn.Conv2d(
+                3,
+                self.c_fixed,
+                kernel_size=3,
+                padding=1,
+                bias=True,
+            ),
+            nn.GELU(),
         )
+
+        self.cnn_out = nn.Sequential(
+            nn.Conv2d(self.c_fixed, 3, kernel_size=3, padding=1, bias=True),
+            nn.PixelShuffle(int(repeat_factor ** (1 / 2))),
+        )
+
+        self.skip_w = nn.ParameterList()
+        for i in range(4):
+            self.skip_w.append(nn.Parameter(torch.ones(1)))
 
     def forward(self, x):
-        # x = self.cnn_in(x)
-        outs = []
         for i, block in enumerate(self.dag):
             if i == 0:
-                # state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
-                state_zero = self.cnn_in(x)
-                self.assertion_in(state_zero.shape)
-                first_state = state_zero  # self.pixelup(state_zero)
+                state_zero = torch.repeat_interleave(x, self.repeat_factor, 1)
+                skip_block = self.cnn_in(x)
+                self.assertion_in(skip_block.shape)
+                first_skip = skip_block  # self.pixelup(state_zero)
 
             else:
-                state_zero = x
+                skip_block = x
 
-                # self.space_to_depth(
-                #     x, int(self.repeat_factor ** (1 / 2))
-                # )
+            s_cur = skip_block
 
-            s_cur = state_zero
-            ss = []
-            for op in block[:-1]:
+            for op in block:
                 s_cur = op(s_cur)
-                ss.append(s_cur)
-            s_skip = block[-1](state_zero)
+
+            # skip_node = block[-1](skip_block)
             self.assertion_in(s_cur.shape)
 
-            x = (s_cur + s_skip) * 0.2 + state_zero
-            # res = self.pixelup()
+            x = (
+                self.skip_w[0] * s_cur
+                + self.skip_w[1] * skip_node
+                + self.skip_w[2] * skip_block
+            )
 
-            # x = out + res
-            outs.append(x)
-
-        x = self.cnn_out(x + first_state)
-        x = self.pixelup(x)
+        x = self.cnn_out(x + self.skip_w[3] * first_skip)
         return x
 
     def drop_path_prob(self, p):

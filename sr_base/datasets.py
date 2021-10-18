@@ -162,17 +162,38 @@ class CropDataset(torch.utils.data.dataset.Dataset):
             img = img.transpose(method=Image.FLIP_LEFT_RIGHT)
         return img
 
+    def gety(self, img):
+        y, _, _ = img.convert("YCbCr").split()
+        return y
+
+    def corrupt(self, image):
+        if self.train:
+            size_lr = self.crop_size
+            lr = image.resize((size_lr, size_lr), Image.BICUBIC)
+            return image, lr.resize(
+                (self.crop_size, self.crop_size), Image.BICUBIC
+            )
+        else:
+            width, height = image.size
+            # width, height = width // self.scale, height // self.scale
+            lr = image.resize(
+                (width // self.scale, height // self.scale), Image.BICUBIC
+            )
+            return (
+                image,
+                lr.resize((width, height), Image.BICUBIC),
+            )
+
     def downscale(self, image):
         if self.train:
             size_lr = self.crop_size
             return image, image.resize((size_lr, size_lr), Image.BICUBIC)
         else:
-            width, height = image.size
-            width, height = width // self.scale, height // self.scale
+            width_orig, height_orig = image.size
+            width, height = width_orig // self.scale, height_orig // self.scale
+            image = image.crop((0, 0, width * self.scale, height * self.scale))
             return (
-                image.resize(
-                    (width * self.scale, height * self.scale), Image.BICUBIC
-                ),
+                image,
                 image.resize((width, height), Image.BICUBIC),
             )
 
@@ -190,6 +211,7 @@ class CropDataset(torch.utils.data.dataset.Dataset):
             hr = self.random_flip(hr)
 
         hr, lr = self.downscale(hr)
+        # hr, lr = self.gety(hr), self.gety(lr)
         hr_img = self.transforms(hr)
         lr_img = self.transforms(lr)
         return (

@@ -102,7 +102,7 @@ if __name__ == "__main__":
     valid_cfg = omg.load(CFG_PATH)
     run_name = "TEST_2"
     genotype_path = "./genotype_example_sr.gen"
-    weights_path = "/home/dev/data/logs/TUNE_TEST-2021-10-09-22/best.pth.tar"
+    weights_path = "/home/dev/data/logs/TUNE_TEST-2021-10-11-18/best.pth.tar"
     log_dir = "/home/dev/data/logs/VAL_LOGS"
     save_dir = os.path.join(log_dir, run_name)
     os.makedirs(save_dir, exist_ok=True)

@@ -8,7 +8,7 @@ import copy
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from omegaconf import OmegaConf as omg
-from sr_models.test_arch import ManualCNN, ESPCN
+from sr_models.test_arch import ManualCNN, ESPCN, SRESPCN, SRResNet
 
 from sr_models.augment_cnn import AugmentCNN
 import utils
@@ -37,7 +37,8 @@ def train_setup(cfg):
 
     # FIX SEED
     np.random.seed(cfg.seed)
-    torch.cuda.set_device(cfg.gpu)
+    if cfg.gpu != "cpu":
+        torch.cuda.set_device(cfg.gpu)
     np.random.seed(cfg.seed)
     torch.manual_seed(cfg.seed)
     torch.cuda.manual_seed_all(cfg.seed)
@@ -63,7 +64,8 @@ def run_train(cfg):
 
     # set default gpu device id
     device = cfg.gpu
-    torch.cuda.set_device(device)
+    if cfg.gpu != "cpu":
+        torch.cuda.set_device(device)
 
     # TODO fix here and passing params from search config too
     # cfg_dataset.subset = None
@@ -108,8 +110,11 @@ def run_train(cfg):
     print(genotype)
 
     # model = ManualCNN(cfg.channels, cfg.repeat_factor)
+    model = SRResNet(4)
     # model = ESPCN(4)
-    model = AugmentCNN(cfg.channels, cfg.repeat_factor, genotype, cfg.blocks)
+    # model = AugmentCNN(
+    #     cfg.channels, cfg.repeat_factor, genotype, blocks=cfg.blocks
+    # )
 
     model.to(device)
 
@@ -125,7 +130,7 @@ def run_train(cfg):
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=cfg.lr,
-        # weight_decay=cfg.weight_decay,
+        weight_decay=cfg.weight_decay,
     )
     scheduler = {
         "cosine": torch.optim.lr_scheduler.CosineAnnealingLR(
@@ -147,7 +152,7 @@ def run_train(cfg):
             model.drop_path_prob(drop_prob)
 
         # training
-        score_train = train(
+        train(
             train_loader,
             model,
             optimizer,
@@ -180,11 +185,8 @@ def run_train(cfg):
         else:
             is_best = False
         utils.save_checkpoint(model, cfg.save, is_best)
-
         print("")
-        writer.add_scalars(
-            "psnr/tune", {"val": score_val, "train": score_train}, epoch
-        )
+        writer.add_scalars("psnr/tune", {"val": score_val}, epoch)
 
     logger.info("Final best PSNR = {:.4%}".format(best_score))
 
@@ -204,18 +206,15 @@ def train(
     device,
     cfg,
 ):
-    psnr_meter = utils.AverageMeter()
-    loss_meter = utils.AverageMeter()
 
+    loss_meter = utils.AverageMeter()
     cur_step = epoch * len(train_loader)
     cur_lr = optimizer.param_groups[0]["lr"]
     logger.info("Epoch {} LR {}".format(epoch, cur_lr))
     writer.add_scalar("tune/train/lr", cur_lr, cur_step)
-
     model.train()
 
     for step, (X, y, _, _) in enumerate(train_loader):
-        # print("SHAPES: ", X.shape, y.shape)
         X, y = X.to(device, non_blocking=True), y.to(device, non_blocking=True)
         N = X.size(0)
         optimizer.zero_grad()
@@ -226,35 +225,26 @@ def train(
 
         optimizer.step()
 
-        psnr = utils.calc_psnr(preds, y)
-
-        psnr_meter.update(psnr.item(), N)
         # loss_inter.update(intermediate_l[0].item(), N)
 
         if step % cfg.print_freq == 0 or step == len(train_loader) - 1:
+            # if step % 3 == 0:
+            #     logger.info(f"w skips: {[w.item() for w in model.skip_w]}")
             logger.info(
-                "Train: [{:3d}/{}] Step {:03d}/{:03d} Loss {losses.avg:.3f} "
-                "PSNR ({score.avg:.3f})".format(
+                "Train: [{:3d}/{}] Step {:03d}/{:03d} Loss {losses.avg:.4f} ".format(
                     epoch + 1,
                     cfg.epochs,
                     step,
                     len(train_loader) - 1,
                     losses=loss_meter,
-                    score=psnr_meter,
                 )
             )
 
         writer.add_scalar("tune/train/loss", loss_meter.avg, cur_step)
-        writer.add_scalar("tune/train/psnr", psnr_meter.avg, cur_step)
 
         cur_step += 1
 
-    logger.info(
-        "Train: [{:3d}/{}] Final PSNR{:.3f}".format(
-            epoch + 1, cfg.epochs, psnr_meter.avg
-        )
-    )
-    return psnr_meter.avg
+    return loss_meter.avg
 
 
 def validate(
@@ -275,14 +265,14 @@ def validate(
             X, y = X.to(device, non_blocking=True), y.to(
                 device, non_blocking=True
             )
-            N = X.size(0)
+            N = 1  # N = X.size(0)
 
             preds = model(X).clamp(0.0, 1.0)
             loss = criterion(preds.detach(), y)
 
-            psnr = utils.calc_psnr(preds, y)
+            psnr = utils.compute_psnr(preds, y)
             loss_meter.update(loss.item(), N)
-            val_psnr_meter.update(psnr.item(), N)
+            val_psnr_meter.update(psnr, N)
 
         if step % cfg.print_freq == 0 or step == len(valid_loader) - 1:
             logger.info(
