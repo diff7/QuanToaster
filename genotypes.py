@@ -84,10 +84,14 @@ def to_dag(C_in, gene, reduction):
     return dag
 
 
-def to_dag_sr(C_fixed, gene, gene_type, C_in=3, C_out=3, scale=4):
+def to_dag_sr(C_fixed, gene, gene_type, c_in=3, c_out=3, scale=4):
     """generate discrete ops from gene"""
     dag = []
     for i, edges in enumerate(gene):
+        C_in, C_out, = (
+            C_fixed,
+            C_fixed,
+        )
         if i == 0 and gene_type == "head":
             C_in = c_in
         elif i + 1 == len(gene) and gene_type == "tail":
