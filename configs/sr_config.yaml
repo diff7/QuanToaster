@@ -57,7 +57,7 @@ train:
   drop_path_prob : 0.0
   blocks: 1
   batch_size : 16 # batch size
-  lr : 1e-4 # lr for weights
+  lr : 1e-3 # lr for weights
   weight_decay : 0 # weight decay
   print_freq : 200 # print frequency
   epochs : 60 # # of training epochs
