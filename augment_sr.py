@@ -66,8 +66,8 @@ def run_train(cfg):
 
     # TODO fix here and passing params from search config too
     # cfg_dataset.subset = None
-    train_data = TrainDataset(cfg_dataset.train_path, train=True)
-    val_data = EvalDataset(cfg_dataset.eval_path, train=False)
+    train_data = TrainDataset(cfg_dataset.train_path)
+    val_data = EvalDataset(cfg_dataset.eval_path)
 
     if cfg_dataset.debug_mode:
         indices = list(range(300))
