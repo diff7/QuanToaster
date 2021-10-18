@@ -30,9 +30,7 @@ class AugmentCNN(nn.Module):
         self.c_fixed = 32  # c_init * repeat_factor
         self.repeat_factor = c_in * (scale ** 2)
 
-        self.head = gt.to_dag_sr(
-            self.c_fixed, genotype.normal, gene_type="head"
-        )
+        self.head = gt.to_dag_sr(self.c_fixed, genotype.head, gene_type="head")
 
         fb = []
         for _ in range(blocks):
