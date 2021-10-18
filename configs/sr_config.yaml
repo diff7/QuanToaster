@@ -19,7 +19,7 @@ search:
   alpha_selector: gumbel #softmax #softmax #softmax #gumbel2k #softmax 
   warm_up: 10
   channels: 3
-  repeat_factor: 16
+  scale: 4
   n_nodes: 5
   lr_scheduler: cosine
   log_dir: /home/dev/data_mnt/logs
