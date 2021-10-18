@@ -97,7 +97,7 @@ def to_dag_sr(C_fixed, gene, gene_type, c_in=3, c_out=3, scale=4):
         elif i + 1 == len(gene) and gene_type == "tail":
             C_out = c_out
         elif i == 0 and gene_type == "tail":
-            C_out = c_out
+            C_in = c_in
 
         elif gene_type == "upsample":
             C_in = C_fixed
