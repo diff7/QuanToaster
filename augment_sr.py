@@ -11,8 +11,9 @@ from omegaconf import OmegaConf as omg
 from sr_models.test_arch import ManualCNN, ESPCN, SRESPCN, SRResNet
 
 from sr_models.augment_cnn import AugmentCNN
-import utils TrainDataset, EvalDataset
-)
+import sr_models.utils as utils
+from sr_models.datasets import TrainDataset, EvalDataset
+
 from genotypes import from_str
 
 
@@ -106,9 +107,9 @@ def run_train(cfg):
     print(genotype)
 
     # model = ManualCNN(cfg.channels, cfg.repeat_factor)
-    model = SRResNet(4)
+    #model = SRResNet(4)
     # model = ESPCN(4)
-    # model = AugmentCNN(
+    model = AugmentCNN(
     #     cfg.channels, cfg.repeat_factor, genotype, blocks=cfg.blocks
     # )
 
