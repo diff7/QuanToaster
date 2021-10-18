@@ -51,7 +51,7 @@ class AugmentCNN(nn.Module):
         x = self.head(x)
         x = self.body(x)
         x = self.upsample(x)
-        x = self.tail(x) + x
+        x = self.tail(x)
         return x
 
     def drop_path_prob(self, p):
