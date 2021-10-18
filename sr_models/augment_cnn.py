@@ -34,10 +34,7 @@ class AugmentCNN(nn.Module):
 
         fb = []
         for _ in range(blocks):
-            b = [
-                gt.to_dag_sr(self.c_fixed, genotype.body, gene_type="body")
-            ] * blocks
-
+            b = gt.to_dag_sr(self.c_fixed, genotype.body, gene_type="body")
             s = gt.to_dag_sr(self.c_fixed, genotype.skip, gene_type="skip")
             fb.append(Residual(s, b))
 
