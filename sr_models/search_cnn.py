@@ -65,6 +65,7 @@ class SearchCNNController(nn.Module):
             alphass_projected[name] = [
                 func(alphas, self.temp, dim=-1) for alphas in self.alphas[name]
             ]
+        return alphass_projected
 
     def forward(self, x, temperature=1, stable=False):
         self.temp = temperature
@@ -74,10 +75,10 @@ class SearchCNNController(nn.Module):
         else:
             func = self.alphaselector
 
-        weight_alphass = self.get_alphass(func)
+        weight_alphas = self.get_alphass(func)
 
         out = self.net(x, weight_alphass)
-        (flops, mem) = self.net.fetch_weighted_flops_and_memory(weight_alphass)
+        (flops, mem) = self.net.fetch_weighted_flops_and_memory(weight_alphas)
         return out, (flops, mem)
 
     def forward_current_best(self, x):
@@ -93,8 +94,8 @@ class SearchCNNController(nn.Module):
             handler.setFormatter(logging.Formatter("%(message)s"))
 
         logger.info("####### alphas #######")
-        weight_alphass = self.get_alphass(self.alphaselector)
-        for name in weight_alphass:
+        weight_alphas = self.get_alphass(self.alphaselector)
+        for name in weight_alphas:
             logger.info(f"# alphas - {name}")
             for alphas in weight_alphass[name]:
                 logger.info(alphas)
