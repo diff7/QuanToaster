@@ -62,8 +62,6 @@ head = [
     "simple_3x3",
     "simple_1x1",
     "simple_5x5",
-    "DWS_3x3",
-    "DWS_5x5",
     "growth2_5x5",
     "growth2_3x3",
     "decenc_3x3_4",
