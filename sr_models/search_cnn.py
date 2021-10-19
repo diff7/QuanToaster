@@ -83,7 +83,7 @@ class SearchCNNController(nn.Module):
         weight_alphass = self.get_alphass(self.get_max)
         return self.net(x, weight_alphass)
 
-    def print_alphass(self, logger, temperature):
+    def print_alphas(self, logger, temperature):
 
         # remove formats
         org_formatters = []
