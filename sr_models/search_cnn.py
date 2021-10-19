@@ -59,7 +59,7 @@ class SearchCNNController(nn.Module):
         self.net = SearchArch(c_init, scale, c_fixed, arch_pattern, body_cells)
 
     def get_alphas(self, func):
-        alphas_projected = dict()
+        alphas_projected = nn.ParameterDict()
         for name in self.alpha_names:
             alphas_projected[name] = [
                 func(alpha, self.temp, dim=-1) for alpha in self.alpha[name]
