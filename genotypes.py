@@ -53,7 +53,6 @@ body = [
     "decenc_5x5_2_g3",
     "decenc_5x5_8_g3",
     "decenc_3x3_8_g3",
-    "growth4_3x3",
 ]
 head = [
     "skip_connect",
