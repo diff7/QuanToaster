@@ -55,12 +55,29 @@ body = [
     "decenc_3x3_8_g3",
     "growth4_3x3",
 ]
-
+head = [
+    "skip_connect",
+    "conv_5x1_1x5",
+    "conv_3x1_1x3",
+    "simple_3x3",
+    "simple_1x1",
+    "simple_5x5",
+    "DWS_3x3",
+    "DWS_5x5",
+    "growth2_5x5",
+    "growth2_3x3",
+    "decenc_3x3_4",
+    "decenc_3x3_2",
+    "decenc_5x5_2",
+    "decenc_5x5_8",
+    "decenc_3x3_8",
+    "growth4_3x3",
+]
 PRIMITIVES_SR = {
-    "head": body,
+    "head": head,
     "body": body,
     "skip": body,
-    "tail": body,
+    "tail": head,
     "upsample": body,
 }
 
