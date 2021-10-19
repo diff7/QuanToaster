@@ -42,18 +42,18 @@ class SharedBlock(nn.Module):
 
             self.net.append(ops.MixedOp(c_in, c_out, c_fixed, gene_type))
 
-        def forward(self, x, alphas):
-            for layer in self.net:
-                x = layer(x, alphas)
-            return x
+    def forward(self, x, alphas):
+        for layer in self.net:
+            x = layer(x, alphas)
+        return x
 
-        def fetch_info(self, x, alphas):
-            flops = 0
-            memory = 0
-            for layer in self.net:
-                flops += layer.fetch_weighted_flops(x, alphas)
-                memory += layer.fetch_weighted_memory(x, alphas)
-            return flops, memory
+    def fetch_info(self, x, alphas):
+        flops = 0
+        memory = 0
+        for layer in self.net:
+            flops += layer.fetch_weighted_flops(x, alphas)
+            memory += layer.fetch_weighted_memory(x, alphas)
+        return flops, memory
 
 
 class SearchArch(nn.Module):
