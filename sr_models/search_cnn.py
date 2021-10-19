@@ -51,10 +51,10 @@ class SearchCNNController(nn.Module):
         self.softmax = alphaSelector(name="softmax")
 
         # setup alphass list
-        self._alphass = []
-        for name in self.alphass:
-            for n, p in self.alphass[name].named_parameters():
-                self._alphass.append((n, p))
+        self._alphas = []
+        for name in self.alphas:
+            for n, p in self.alphas[name].named_parameters():
+                self._alphas.append((n, p))
 
         self.net = SearchArch(c_init, scale, c_fixed, arch_pattern, body_cells)
 
@@ -71,7 +71,7 @@ class SearchCNNController(nn.Module):
         if stable:
             func = self.softmax
         else:
-            func = self.alphasselector
+            func = self.alphaselector
 
         weight_alphass = self.get_alphass(func)
 
@@ -92,7 +92,7 @@ class SearchCNNController(nn.Module):
             handler.setFormatter(logging.Formatter("%(message)s"))
 
         logger.info("####### alphas #######")
-        weight_alphass = self.get_alphass(self.alphasselector, temperature)
+        weight_alphass = self.get_alphass(elector, temperature)
         for name in weight_alphass:
             logger.info(f"# alphas - {name}")
             for alphas in weight_alphass[name]:
