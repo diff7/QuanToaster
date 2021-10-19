@@ -64,7 +64,6 @@ head = [
     "simple_5x5",
     "growth2_5x5",
     "growth2_3x3",
-    "growth4_3x3",
 ]
 PRIMITIVES_SR = {
     "head": head,
