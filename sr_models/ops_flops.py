@@ -42,13 +42,13 @@ OPS = {
         C_in, C_out, C_fixed, 5, stride, 2, groups=C_in, affine=affine
     ),
     "simple_1x1_grouped_3": lambda C_in, C_out, C_fixed, stride, affine: SimpleConv(
-        C_in, C_out, C_fixed, 1, stride, 0, groups=4, affine=affine
+        C_in, C_out, C_fixed, 1, stride, 0, groups=3, affine=affine
     ),
     "simple_3x3_grouped_3": lambda C_in, C_out, C_fixed, stride, affine: SimpleConv(
-        C_in, C_out, C_fixed, 3, stride, 1, groups=4, affine=affine
+        C_in, C_out, C_fixed, 3, stride, 1, groups=3, affine=affine
     ),
     "simple_5x5_grouped_3": lambda C_in, C_out, C_fixed, stride, affine: SimpleConv(
-        C_in, C_out, C_fixed, 5, stride, 2, groups=4, affine=affine
+        C_in, C_out, C_fixed, 5, stride, 2, groups=3, affine=affine
     ),
     "DWS_3x3": lambda C_in, C_out, C_fixed, stride, affine: DWS(
         C_in, C_out, C_fixed, 3, stride, 1, affine=affine
@@ -81,22 +81,22 @@ OPS = {
         C_in, C_out, C_fixed, 5, stride, 2, groups=1, reduce=8, affine=affine
     ),
     "decenc_3x3_4_g3": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
-        C_in, C_out, C_fixed, 3, stride, 1, groups=4, reduce=4, affine=affine
+        C_in, C_out, C_fixed, 3, stride, 1, groups=3, reduce=4, affine=affine
     ),
     "decenc_3x3_2_g3": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
-        C_in, C_out, C_fixed, 3, stride, 1, groups=4, reduce=2, affine=affine
+        C_in, C_out, C_fixed, 3, stride, 1, groups=3, reduce=2, affine=affine
     ),
     "decenc_5x5_2_g3": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
-        C_in, C_out, C_fixed, 5, stride, 2, groups=4, reduce=2, affine=affine
+        C_in, C_out, C_fixed, 5, stride, 2, groups=3, reduce=2, affine=affine
     ),
     "decenc_5x5_4_g3": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
-        C_in, C_out, C_fixed, 5, stride, 2, groups=4, reduce=4, affine=affine
+        C_in, C_out, C_fixed, 5, stride, 2, groups=3, reduce=4, affine=affine
     ),
     "decenc_3x3_8_g3": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
-        C_in, C_out, C_fixed, 3, stride, 1, groups=4, reduce=8, affine=affine
+        C_in, C_out, C_fixed, 3, stride, 1, groups=3, reduce=8, affine=affine
     ),
     "decenc_5x5_8_g3": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
-        C_in, C_out, C_fixed, 5, stride, 2, groups=4, reduce=8, affine=affine
+        C_in, C_out, C_fixed, 5, stride, 2, groups=3, reduce=8, affine=affine
     ),
 }
 

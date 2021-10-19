@@ -63,13 +63,16 @@ head = [
     "simple_5x5",
     "growth2_5x5",
     "growth2_3x3",
+    "simple_1x1_grouped_3",
+    "simple_3x3_grouped_3",
+    "simple_5x5_grouped_3",
 ]
 PRIMITIVES_SR = {
     "head": head,
     "body": body,
     "skip": body,
     "tail": head,
-    "upsample": body,
+    "upsample": head,
 }
 
 
