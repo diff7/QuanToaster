@@ -103,9 +103,8 @@ class SearchArch(nn.Module):
         x = self.head(x, alphas["head"])
         for cell in self.body:
             x = cell(x, alphas["body"], alphas["skip"])
-        x = self.upsample(self.upsample(x, alphas["upsample"])) + self.tail(
-            x, alphas["tail"]
-        )
+        x = self.upsample(self.upsample(x, alphas["upsample"]))
+        x = self.tail(x, alphas["tail"]) + x
         return x
 
     def fetch_weighted_flops_and_memory(self, alphas):
