@@ -90,10 +90,10 @@ class SearchArch(nn.Module):
             )
             self.body.append(Residual(s, b))
 
-        upsample = SharedBlock(
+        self.upsample = SharedBlock(
             c_fixed, c_init, arch_pattern["upsample"], gene_type="upsample"
         )
-        self.upsample = nn.Sequential(upsample, nn.PixelShuffle(scale))
+        self.pixel_up = nn.PixelShuffle(scale)
 
         self.tail = SharedBlock(
             c_fixed, c_init, arch_pattern["tail"], gene_type="tail"
@@ -103,7 +103,9 @@ class SearchArch(nn.Module):
         x = self.head(x, alphas["head"])
         for cell in self.body:
             x = cell(x, alphas["body"], alphas["skip"])
-        x = self.upsample(x, alphas["upsample"]) + self.tail(x, alphas["tail"])
+        x = self.upsample(self.upsample(x, alphas["upsample"])) + self.tail(
+            x, alphas["tail"]
+        )
         return x
 
     def fetch_weighted_flops_and_memory(self, alphas):
