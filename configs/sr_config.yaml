@@ -15,7 +15,7 @@ dataset:
 
 arch:
   channels: 3
-  c_fixed: 33
+  c_fixed: 36
   scale: 4
   arch_pattern: 
       head: 2
