@@ -31,7 +31,7 @@ search:
   penalty: 0.0
   use_adjuster: false
   unrolled: false
-  gpu: cpu
+  gpu: 0
   use_l1_alpha: false
   l1_lambda: 1
   use_soft_edge: false
