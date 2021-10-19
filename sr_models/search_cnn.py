@@ -92,7 +92,7 @@ class SearchCNNController(nn.Module):
             handler.setFormatter(logging.Formatter("%(message)s"))
 
         logger.info("####### alphas #######")
-        weight_alphass = self.get_alphass(elector, temperature)
+        weight_alphass = self.get_alphass(self.alphaselector, temperature)
         for name in weight_alphass:
             logger.info(f"# alphas - {name}")
             for alphas in weight_alphass[name]:
