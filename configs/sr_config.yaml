@@ -22,6 +22,7 @@ arch:
       skip: 1
       tail: 2
       body: 3
+      upsample: 1
   body_cells: 2
 
 
