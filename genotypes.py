@@ -64,11 +64,6 @@ head = [
     "simple_5x5",
     "growth2_5x5",
     "growth2_3x3",
-    "decenc_3x3_4",
-    "decenc_3x3_2",
-    "decenc_5x5_2",
-    "decenc_5x5_8",
-    "decenc_3x3_8",
     "growth4_3x3",
 ]
 PRIMITIVES_SR = {
