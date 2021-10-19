@@ -20,6 +20,7 @@ class SharedBlock(nn.Module):
         super().__init__()
 
         self.net = nn.ModuleList()
+        self.name = gene_type
         for i in range(num_layers):
             (
                 c_in,
@@ -43,6 +44,7 @@ class SharedBlock(nn.Module):
             self.net.append(ops.MixedOp(c_in, c_out, c_fixed, gene_type))
 
     def forward(self, x, alphas):
+        print(self.name)
         for layer, a_w in zip(self.net, alphas):
             x = layer(x, a_w)
         return x
