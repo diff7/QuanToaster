@@ -114,8 +114,8 @@ class SearchCNNController(nn.Module):
     def named_weights(self):
         return self.net.named_parameters()
 
-    def alphass(self):
-        for n, p in self._alphass:
+    def alphas_weights(self):
+        for n, p in self._alphas:
             yield p
 
     def named_alphass(self):

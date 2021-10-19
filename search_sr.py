@@ -88,7 +88,7 @@ def run_search(cfg):
     )
     # alphas optimizer
     alpha_optim = torch.optim.Adam(
-        model.alphas(),
+        model.alphas_weights(),
         cfg.alpha_lr,
         betas=(0.5, 0.999),
         weight_decay=cfg.alpha_weight_decay,
