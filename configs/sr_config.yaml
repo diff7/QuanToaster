@@ -23,7 +23,7 @@ arch:
       tail: 2
       body: 3
       upsample: 1
-  body_cells: 2
+  body_cells: 1
 
 
 search:
@@ -31,7 +31,7 @@ search:
   penalty: 0.0
   use_adjuster: false
   unrolled: false
-  gpu: 2
+  gpu: cpu
   use_l1_alpha: false
   l1_lambda: 1
   use_soft_edge: false
@@ -49,7 +49,6 @@ search:
   epochs: 20 # n of training epochs
   temperature_start: 1e1
   temp_red: 0.6
-  layers: 4 # of layers 8 is default
   seed: 2 #random seed
   workers: 4 ## of workers
   alpha_lr:  3e-4 #3e-4 #lr for alpha
