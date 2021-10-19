@@ -26,19 +26,19 @@ PRIMITIVES = [
 ]
 
 
-PRIMITIVES_SR = [
-    # "skip_connect",  # identity
-    # "conv_5x1_1x5",
-    # "conv_3x1_1x3",
+body = [
+    "skip_connect",
+    "conv_5x1_1x5",
+    "conv_3x1_1x3",
     "simple_3x3",
     "simple_1x1",
     "simple_5x5",
-    # "simple_1x1_grouped_full",
-    # "simple_3x3_grouped_full",
-    # "simple_5x5_grouped_full",
-    # "simple_1x1_grouped_3",
-    # "simple_3x3_grouped_3",
-    # "simple_5x5_grouped_3",
+    "simple_1x1_grouped_full",
+    "simple_3x3_grouped_full",
+    "simple_5x5_grouped_full",
+    "simple_1x1_grouped_3",
+    "simple_3x3_grouped_3",
+    "simple_5x5_grouped_3",
     "DWS_3x3",
     "DWS_5x5",
     "growth2_5x5",
@@ -46,22 +46,23 @@ PRIMITIVES_SR = [
     "decenc_3x3_4",
     "decenc_3x3_2",
     "decenc_5x5_2",
-    # "decenc_5x5_8",
-    # "decenc_3x3_8",
-    # "decenc_3x3_4_g3",
-    # "decenc_3x3_2_g3",
-    # "decenc_5x5_2_g3",
-    # "decenc_5x5_8_g3",
-    # "decenc_3x3_8_g3",
-    # "growth4_3x3",
-    # "bs_up_bicubic_residual",
-    # "bs_up_nearest_residual",
-    # "bs_up_bilinear_residual",
-    # "bs_up_bicubic",
-    # "bs_up_nearest",
-    # "bs_up_bilinear",
-    # "none",
+    "decenc_5x5_8",
+    "decenc_3x3_8",
+    "decenc_3x3_4_g3",
+    "decenc_3x3_2_g3",
+    "decenc_5x5_2_g3",
+    "decenc_5x5_8_g3",
+    "decenc_3x3_8_g3",
+    "growth4_3x3",
 ]
+
+PRIMITIVES_SR = {
+    "head": body,
+    "body": body,
+    "skip": body,
+    "tail": body,
+    "upsample": body,
+}
 
 
 def to_dag(C_in, gene, reduction):
@@ -174,18 +175,13 @@ def parse(alpha, k):
     return gene
 
 
-def parse_sr(alpha):
+def parse_sr(alpha, name):
 
-    gene = []
-    # assert PRIMITIVES_SR[-1] == "none"  # assume last PRIMITIVE is 'none'
+    gene = dict()
 
-    # 1) Convert the mixed op to discrete edge (single op) by choosing top-1 weight edge
-    # 2) Choose top-k edges per node by edge score (top-1 weight in edge)
     for i, edges in enumerate(alpha):
-
         func_idx = edges.argmax()  # ignore 'none'
-        prim = PRIMITIVES_SR[func_idx]
-        node_gene = [(prim, i)]
-        gene.append(node_gene)
+        prim = PRIMITIVES_SR[name][func_idx]
+        gene.append(prim)
 
     return gene

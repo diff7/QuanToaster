@@ -12,7 +12,7 @@ import genotypes as gt
 # lower exp is sinlge path
 
 OPS = {
-    "none": lambda C_in, C_out, C_fixed, stride, affine: Zero(stride, zero=0),
+    "zero": lambda C_in, C_out, C_fixed, stride, affine: Zero(stride, zero=0),
     "skip_connect": lambda C_in, C_out, C_fixed, stride, affine: Identity(),
     "conv_5x1_1x5": lambda C_in, C_out, C_fixed, stride, affine: FacConv(
         C_in, C_out, C_fixed, 5, stride, 2, affine=affine
@@ -98,36 +98,6 @@ OPS = {
     "decenc_5x5_8_g3": lambda C_in, C_out, C_fixed, stride, affine: DecEnc(
         C_in, C_out, C_fixed, 5, stride, 2, groups=3, reduce=8, affine=affine
     ),
-    # "bs_up_bicubic_residual": lambda C, stride, affine: BSup(
-    #     "bicubic",
-    #     C,
-    #     residual=True,
-    # ),
-    # "bs_up_nearest_residual": lambda C, stride, affine: BSup(
-    #     "nearest",
-    #     C,
-    #     residual=True,
-    # ),
-    # "bs_up_bilinear_residual": lambda C, stride, affine: BSup(
-    #     "bilinear",
-    #     C,
-    #     residual=True,
-    # ),
-    # "bs_up_bicubic": lambda C, stride, affine: BSup(
-    #     "bicubic",
-    #     C,
-    #     residual=False,
-    # ),
-    # "bs_up_nearest": lambda C, stride, affine: BSup(
-    #     "nearest",
-    #     C,
-    #     residual=False,
-    # ),
-    # "bs_up_bilinear": lambda C, stride, affine: BSup(
-    #     "bilinear",
-    #     C,
-    #     residual=False,
-    # ),
 }
 
 
@@ -504,13 +474,10 @@ class AssertWrapper(nn.Module):
 class MixedOp(nn.Module):
     """Mixed operation"""
 
-    def __init__(self, C_in, C_out, C_fixed, stride, first=False):
+    def __init__(self, C_in, C_out, C_fixed, gene_type, stride=1):
         super().__init__()
         self._ops = nn.ModuleList()
-        for primitive in gt.PRIMITIVES_SR:
-            # avoid zero connection at the first node
-            if first and primitive == "zero":
-                continue
+        for primitive in gt.PRIMITIVES_SR[gene_type]:
             # print(primitive, "channels:", C)
             func = OPS[primitive](C_in, C_out, C_fixed, stride, affine=True)
             self._ops.append(func)
