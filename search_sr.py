@@ -62,10 +62,12 @@ def run_search(cfg):
     criterion = nn.L1Loss().to(device)
 
     model = SearchCNNController(
-        cfg.channels,
-        cfg.repeat_factor,
+        cfg.arch.channels,
+        cfg.arch.c_fixed,
+        cfg.arch.scale,
         criterion,
-        cfg.n_nodes,
+        cfg.arch.arch_pattern,
+        cfg.arch.body_cells,
         device_ids=cfg.gpu,
         alpha_selector=cfg.alpha_selector,
     )

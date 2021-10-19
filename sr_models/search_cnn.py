@@ -22,13 +22,12 @@ class SearchCNNController(nn.Module):
         scale,
         criterion,
         arch_pattern,
-        n_nodes=4,
+        body_cells=2,
         device_ids=None,
         alpha_selector="softmax",
-        blocks=2,
     ):
         super().__init__()
-        self.n_nodes = n_nodes
+        self.body_cells = body_cells
         self.criterion = criterion
         if device_ids is None:
             device_ids = list(range(torch.cuda.device_count()))
@@ -57,9 +56,7 @@ class SearchCNNController(nn.Module):
             if "alpha" in n:
                 self._alphas.append((n, p))
 
-        self.net = SearchArch(
-            n_nodes, c_init, scale, c_fixed, arch_pattern, blocks
-        )
+        self.net = SearchArch(c_init, scale, c_fixed, arch_pattern, body_cells)
 
     def get_alphas(self, func):
         alphas_projected = dict()

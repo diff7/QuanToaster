@@ -57,22 +57,19 @@ class SharedBlock(nn.Module):
 
 
 class SearchArch(nn.Module):
-    """Cell for search
-    Each edge is mixed and continuous relaxed.
-    """
-
-    def __init__(self, n_nodes, c_init, scale, c_fixed, arch_pattern, blocks):
+    def __init__(self, c_init, scale, c_fixed, arch_pattern, body_cells):
         """
         Args:
-            n_nodes: # of intermediate n_nodes
-            C_fixed: # of channels to work with
-            C_init:  # of initial channels, usually 3
+            body_cells: # of intermediate body blocks
+            c_fixed: # of channels to work with
+            c_init:  # of initial channels, usually 3
+            scale: # downsampling scale
 
             arch_pattern : {'head':2, 'body':4, 'tail':3, 'skip'=1, 'upsample'=1}
         """
 
         super().__init__()
-        self.n_nodes = n_nodes
+        self.body_cells = body_cells
         self.c_fixed = c_fixed  # 32, 64 etc
         self.c_init = c_init
 
@@ -82,7 +79,7 @@ class SearchArch(nn.Module):
         )
 
         self.body = nn.ModuleList()
-        for _ in range(blocks):
+        for _ in range(body_cells):
             b = SharedBlock(
                 self.c_fixed, arch_pattern["body"], c_init, gene_type="body"
             )

@@ -13,6 +13,18 @@ dataset:
   debug_mode: false # run on a small porion of data
   
 
+arch:
+  channels: 3
+  c_fixed: 32
+  scale: 4
+  arch_pattern: 
+      head: 2
+      skip: 1
+      tail: 2
+      body: 3
+  body_cells: 2
+
+
 search:
   run_name: 'DEBUG'
   penalty: 0.0
