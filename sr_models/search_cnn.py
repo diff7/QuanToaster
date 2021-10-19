@@ -32,6 +32,7 @@ class SearchCNNController(nn.Module):
         if device_ids is None:
             device_ids = list(range(torch.cuda.device_count()))
         self.device_ids = device_ids
+        self.temp = 1
 
         # initialize architect parameters: alphass
         self.n_ops = len(gt.PRIMITIVES_SR)
