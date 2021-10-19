@@ -77,7 +77,7 @@ class SearchCNNController(nn.Module):
 
         weight_alphas = self.get_alphass(func)
 
-        out = self.net(x, weight_alphass)
+        out = self.net(x, weight_alphas)
         (flops, mem) = self.net.fetch_weighted_flops_and_memory(weight_alphas)
         return out, (flops, mem)
 
