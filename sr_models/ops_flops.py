@@ -33,13 +33,13 @@ OPS = {
         C_in, C_out, C_fixed, 5, stride, 2, affine=affine
     ),
     "simple_1x1_grouped_full": lambda C_in, C_out, C_fixed, stride, affine: SimpleConv(
-        C_in, C_out, C_fixed, 1, stride, 0, groups=C_out, affine=affine
+        C_in, C_out, C_fixed, 1, stride, 0, groups=C_in, affine=affine
     ),
     "simple_3x3_grouped_full": lambda C_in, C_out, C_fixed, stride, affine: SimpleConv(
-        C_in, C_out, C_fixed, 3, stride, 1, groups=C_out, affine=affine
+        C_in, C_out, C_fixed, 3, stride, 1, groups=C_in, affine=affine
     ),
     "simple_5x5_grouped_full": lambda C_in, C_out, C_fixed, stride, affine: SimpleConv(
-        C_in, C_out, C_fixed, 5, stride, 2, groups=C_out, affine=affine
+        C_in, C_out, C_fixed, 5, stride, 2, groups=C_in, affine=affine
     ),
     "simple_1x1_grouped_3": lambda C_in, C_out, C_fixed, stride, affine: SimpleConv(
         C_in, C_out, C_fixed, 1, stride, 0, groups=3, affine=affine
