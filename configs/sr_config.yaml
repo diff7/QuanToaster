@@ -36,9 +36,6 @@ search:
   use_soft_edge: false
   alpha_selector: gumbel #softmax #softmax #softmax #gumbel2k #softmax 
   warm_up: 10
-  channels: 3
-  scale: 4
-  n_nodes: 5
   lr_scheduler: cosine
   log_dir: /home/dev/data_mnt/logs
   im_dir: 'arch_images'
@@ -64,7 +61,6 @@ search:
     max_iter: 100
     verbose: true
     gamma: 1e-6
-  
   
 train:
   run_name: 'Stress test'

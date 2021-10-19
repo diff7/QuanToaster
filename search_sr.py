@@ -23,6 +23,7 @@ def train_setup(cfg):
     # INIT FOLDERS & cfg
 
     cfg_dataset = cfg.dataset
+    cfg_arch = cfg.arch
     cfg = cfg.search
     cfg.save = utils.get_run_path(cfg.log_dir, "SEARCH_" + cfg.run_name)
 
@@ -47,11 +48,11 @@ def train_setup(cfg):
         for k, v in cfg.items():
             f.write(f"{str(k)}:{str(v)}\n")
 
-    return cfg, writer, logger, cfg_dataset
+    return cfg, writer, logger, cfg_dataset, cfg_arch
 
 
 def run_search(cfg):
-    cfg, writer, logger, cfg_dataset = train_setup(cfg)
+    cfg, writer, logger, cfg_dataset, cfg_arch = train_setup(cfg)
     logger.info("Logger is set - training start")
 
     # set default gpu device id
@@ -62,12 +63,12 @@ def run_search(cfg):
     criterion = nn.L1Loss().to(device)
 
     model = SearchCNNController(
-        cfg.arch.channels,
-        cfg.arch.c_fixed,
-        cfg.arch.scale,
+        cfg_arch.channels,
+        cfg_arch.c_fixed,
+        cfg_arch.scale,
         criterion,
-        cfg.arch.arch_pattern,
-        cfg.arch.body_cells,
+        cfg_arch.arch_pattern,
+        cfg_arch.body_cells,
         device_ids=cfg.gpu,
         alpha_selector=cfg.alpha_selector,
     )
