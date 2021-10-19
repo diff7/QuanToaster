@@ -75,26 +75,26 @@ class SearchArch(nn.Module):
 
         # Generate searchable network with shared weights
         self.head = SharedBlock(
-            c_fixed, arch_pattern["head"], c_init, gene_type="head"
+            c_fixed, c_init, arch_pattern["head"], gene_type="head"
         )
 
         self.body = nn.ModuleList()
         for _ in range(body_cells):
             b = SharedBlock(
-                c_fixed, arch_pattern["body"], c_init, gene_type="body"
+                c_fixed, c_init, arch_pattern["body"], gene_type="body"
             )
             s = SharedBlock(
-                c_fixed, arch_pattern["skip"], c_init, gene_type="skip"
+                c_fixed, c_init, arch_pattern["skip"], gene_type="skip"
             )
             self.body.append(Residual(s, b))
 
         upsample = SharedBlock(
-            c_fixed, arch_pattern["upsample"], c_init, gene_type="upsample"
+            c_fixed, c_init, arch_pattern["upsample"], gene_type="upsample"
         )
         self.upsample = nn.Sequential(upsample, nn.PixelShuffle(scale))
 
         self.tail = SharedBlock(
-            c_fixed, arch_pattern["tail"], c_init, gene_type="tail"
+            c_fixed, c_init, arch_pattern["tail"], gene_type="tail"
         )
 
     def forward(self, x, alphas):
