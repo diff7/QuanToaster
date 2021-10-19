@@ -113,7 +113,6 @@ class SearchArch(nn.Module):
 
         for func, name in [
             (self.head, "head"),
-            (self.skip, "skip"),
             (self.tail, "tail"),
             (self.upsample, "upsample"),
         ]:
