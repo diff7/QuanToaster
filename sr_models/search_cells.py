@@ -43,8 +43,8 @@ class SharedBlock(nn.Module):
             self.net.append(ops.MixedOp(c_in, c_out, c_fixed, gene_type))
 
     def forward(self, x, alphas):
-        for layer in self.net:
-            x = layer(x, alphas)
+        for layer, a_w in zip(self.net, alphas):
+            x = layer(x, a_w)
         return x
 
     def fetch_info(self, x, alphas):
