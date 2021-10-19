@@ -33,36 +33,36 @@ class SearchCNNController(nn.Module):
             device_ids = list(range(torch.cuda.device_count()))
         self.device_ids = device_ids
 
-        # initialize architect parameters: alphas
+        # initialize architect parameters: alphass
         self.n_ops = len(gt.PRIMITIVES_SR)
 
-        self.alpha_names = ["head", "body", "skip", "upsample", "tail"]
+        self.alphas_names = ["head", "body", "skip", "upsample", "tail"]
 
-        self.alpha = nn.ParameterDict()
-        for name in self.alpha_names:
+        self.alphas = dict()
+        for name in self.alphas_names:
             params = nn.ParameterList()
             for _ in range(arch_pattern[name]):
                 params.append(
                     nn.Parameter(torch.ones(len(gt.PRIMITIVES_SR[name])))
                 )
-            self.alpha[name] = params
+            self.alphas[name] = params
 
-        self.alphaselector = AlphaSelector(name=alpha_selector)
-        self.softmax = AlphaSelector(name="softmax")
+        self.alphaselector = alphaSelector(name=alpha_selector)
+        self.softmax = alphaSelector(name="softmax")
 
-        # setup alphas list
-        self._alphas = []
-        for n, p in self.named_parameters():
-            if "alpha" in n:
-                self._alphas.append((n, p))
+        # setup alphass list
+        self._alphass = []
+        for name in self.alphass:
+            for n, p in self.alphass[name].named_parameters():
+                self._alphass.append((n, p))
 
         self.net = SearchArch(c_init, scale, c_fixed, arch_pattern, body_cells)
 
-    def get_alphas(self, func):
-        alphas_projected = nn.ParameterDict()
-        for name in self.alpha_names:
-            alphas_projected[name] = [
-                func(alpha, self.temp, dim=-1) for alpha in self.alpha[name]
+    def get_alphass(self, func):
+        alphass_projected = dict()
+        for name in self.alphas_names:
+            alphass_projected[name] = [
+                func(alphas, self.temp, dim=-1) for alphas in self.alphas[name]
             ]
 
     def forward(self, x, temperature=1, stable=False):
@@ -71,19 +71,19 @@ class SearchCNNController(nn.Module):
         if stable:
             func = self.softmax
         else:
-            func = self.alphaselector
+            func = self.alphasselector
 
-        weight_alphas = self.get_alphas(func)
+        weight_alphass = self.get_alphass(func)
 
-        out = self.net(x, weight_alphas)
-        (flops, mem) = self.net.fetch_weighted_flops_and_memory(weight_alphas)
+        out = self.net(x, weight_alphass)
+        (flops, mem) = self.net.fetch_weighted_flops_and_memory(weight_alphass)
         return out, (flops, mem)
 
     def forward_current_best(self, x):
-        weight_alphas = self.get_alphas(self.get_max)
-        return self.net(x, weight_alphas)
+        weight_alphass = self.get_alphass(self.get_max)
+        return self.net(x, weight_alphass)
 
-    def print_alphas(self, logger, temperature):
+    def print_alphass(self, logger, temperature):
 
         # remove formats
         org_formatters = []
@@ -91,12 +91,12 @@ class SearchCNNController(nn.Module):
             org_formatters.append(handler.formatter)
             handler.setFormatter(logging.Formatter("%(message)s"))
 
-        logger.info("####### ALPHA #######")
-        weight_alphas = self.get_alphas(self.alphaselector, temperature)
-        for name in weight_alphas:
-            logger.info(f"# Alpha - {name}")
-            for alpha in weight_alphas[name]:
-                logger.info(alpha)
+        logger.info("####### alphas #######")
+        weight_alphass = self.get_alphass(self.alphasselector, temperature)
+        for name in weight_alphass:
+            logger.info(f"# alphas - {name}")
+            for alphas in weight_alphass[name]:
+                logger.info(alphas)
 
         # restore formats
         for handler, formatter in zip(logger.handlers, org_formatters):
@@ -104,8 +104,8 @@ class SearchCNNController(nn.Module):
 
     def genotype(self):
         gene = dict()
-        for name in self.alpha_names:
-            gene[name] = gt.parse_sr(self.alpha[name], name)
+        for name in self.alphas_names:
+            gene[name] = gt.parse_sr(self.alphas[name], name)
         return gt.Genotype_SR(**gene)
 
     def weights(self):
@@ -114,12 +114,12 @@ class SearchCNNController(nn.Module):
     def named_weights(self):
         return self.net.named_parameters()
 
-    def alphas(self):
-        for n, p in self._alphas:
+    def alphass(self):
+        for n, p in self._alphass:
             yield p
 
-    def named_alphas(self):
-        for n, p in self._alphas:
+    def named_alphass(self):
+        for n, p in self._alphass:
             yield n, p
 
     def fetch_weighted_flops_and_memory(
@@ -127,27 +127,27 @@ class SearchCNNController(nn.Module):
     ):
 
         return self.net.fetch_weighted_flops_and_memory(
-            self.self.get_alphas(F.softmax, self.temp)
+            self.self.get_alphass(F.softmax, self.temp)
         )
 
-    def get_max(self, alpha, keep_weight=False):
+    def get_max(self, alphas, keep_weight=False):
         # get ones on the place of max values
-        # alpha is 1d vector here
-        values = alpha.max()
-        ones = (values == alpha).type(torch.int)
+        # alphas is 1d vector here
+        values = alphas.max()
+        ones = (values == alphas).type(torch.int)
 
         if keep_weight:
-            return alpha * ones.detach()
+            return alphas * ones.detach()
         else:
             return ones.detach()
 
     def fetch_current_best_flops_and_memory(self):
         return self.net.fetch_weighted_flops_and_memory(
-            self.self.get_alphas(self.get_max, self.temp)
+            self.self.get_alphass(self.get_max, self.temp)
         )
 
 
-class AlphaSelector:
+class alphaSelector:
     def __init__(self, name="softmax"):
         assert name in ["softmax", "gumbel", "gumbel2k"]
         self.name = name
