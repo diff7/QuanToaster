@@ -333,7 +333,7 @@ class DWS(BaseConv):
                 1,
                 padding,
                 bias=False,
-                groups=C_in * 4,
+                groups=C_in,
             ),
             # nn.BatchNorm2d(C_out, affine=True),
             nn.GELU(),
