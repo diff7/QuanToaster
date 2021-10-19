@@ -35,7 +35,7 @@ search:
   use_l1_alpha: false
   l1_lambda: 1
   use_soft_edge: false
-  alpha_selector: gumbel #softmax #softmax #softmax #gumbel2k #softmax 
+  alpha_selector: softmax #softmax #gumbel2k
   warm_up: 10
   lr_scheduler: cosine
   log_dir: /home/dev/data_mnt/logs

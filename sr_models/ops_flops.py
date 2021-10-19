@@ -477,10 +477,8 @@ class MixedOp(nn.Module):
     def __init__(self, C_in, C_out, C_fixed, gene_type, stride=1):
         super().__init__()
         self._ops = nn.ModuleList()
-        print(gene_type)
         for primitive in gt.PRIMITIVES_SR[gene_type]:
             # print(primitive, "channels:", C)
-            print(primitive, C_in, C_out, C_fixed, stride)
             func = OPS[primitive](C_in, C_out, C_fixed, stride, affine=True)
             self._ops.append(func)
 
@@ -490,6 +488,8 @@ class MixedOp(nn.Module):
             x: input
             weights: weight for each operation
         """
+        for w, op in zip(weights, self._ops):
+            print("W: ", w.shape, "OUT: ", op(x).shape)
 
         return sum(w * op(x) for w, op in zip(weights, self._ops))
 
