@@ -97,7 +97,7 @@ class SearchCNNController(nn.Module):
         weight_alphas = self.get_alphass(self.alphaselector)
         for name in weight_alphas:
             logger.info(f"# alphas - {name}")
-            for alphas in weight_alphass[name]:
+            for alphas in weight_alphas[name]:
                 logger.info(alphas)
 
         # restore formats
