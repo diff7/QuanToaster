@@ -12,7 +12,7 @@ from torch.utils.tensorboard import SummaryWriter
 import utils
 from sr_models.search_cnn import SearchCNNController
 from architect import Architect, ArchConstrains
-from sr_base.datasets import PatchDataset
+from sr_base.datasets import CropDataset
 from visualize import plot_sr
 
 from omegaconf import OmegaConf as omg
@@ -209,14 +209,14 @@ def run_search(cfg):
             )
         print("best current", best_current_flops)
         writer.add_scalars(
-            "psnr/search", {"val": best_score, "train": score_train}, epoch
+            "loss/search", {"val": best_score, "train": score_train}, epoch
         )
         writer.add_scalars(
-            "psnr_val_unsummed/search", {"val": score_val_unsummed}, epoch
+            "loss_val_unsummed/search", {"val": score_val_unsummed}, epoch
         )
         writer.add_scalar("search/train/temperature", temperature, epoch)
 
-        logger.info("Final best Prec@1 = {:.3f}".format(best_score))
+        logger.info("Final best LOSS = {:.3f}".format(best_score))
         logger.info("Best Genotype = {}".format(best_genotype))
 
     # FINISH TRAINING
@@ -260,7 +260,6 @@ def train(
     flops_loss,
     temperature,
 ):
-    psnr_meter = utils.AverageMeter()
     loss_meter = utils.AverageMeter()
 
     stable = True
@@ -326,20 +325,16 @@ def train(
         nn.utils.clip_grad_norm_(model.weights(), cfg.w_grad_clip)
         w_optim.step()
 
-        psnr = utils.calc_psnr(preds, trn_y)
         loss_meter.update(loss_w.item(), N)
-        psnr_meter.update(psnr.item(), N)
 
         if step % cfg.print_freq == 0 or step == len(train_loader) - 1:
             logger.info(
-                "Train: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} "
-                "PSNR ({psnr.avg:.3f}) ".format(
+                "Train: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} ".format(
                     epoch + 1,
                     cfg.epochs,
                     step,
                     len(train_loader) - 1,
                     losses=loss_meter,
-                    psnr=psnr_meter,
                 )
             )
 
@@ -364,12 +359,12 @@ def train(
         cur_step += 1
 
     logger.info(
-        "Train: [{:2d}/{}] Final PSNR {:.3f}".format(
-            epoch + 1, cfg.epochs, psnr_meter.avg
+        "Train: [{:2d}/{}] Final LOSS {:.3f}".format(
+            epoch + 1, cfg.epochs, loss_meter.avg
         )
     )
 
-    return psnr_meter.avg, cur_step, best_current_flops
+    return cur_step, best_current_flops
 
 
 def validate(
@@ -402,38 +397,34 @@ def validate(
 
             loss = model.criterion(preds, y)
 
-            psnr = utils.calc_psnr(preds, y)
             loss_meter.update(loss.item(), N)
-            psnr_meter.update(psnr.item(), N)
             if step % cfg.print_freq == 0 or step == len(valid_loader) - 1:
                 logger.info(
-                    "Valid: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} "
-                    "PSNR ({psnr.avg:.3f}) ".format(
+                    "Valid: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} ".format(
                         epoch + 1,
                         cfg.epochs,
                         step,
                         len(valid_loader) - 1,
                         losses=loss_meter,
-                        psnr=psnr_meter,
                     )
                 )
 
     logger.info(
-        "Valid: [{:2d}/{}] Final Prec@1 {:.3f}".format(
-            epoch + 1, cfg.epochs, psnr_meter.avg
+        "Valid: [{:2d}/{}] Final LOSS {:.3f}".format(
+            epoch + 1, cfg.epochs, loss_meter.avg
         )
     )
     if not best:
         utils.save_images(
             cfg.save, x_path[0], y_path[0], preds[0], epoch, writer
         )
-    return psnr_meter.avg
+    return loss_meter.avg
 
 
 def get_data_loaders(cfg):
 
     # get data with meta info
-    train_data = PatchDataset(cfg, train=True)
+    train_data = CropDataset(cfg, train=True)
 
     # split data to train/validation
     n_train = len(train_data) // 2
