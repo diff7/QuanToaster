@@ -488,8 +488,8 @@ class MixedOp(nn.Module):
             x: input
             weights: weight for each operation
         """
-        # for w, op in zip(weights, self._ops):
-        #     print("W: ", w.shape, "OUT: ", op(x).shape)
+        for w, op in zip(weights, self._ops):
+            print("W: ", w.shape, "OUT: ", op(x).shape)
 
         return sum(w * op(x) for w, op in zip(weights, self._ops))
 
