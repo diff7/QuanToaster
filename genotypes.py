@@ -53,7 +53,7 @@ body = [
     # "decenc_5x5_2_g3",
 ]
 head = [
-    "skip_connect",
+    # "skip_connect",
     "conv_5x1_1x5",
     "conv_3x1_1x3",
     "simple_3x3",
