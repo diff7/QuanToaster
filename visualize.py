@@ -108,15 +108,14 @@ def plot_sr(genotype, file_path, caption=None):
     # input nodes
     g.node("Input", fillcolor="darkseagreen2")
 
-    parts = ["head", "body", "upsample", "skip", "tail"]
+    parts = ["head", "body", "upsample", "tail"]
 
     node_n = 1
     for name in parts:
         layers = getattr(genotype, name)
-        # intermediate nodes
-        n_nodes = len(genotype)
-        # for i in range(n_nodes - 1):
-        #     g.node(str(i + 1), fillcolor="lightblue")
+        if name == "body":
+            body_start = node_n
+            body_end = node_n + len(parts)
 
         if name == "upsample":
             g.edge(
@@ -139,6 +138,8 @@ def plot_sr(genotype, file_path, caption=None):
             )
             node_n += 1
 
+    # BODY SKIP
+    body_SKIP
     # SKIP NODE
     g.node("Pixel shuffle", fillcolor="palegoldenrod")
     g.edge(
