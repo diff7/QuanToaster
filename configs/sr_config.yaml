@@ -6,7 +6,7 @@ dataset:
   scale: 4
   subset: #/home/dev/data_main/CORESETS/vmlinuz.txt
   workers: 10
-  train_portion: 0.7
+  train_portion: 0.2
   batch_size: 32
   crop_size: 45 # small image,  60x4=240, pathces are 200x200
   files_list: /home/dev/data_mnt/SR

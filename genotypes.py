@@ -186,7 +186,7 @@ def parse(alpha, k):
 
 def parse_sr(alpha, name):
 
-    gene = dict()
+    gene = []
 
     for i, edges in enumerate(alpha):
         func_idx = edges.argmax()  # ignore 'none'
