@@ -108,7 +108,7 @@ def run_search(cfg):
     architect = Architect(model, cfg.w_momentum, cfg.w_weight_decay)
 
     # training loop
-    best_score = -1e3
+    best_score = 1e3
     cur_step = 0
     temperature = cfg.temperature_start
     for epoch in range(cfg.epochs):
@@ -172,7 +172,7 @@ def run_search(cfg):
         logger.info("genotype = {}".format(genotype))
 
         # save
-        if best_score < score_val:
+        if best_score > score_val:
             best_score = score_val
             best_flops = best_current_flops
             best_genotype = genotype
@@ -365,7 +365,7 @@ def train(
         )
     )
 
-    return cur_step, best_current_flops
+    return loss_meter.avg, cur_step, best_current_flops
 
 
 def validate(

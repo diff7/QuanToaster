@@ -18,7 +18,7 @@ class Residual(nn.Module):
 class AugmentCNN(nn.Module):
     """Augmented CNN model"""
 
-    def __init__(self, c_in, scale, genotype, blocks=4):
+    def __init__(self, c_in, c_fixed, scale, genotype, blocks=4):
 
         """
         Args:
@@ -27,7 +27,7 @@ class AugmentCNN(nn.Module):
             C: # of starting model channels
         """
         super().__init__()
-        self.c_fixed = 32  # c_init * repeat_factor
+        self.c_fixed = c_fixed  # c_init * repeat_factor
         self.repeat_factor = c_in * (scale ** 2)
 
         self.head = gt.to_dag_sr(self.c_fixed, genotype.head, gene_type="head")

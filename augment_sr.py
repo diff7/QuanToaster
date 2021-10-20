@@ -21,6 +21,7 @@ def train_setup(cfg):
 
     # INIT FOLDERS & cfg
     cfg_dataset = copy.copy(cfg.dataset)
+    cfg_arch = copy.copy(cfg.arch)
     scale = cfg.search.scale
     channels = cfg.search.channels
     cfg = cfg.train
@@ -52,11 +53,11 @@ def train_setup(cfg):
         for k, v in cfg.items():
             f.write(f"{str(k)}:{str(v)}\n")
 
-    return cfg, writer, logger, cfg_dataset
+    return cfg, writer, logger, cfg_dataset, cfg_arch
 
 
 def run_train(cfg):
-    cfg, writer, logger, cfg_dataset = train_setup(cfg)
+    cfg, writer, logger, cfg_dataset, cfg_arch = train_setup(cfg)
     logger.info("Logger is set - training start")
 
     # set default gpu device id
@@ -109,7 +110,9 @@ def run_train(cfg):
     # model = ManualCNN(cfg.channels, cfg.repeat_factor)
     # model = SRResNet(4)
     # model = ESPCN(4)
-    model = AugmentCNN(cfg.channels, cfg.scale, genotype, blocks=cfg.blocks)
+    model = AugmentCNN(
+        cfg_arch.channels, cfg_arch.scale, genotype, blocks=cfg_arch.blocks
+    )
 
     model.to(device)
 
