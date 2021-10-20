@@ -177,7 +177,7 @@ def run_train(cfg):
         print("")
         writer.add_scalars("psnr/tune", {"val": score_val}, epoch)
 
-    logger.info("Final best PSNR = {:.4%}".format(best_score))
+    logger.info("Final best PSNR = {:.4f}".format(best_score))
 
     # FINISH TRAINING
     logging.shutdown()

@@ -92,7 +92,6 @@ def run_batch():
             cfg.env.log_dir = os.path.join(
                 log_dir,
                 args.dir,
-                mode,
                 f"trail_{r}",
             )
             os.makedirs(cfg.env.log_dir, exist_ok=True)
