@@ -103,7 +103,7 @@ def run_train(cfg):
     # model = SRResNet(4)
     # model = ESPCN(4)
     model = AugmentCNN(
-        cfg.arch.channels, cfg.arch.scale, genotype, blocks=cfg.arch.blocks
+        cfg.arch.channels, cfg.arch.scale, genotype, blocks=cfg.arch.body_cells
     )
 
     model.to(device)
