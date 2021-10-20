@@ -11,9 +11,21 @@ from genotypes import from_str
 
 
 def get_model(
-    weights_path, device, genotype, channels=3, repeat_factor=16, blocks=4
+    weights_path,
+    device,
+    genotype,
+    c_fixed=32,
+    channels=3,
+    scale=4,
+    body_cells=4,
 ):
-    model = AugmentCNN(channels, repeat_factor, genotype, blocks)
+    model = AugmentCNN(
+        channels,
+        c_fixed,
+        scale,
+        genotype,
+        blocks=body_cells,
+    )
 
     model_ = torch.load(weights_path, map_location="cpu")
     model.load_state_dict(model_.state_dict())
@@ -115,7 +127,14 @@ if __name__ == "__main__":
 
     logger = utils.get_logger(save_dir + "/validation_log.txt")
     logger.info(genotype)
+
     model = get_model(
-        weights_path, device, genotype, channels=3, repeat_factor=16, blocks=3
+        weights_path,
+        device,
+        genotype,
+        c_fixed,
+        channels=3,
+        repeat_factor=4,
+        blocks=2,
     )
     dataset_loop(valid_cfg, model, logger, save_dir, device)
