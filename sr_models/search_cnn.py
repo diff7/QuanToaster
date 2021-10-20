@@ -59,7 +59,7 @@ class SearchCNNController(nn.Module):
 
         self.net = SearchArch(c_init, c_fixed, scale, arch_pattern, body_cells)
 
-    def get_alphass(self, func):
+    def get_alphas(self, func):
         alphass_projected = dict()
         for name in self.alphas_names:
             alphass_projected[name] = [
