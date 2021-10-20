@@ -123,7 +123,7 @@ def run_train(cfg):
     # weights optimizer
     optimizer = torch.optim.Adam(
         model.parameters(),
-        lr=cfg.search.lr,
+        lr=cfg.train.lr,
         weight_decay=cfg.train.weight_decay,
     )
     scheduler = {
