@@ -129,7 +129,7 @@ class SearchCNNController(nn.Module):
     ):
 
         return self.net.fetch_weighted_flops_and_memory(
-            self.self.get_alphass(F.softmax)
+            self.get_alphass(F.softmax)
         )
 
     def get_max(self, alphas, keep_weight=False):
@@ -145,7 +145,7 @@ class SearchCNNController(nn.Module):
 
     def fetch_current_best_flops_and_memory(self):
         return self.net.fetch_weighted_flops_and_memory(
-            self.self.get_alphass(self.get_max)
+            self.get_alphass(self.get_max)
         )
 
 
