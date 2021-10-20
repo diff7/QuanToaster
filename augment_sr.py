@@ -222,7 +222,7 @@ def train(
             logger.info(
                 "Train: [{:3d}/{}] Step {:03d}/{:03d} Loss {losses.avg:.4f} ".format(
                     epoch + 1,
-                    cfg.epochs,
+                    cfg.train.epochs,
                     step,
                     len(train_loader) - 1,
                     losses=loss_meter,
