@@ -490,11 +490,15 @@ class MixedOp(nn.Module):
         """
         return sum(w * op(x) for w, op in zip(weights, self._ops))
 
-    def fetch_weighted_flops(self, weights):
-        return sum(w * op.fetch_info()[0] for w, op in zip(weights, self._ops))
+    def fetch_weighted_info(self, weights):
+        flops = 0
+        memory = 0
 
-    def fetch_weighted_memory(self, weights):
-        return sum(w * op.fetch_info()[1] for w, op in zip(weights, self._ops))
+        for w, op in zip(weights, self._ops):
+            f, m = w * op.fetch_info()[0], w * w * op.fetch_info()[1]
+            flops += f
+            memory += m
+        return flops, memory
 
 
 if __name__ == "__main__":
