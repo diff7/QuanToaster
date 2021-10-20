@@ -97,8 +97,7 @@ def to_dag(C_in, gene, reduction):
 def to_dag_sr(C_fixed, gene, gene_type, c_in=3, c_out=3, scale=4):
     """generate discrete ops from gene"""
     dag = []
-    print(gene)
-    for i, edges in enumerate(gene):
+    for i, op_name in enumerate(gene):
         C_in, C_out, = (
             C_fixed,
             C_fixed,
@@ -117,10 +116,9 @@ def to_dag_sr(C_fixed, gene, gene_type, c_in=3, c_out=3, scale=4):
             C_in = C_fixed
             C_out = C_fixed
 
-        for op_name in edges:
-            print(gene_type, op_name, C_in, C_out, C_fixed)
-            op = ops_sr.OPS[op_name](C_in, C_out, C_fixed, 1, True)
-            dag.append(op)
+        print(gene_type, op_name, C_in, C_out, C_fixed)
+        op = ops_sr.OPS[op_name](C_in, C_out, C_fixed, 1, True)
+        dag.append(op)
     return nn.Sequential(*dag)
 
 
