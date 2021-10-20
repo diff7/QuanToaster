@@ -500,7 +500,6 @@ class MixedOp(nn.Module):
             flops, memory = self.summer(
                 (flops, memory), (w[0] * v for v in op.fetch_info())
             )
-        print("INFO:", flops, memory)
         return flops, memory
 
 

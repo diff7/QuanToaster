@@ -132,7 +132,7 @@ class SearchCNNController(nn.Module):
             self.get_alphas(self.softmax)
         )
 
-    def get_max(self, alphas, keep_weight=False):
+    def get_max(self, alphas, dim=-1, keep_weight=False):
         # get ones on the place of max values
         # alphas is 1d vector here
         values = alphas.max()
