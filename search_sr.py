@@ -237,7 +237,7 @@ def log_genotype(
         epoch + 1, best_current_flops, psnr
     )
 
-    im_normal = plot_sr(genotype.normal, plot_path + "-normal", caption)
+    im_normal = plot_sr(genotype, plot_path + "-normal", caption)
 
     writer.add_image(
         tag=f"SR_im_normal_best_{best}",

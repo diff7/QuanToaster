@@ -123,7 +123,7 @@ def plot_sr(genotype, file_path, caption=None):
             g.edge(
                 str(node_n),
                 str(node_n + 1),
-                label=f"{name}\n{f}+PS",
+                label=f"{name.upper()}\n{f}+PS",
                 fillcolor="darkseagreen2",
             )
             node_n += 1
@@ -138,7 +138,7 @@ def plot_sr(genotype, file_path, caption=None):
             g.edge(
                 current_n,
                 str(node_n + 1),
-                label=f"{name}\n{op}",
+                label=f"{name.upper()}\n{op}",
                 fillcolor="lightblue",
             )
             node_n += 1
