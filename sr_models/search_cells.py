@@ -11,8 +11,19 @@ class Residual(nn.Module):
         self.skip = skip
         self.body = body
 
-    def forward(self, x, s_weights, b_weights):
+    def forward(self, x, b_weights, s_weights):
         return (self.skip(x, s_weights) + self.body(x, b_weights)) * 0.2 + x
+
+    def fetch_info(self, x, b_weights, s_weights):
+        flops = 0
+        memory = 0
+        for layer, weights in zip(
+            (self.skip, s_weights), (self.body, b_weights)
+        ):
+            f, m = layer.fetch_info(x, weights)
+            flops += f
+            memory += m
+        return flops, memory
 
 
 class SharedBlock(nn.Module):
@@ -121,7 +132,7 @@ class SearchArch(nn.Module):
             total_memory += m
 
         for cell in self.body:
-            f, m = cell.fetch_info(alphas["body"])
+            f, m = cell.fetch_info(alphas["body"], alphas["skip"])
             total_flops += f
             total_memory += m
 
