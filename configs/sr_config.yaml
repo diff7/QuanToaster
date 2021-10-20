@@ -10,7 +10,7 @@ dataset:
   batch_size: 32
   crop_size: 45 # small image,  60x4=240, pathces are 200x200
   files_list: /home/dev/data_mnt/SR
-  debug_mode: false # run on a small porion of data
+  debug_mode: True # run on a small porion of data
   
 arch:
   channels: 3
@@ -48,7 +48,7 @@ search:
   w_momentum: 0.9 # momentum for weights
   w_weight_decay: 3e-6 # weight decay for weights
   w_grad_clip: 5 # gradient clipping for weights
-  epochs: 20 # n of training epochs
+  epochs: 2 # n of training epochs
   temperature_start: 1e1
   temp_red: 0.6
   alpha_lr:  3e-4 #3e-4 #lr for alpha
@@ -68,5 +68,5 @@ train:
   lr : 1e-3 # lr for weights
   weight_decay : 0 # weight decay
   print_freq : 200 # print frequency
-  epochs : 60 # # of training epochs
+  epochs : 2 # # of training epochs
   genotype_path: "./genotype_example_sr.gen"

@@ -406,7 +406,7 @@ def validate(
                 logger.info(
                     "Valid: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} ".format(
                         epoch + 1,
-                        cfg.epochs,
+                        cfg.search.epochs,
                         step,
                         len(valid_loader) - 1,
                         losses=loss_meter,
