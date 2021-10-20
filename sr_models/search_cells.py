@@ -6,8 +6,6 @@ from sr_models import ops_flops as ops
 
 
 def summer(values, increments):
-    print("VALUES :", values)
-    print("INCR :", increments)
     return (v + i for v, i in zip(values, increments))
 
 
@@ -131,12 +129,10 @@ class SearchArch(nn.Module):
             (self.tail, "tail"),
             (self.upsample, "upsample"),
         ]:
-            print(name)
             flops, memory = summer(
                 (flops, memory), func.fetch_info(alphas[name])
             )
 
-        print("BODY:")
         for cell in self.body:
             flops, memory = summer(
                 (flops, memory), cell.fetch_info(alphas["body"], alphas["skip"])

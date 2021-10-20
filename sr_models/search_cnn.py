@@ -75,14 +75,14 @@ class SearchCNNController(nn.Module):
         else:
             func = self.alphaselector
 
-        weight_alphas = self.get_alphass(func)
+        weight_alphas = self.get_alphas(func)
 
         out = self.net(x, weight_alphas)
         (flops, mem) = self.net.fetch_weighted_flops_and_memory(weight_alphas)
         return out, (flops, mem)
 
     def forward_current_best(self, x):
-        weight_alphass = self.get_alphass(self.get_max)
+        weight_alphass = self.get_alphas(self.get_max)
         return self.net(x, weight_alphass)
 
     def print_alphas(self, logger, temperature):
@@ -94,7 +94,7 @@ class SearchCNNController(nn.Module):
             handler.setFormatter(logging.Formatter("%(message)s"))
 
         logger.info("####### alphas #######")
-        weight_alphas = self.get_alphass(self.alphaselector)
+        weight_alphas = self.get_alphas(self.alphaselector)
         for name in weight_alphas:
             logger.info(f"# alphas - {name}")
             for alphas in weight_alphas[name]:
@@ -129,7 +129,7 @@ class SearchCNNController(nn.Module):
     ):
 
         return self.net.fetch_weighted_flops_and_memory(
-            self.get_alphass(F.softmax)
+            self.get_alphas(self.softmax)
         )
 
     def get_max(self, alphas, keep_weight=False):
@@ -145,7 +145,7 @@ class SearchCNNController(nn.Module):
 
     def fetch_current_best_flops_and_memory(self):
         return self.net.fetch_weighted_flops_and_memory(
-            self.get_alphass(self.get_max)
+            self.get_alphas(self.get_max)
         )
 
 
