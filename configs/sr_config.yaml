@@ -25,10 +25,10 @@ arch:
   body_cells: 1
 
 env:
+  run_name: 'DEBUG'
   gpu: 0
   log_dir: /home/dev/data_mnt/logs
-  im_dir: 'arch_images'
-  run_name: 'DEBUG'
+  im_dir: 'arch_images'  
   workers: 4 
   seed : 777 
   print_freq: 60 # print frequency

@@ -420,7 +420,7 @@ def validate(
     )
     if not best:
         utils.save_images(
-            cfg.save, x_path[0], y_path[0], preds[0], epoch, writer
+            cfg.env.save, x_path[0], y_path[0], preds[0], epoch, writer
         )
     return loss_meter.avg
 
