@@ -29,7 +29,6 @@ env:
   log_dir: /home/dev/data_mnt/logs
   im_dir: 'arch_images'
   run_name: 'DEBUG'
-  log_dir: /home/dev/data_mnt/logs
   workers: 4 
   seed : 777 
   print_freq: 60 # print frequency
