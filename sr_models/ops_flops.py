@@ -482,6 +482,9 @@ class MixedOp(nn.Module):
             func = OPS[primitive](C_in, C_out, C_fixed, stride, affine=True)
             self._ops.append(func)
 
+    def summer(self, values, increments):
+        return (v + i for v, i in zip(values, increments))
+
     def forward(self, x, weights):
         """
         Args:
@@ -495,9 +498,9 @@ class MixedOp(nn.Module):
         memory = 0
 
         for w, op in zip(weights, self._ops):
-            f, m = w * op.fetch_info()[0], w * w * op.fetch_info()[1]
-            flops += f
-            memory += m
+            flops, memory = self.summer(
+                (flops, memory), (w * v for v in op.fetch_info())
+            )
         return flops, memory
 
 

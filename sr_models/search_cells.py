@@ -5,6 +5,10 @@ import torch.nn.functional as F
 from sr_models import ops_flops as ops
 
 
+def summer(values, increments):
+    return (v + i for v, i in zip(values, increments))
+
+
 class Residual(nn.Module):
     def __init__(self, skip, body):
         super().__init__()
@@ -20,9 +24,7 @@ class Residual(nn.Module):
         for layer, weights in zip(
             (self.skip, s_weights), (self.body, b_weights)
         ):
-            f, m = layer.fetch_info(weights)
-            flops += f
-            memory += m
+            flops, memory = summer((flops, memory), layer.fetch_info(weights))
         return flops, memory
 
 
@@ -63,8 +65,7 @@ class CommonBlock(nn.Module):
         flops = 0
         memory = 0
         for layer in self.net:
-            flops += layer.fetch_weighted_flops(alphas)
-            memory += layer.fetch_weighted_memory(alphas)
+            flops, memory = summer((flops, memory), layer.fetch_info(weights))
         return flops, memory
 
 
@@ -118,8 +119,8 @@ class SearchArch(nn.Module):
         return x
 
     def fetch_weighted_flops_and_memory(self, alphas):
-        total_flops = 0
-        total_memory = 0
+        flops = 0
+        memory = 0
 
         for func, name in [
             (self.head, "head"),
@@ -127,14 +128,14 @@ class SearchArch(nn.Module):
             (self.upsample, "upsample"),
         ]:
             print(name)
-            f, m = func.fetch_info(alphas[name])
-            total_flops += f
-            total_memory += m
+            flops, memory = summer(
+                (flops, memory), func.fetch_info(alphas[name])
+            )
 
         print(name)
         for cell in self.body:
-            f, m = cell.fetch_info(alphas["body"], alphas["skip"])
-            total_flops += f
-            total_memory += m
+            flops, memory = summer(
+                (flops, memory), cell.fetch_info(alphas["body"], alphas["skip"])
+            )
 
-        return total_flops, total_memory
+        return flops, memory
