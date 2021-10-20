@@ -125,6 +125,7 @@ def plot_sr(genotype, file_path, caption=None):
                 fillcolor="gray",
             )
             node_n += 1
+            pixel_up_node = node_n
 
         for op in layers:
             if node_n == 0:
@@ -138,22 +139,38 @@ def plot_sr(genotype, file_path, caption=None):
             )
             node_n += 1
 
-    # BODY SKIP
-    body_SKIP
-    # SKIP NODE
-    g.node("Pixel shuffle", fillcolor="palegoldenrod")
+    # body_skip_node
+    body_skip = layers = getattr(genotype, "slip")[0]
     g.edge(
-        "Input",
-        "Pixel shuffle",
-        label=str(genotype[-1][0][0]),
+        str(body_start),
+        str(body_end),
+        label=f"skip_{body_skip}",
         fillcolor="gray",
     )
+    g.edge(
+        str(body_start),
+        str(body_end),
+        label=f"plain_skip",
+        fillcolor="gray",
+    )
+
+    # tail skip
+    g.edge(
+        str(pixel_up_node),
+        str(node_n),
+        label=f"skip",
+        fillcolor="gray",
+    )
+
+    # SKIP NODE
+    # g.node("Pixel shuffle", fillcolor="palegoldenrod")
+    # g.edge(
+    #     "Input",
+    #     "Pixel shuffle",
+    #     label=str(genotype[-1][0][0]),
+    #     fillcolor="gray",
+    # )
     # output node
-
-    # for i in range(n_nodes - 1, n_nodes):
-    g.edge(str(i + 1), "Pixel shuffle", label="", fillcolor="gray")
-
-    # g.edge("Input", "Pixel shuffle", label="sum +", fillcolor="gray")
 
     # add image caption
     if caption:

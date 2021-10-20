@@ -142,7 +142,7 @@ def run_batch():
                 cfg.arch.c_fixed,
                 cfg.arch.channels,
                 cfg.dataset.scale,
-                blocks=cfg.arch.blocks,
+                blocks=cfg.arch.body_cells,
             )
             dataset_loop(valid_cfg, model, logger, save_dir, cfg.train.gpu)
 
