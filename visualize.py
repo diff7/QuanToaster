@@ -122,7 +122,7 @@ def plot_sr(genotype, file_path, caption=None):
                 current_n,
                 str(node_n + 1),
                 label=f"{name}_PIXEL_SHUFFLE",
-                fillcolor="gray",
+                fillcolor="darkseagreen2",
             )
             node_n += 1
             pixel_up_node = node_n
@@ -135,7 +135,7 @@ def plot_sr(genotype, file_path, caption=None):
                 current_n,
                 str(node_n + 1),
                 label=f"{name}_{op}",
-                fillcolor="gray",
+                fillcolor="lightblue",
             )
             node_n += 1
 
@@ -161,16 +161,6 @@ def plot_sr(genotype, file_path, caption=None):
         label=f"skip",
         fillcolor="gray",
     )
-
-    # SKIP NODE
-    # g.node("Pixel shuffle", fillcolor="palegoldenrod")
-    # g.edge(
-    #     "Input",
-    #     "Pixel shuffle",
-    #     label=str(genotype[-1][0][0]),
-    #     fillcolor="gray",
-    # )
-    # output node
 
     # add image caption
     if caption:
@@ -199,4 +189,4 @@ if __name__ == "__main__":
         plot(genotype.normal, "./examples/normal")
         plot(genotype.reduce, "./examples/reduction")
     else:
-        plot_sr(genotype, "./examples/normal")
+        plot_sr(genotype, "./examples/sr_arch")

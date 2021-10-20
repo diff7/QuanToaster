@@ -6,7 +6,7 @@ from omegaconf import OmegaConf as omg
 from genotypes import from_str
 from sr_models.augment_cnn import AugmentCNN
 import utils
-from sr_base.datasets import CropDataset
+from sr_base.datasets import ValidationSet
 from genotypes import from_str
 
 
@@ -36,7 +36,7 @@ def get_model(
 def run_val(model, cfg_val, save_dir, device):
     # set default gpu device id
     torch.cuda.set_device(device)
-    val_data = CropDataset(cfg_val, train=None)
+    val_data = ValidationSet(cfg_val)
 
     val_loader = torch.utils.data.DataLoader(
         val_data,

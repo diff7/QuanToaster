@@ -1,3 +1,4 @@
+import os
 import h5py
 import torch
 from torch.utils.data import Dataset
@@ -61,6 +62,65 @@ def check_image_file(filename):
             ".JPEG",
         ]
     )
+
+
+class ValidationSet(torch.utils.data.dataset.Dataset):
+    r"""An abstract class representing a :class:`Dataset`."""
+
+    def __init__(self, cfg):
+        r"""
+        Args:
+            input_dir (str): The directory address where the data image is stored.
+            target_dir (str): The directory address where the target image is stored.
+        """
+        super(ValidationSet, self).__init__()
+
+        folder_path_hr = os.path.join(cfg.data_processed_hr)
+        folder_path_lr = os.path.join(cfg.data_processed_lr)
+
+        lr_files = os.listdir(folder_path_lr)
+        hr_files = os.listdir(folder_path_hr)
+
+        self.input_filenames = [
+            os.path.join(folder_path_lr, x)
+            for x in lr_files
+            if check_image_file(x)
+        ]
+        self.target_filenames = [
+            os.path.join(folder_path_hr, x)
+            for x in hr_files
+            if check_image_file(x)
+        ]
+
+        print(f"DATASET SIZE:{len(self.input_filenames)}")
+
+        self.transforms = transforms.Compose(
+            [transforms.ToTensor()]
+        )  # Note - to tensor divides by 255
+
+    def __getitem__(self, index):
+        r"""Get image source file.
+        Args:
+            index (int): Index position in image list.
+        Returns:
+            Low resolution image, high resolution image.
+        """
+
+        input_img = Image.open(self.input_filenames[index]).convert("RGB")
+        target_img = Image.open(self.target_filenames[index]).convert("RGB")
+
+        input_img = self.transforms(input_img)
+        target_img = self.transforms(target_img)
+
+        return (
+            input_img,
+            target_img,
+            self.input_filenames[index],
+            self.target_filenames[index],
+        )
+
+    def __len__(self):
+        return len(self.input_filenames)
 
 
 class CropDataset(torch.utils.data.dataset.Dataset):
