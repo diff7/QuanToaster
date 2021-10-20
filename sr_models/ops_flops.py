@@ -478,7 +478,6 @@ class MixedOp(nn.Module):
         super().__init__()
         self._ops = nn.ModuleList()
         for primitive in gt.PRIMITIVES_SR[gene_type]:
-            # print(primitive, "channels:", C)
             func = OPS[primitive](C_in, C_out, C_fixed, stride, affine=True)
             self._ops.append(func)
 
@@ -499,7 +498,7 @@ class MixedOp(nn.Module):
 
         for w, op in zip(weights, self._ops):
             flops, memory = self.summer(
-                (flops, memory), (w * v for v in op.fetch_info())
+                (flops, memory), op.fetch_info())
             )
         print("INFO:", flops, memory)
         return flops, memory
