@@ -3,16 +3,24 @@ digraph {
 	edge [fontname=times fontsize=20]
 rankdir=LR
 	Input [fillcolor=darkseagreen2]
-	1 -> 2 [label=head_simple_1x1_grouped_3 fillcolor=lightblue]
-	2 -> 3 [label=head_simple_1x1_grouped_3 fillcolor=lightblue]
-	3 -> 4 [label=body_simple_1x1 fillcolor=lightblue]
-	4 -> 5 [label=body_simple_1x1 fillcolor=lightblue]
-	5 -> 6 [label=body_simple_1x1 fillcolor=lightblue]
-	5 -> 7 [label=upsample_PIXEL_SHUFFLE fillcolor=darkseagreen2]
-	7 -> 8 [label=upsample_simple_1x1 fillcolor=lightblue]
-	8 -> 9 [label=tail_simple_1x1_grouped_3 fillcolor=lightblue]
-	9 -> 10 [label=tail_simple_5x5 fillcolor=lightblue]
-	3 -> 7 [label=skip_simple_5x5 fillcolor=gray]
-	3 -> 7 [label=plain_skip fillcolor=gray]
-	7 -> 10 [label=skip fillcolor=gray]
+	Input -> 1 [label="head
+simple_1x1_grouped_3" fillcolor=lightblue]
+	1 -> 2 [label="head
+simple_1x1_grouped_3" fillcolor=lightblue]
+	2 -> 3 [label="body
+simple_1x1" fillcolor=lightblue]
+	3 -> 4 [label="body
+simple_1x1" fillcolor=lightblue]
+	4 -> 5 [label="body
+simple_1x1" fillcolor=lightblue]
+	5 -> 6 [label="upsample
+simple_1x1+PS" fillcolor=darkseagreen2]
+	6 -> 7 [label="tail
+simple_1x1_grouped_3" fillcolor=lightblue]
+	7 -> 8 [label="tail
+simple_5x5" fillcolor=lightblue]
+	2 -> 5 [label="skip
+simple_5x5" fillcolor=gray]
+	2 -> 5 [label=plain_skip fillcolor=gray]
+	6 -> 8 [label=skip fillcolor=gray]
 }

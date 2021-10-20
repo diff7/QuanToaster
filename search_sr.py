@@ -233,18 +233,18 @@ def log_genotype(
     plot_path = os.path.join(
         cfg.env.save, cfg.env.im_dir, "EP{:02d}".format(epoch + 1)
     )
-    caption = "Epoch {}   FLOPS {:.2e}  search PSNR: {:.3f}".format(
+    caption = "Epoch {}   FLOPS {:.2e}  search LOSS: {:.3f}".format(
         epoch + 1, best_current_flops, psnr
     )
 
-    # im_normal = plot_sr(genotype.normal, plot_path + "-normal", caption)
+    im_normal = plot_sr(genotype.normal, plot_path + "-normal", caption)
 
-    # writer.add_image(
-    #     tag=f"SR_im_normal_best_{best}",
-    #     img_tensor=np.array(im_normal),
-    #     dataformats="HWC",
-    #     global_step=cur_step,
-    # )
+    writer.add_image(
+        tag=f"SR_im_normal_best_{best}",
+        img_tensor=np.array(im_normal),
+        dataformats="HWC",
+        global_step=cur_step,
+    )
 
 
 def train(
