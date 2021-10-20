@@ -169,7 +169,7 @@ def run_train(cfg):
 
         # save
         if best_score < score_val:
-            score_val = score_val
+            best_score = score_val
             is_best = True
         else:
             is_best = False
