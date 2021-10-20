@@ -22,59 +22,58 @@ def train_setup(cfg):
 
     # INIT FOLDERS & cfg
 
-    cfg_dataset = cfg.dataset
-    cfg_arch = cfg.arch
-    cfg = cfg.search
-    cfg.save = utils.get_run_path(cfg.log_dir, "SEARCH_" + cfg.run_name)
+    cfg.env.save = utils.get_run_path(
+        cfg.env.log_dir, "SEARCH_" + cfg.env.run_name
+    )
 
-    logger = utils.get_logger(cfg.save + "/log.txt")
+    logger = utils.get_logger(cfg.env.save + "/log.txt")
 
     # FIX SEED
-    np.random.seed(cfg.seed)
-    torch.cuda.set_device(cfg.gpu)
-    np.random.seed(cfg.seed)
-    torch.manual_seed(cfg.seed)
-    torch.cuda.manual_seed_all(cfg.seed)
+    np.random.seed(cfg.env.seed)
+    torch.cuda.set_device(cfg.env.gpu)
+    np.random.seed(cfg.env.seed)
+    torch.manual_seed(cfg.env.seed)
+    torch.cuda.manual_seed_all(cfg.env.seed)
     torch.backends.cudnn.benchmark = True
 
-    writer = SummaryWriter(log_dir=os.path.join(cfg.save, "board"))
+    writer = SummaryWriter(log_dir=os.path.join(cfg.env.save, "board"))
 
     writer.add_hparams(
         hparam_dict={str(k): str(cfg[k]) for k in cfg},
         metric_dict={"search/train/loss": 0},
     )
 
-    with open(os.path.join(cfg.save, "config.txt"), "w") as f:
+    with open(os.path.join(cfg.env.save, "config.txt"), "w") as f:
         for k, v in cfg.items():
             f.write(f"{str(k)}:{str(v)}\n")
 
-    return cfg, writer, logger, cfg_dataset, cfg_arch
+    return cfg, writer, logger
 
 
 def run_search(cfg):
-    cfg, writer, logger, cfg_dataset, cfg_arch = train_setup(cfg)
+    cfg, writer, logger = train_setup(cfg)
     logger.info("Logger is set - training start")
 
     # set default gpu device id
-    device = cfg.gpu
+    device = cfg.env.gpu
     torch.cuda.set_device(device)
 
-    train_loader, train_loader_alpha, val_loader = get_data_loaders(cfg_dataset)
+    train_loader, train_loader_alpha, val_loader = get_data_loaders(cfg)
     criterion = nn.L1Loss().to(device)
 
     model = SearchCNNController(
-        cfg_arch.channels,
-        cfg_arch.c_fixed,
-        cfg_arch.scale,
+        cfg.arch.channels,
+        cfg.arch.c_fixed,
+        cfg.arch.scale,
         criterion,
-        cfg_arch.arch_pattern,
-        cfg_arch.body_cells,
-        device_ids=cfg.gpu,
-        alpha_selector=cfg.alpha_selector,
+        cfg.arch.arch_pattern,
+        cfg.arch.body_cells,
+        device_ids=cfg.env.gpu,
+        alpha_selector=cfg.search.alpha_selector,
     )
 
-    if cfg.use_adjuster:
-        ConstrainAdjuster = ArchConstrains(**cfg.adjuster, device=device)
+    if cfg.search.use_adjuster:
+        ConstrainAdjuster = ArchConstrains(**cfg.search.adjuster, device=device)
     model = model.to(device)
 
     flops_loss = FlopsLoss(model.n_ops)
@@ -82,43 +81,45 @@ def run_search(cfg):
     # weights optimizer
     w_optim = torch.optim.SGD(
         model.weights(),
-        cfg.w_lr,
-        momentum=cfg.w_momentum,
-        weight_decay=cfg.w_weight_decay,
+        cfg.search.w_lr,
+        momentum=cfg.search.w_momentum,
+        weight_decay=cfg.search.w_weight_decay,
     )
     # alphas optimizer
     alpha_optim = torch.optim.Adam(
         model.alphas_weights(),
-        cfg.alpha_lr,
+        cfg.search.alpha_lr,
         betas=(0.5, 0.999),
-        weight_decay=cfg.alpha_weight_decay,
+        weight_decay=cfg.search.alpha_weight_decay,
     )
 
     scheduler = {
         "cosine": torch.optim.lr_scheduler.CosineAnnealingLR(
-            w_optim, cfg.epochs
+            w_optim, cfg.search.epochs
         ),
         "linear": torch.optim.lr_scheduler.StepLR(
             w_optim, step_size=3, gamma=0.8
         ),
     }
 
-    lr_scheduler = scheduler[cfg.lr_scheduler]
+    lr_scheduler = scheduler[cfg.search.lr_scheduler]
 
-    architect = Architect(model, cfg.w_momentum, cfg.w_weight_decay)
+    architect = Architect(
+        model, cfg.search.w_momentum, cfg.search.w_weight_decay
+    )
 
     # training loop
     best_score = 1e3
     cur_step = 0
-    temperature = cfg.temperature_start
-    for epoch in range(cfg.epochs):
+    temperature = cfg.search.temperature_start
+    for epoch in range(cfg.search.epochs):
         lr_scheduler.step()
         lr = lr_scheduler.get_lr()[0]
 
-        model.print_alphas(logger, cfg.temperature_start)
+        model.print_alphas(logger, cfg.search.temperature_start)
 
-        if epoch > cfg.warm_up:
-            temperature *= cfg.temp_red
+        if epoch > cfg.search.warm_up:
+            temperature *= cfg.search.temp_red
 
         # training
         score_train, cur_step, best_current_flops = train(
@@ -139,7 +140,7 @@ def run_search(cfg):
             temperature,
         )
 
-        if cfg.use_adjuster:
+        if cfg.search.use_adjuster:
             ConstrainAdjuster.adjust(model)
 
         # validation
@@ -172,11 +173,11 @@ def run_search(cfg):
         logger.info("genotype = {}".format(genotype))
 
         # save
-        if best_score > score_val:
+        if best_score < score_val:
             best_score = score_val
             best_flops = best_current_flops
             best_genotype = genotype
-            with open(os.path.join(cfg.save, "best_arch.gen"), "w") as f:
+            with open(os.path.join(cfg.env.save, "best_arch.gen"), "w") as f:
                 f.write(str(genotype))
 
             writer.add_scalar("search/best_val", best_score, epoch)
@@ -195,7 +196,7 @@ def run_search(cfg):
                 best=True,
             )
 
-            utils.save_checkpoint(model, cfg.save, is_best)
+            utils.save_checkpoint(model, cfg.env.save, is_best)
             print("")
         else:
             log_genotype(
@@ -229,7 +230,9 @@ def log_genotype(
     genotype, cfg, epoch, cur_step, writer, best_current_flops, psnr, best=False
 ):
     # genotype as a image
-    plot_path = os.path.join(cfg.save, cfg.im_dir, "EP{:02d}".format(epoch + 1))
+    plot_path = os.path.join(
+        cfg.env.save, cfg.env.im_dir, "EP{:02d}".format(epoch + 1)
+    )
     caption = "Epoch {}   FLOPS {:.2e}  search PSNR: {:.3f}".format(
         epoch + 1, best_current_flops, psnr
     )
@@ -284,26 +287,26 @@ def train(
             model(val_X)
             flops_norm, _ = model.fetch_weighted_flops_and_memory()
             flops_loss.set_norm(flops_norm)
-            flops_loss.set_penalty(cfg.penalty)
+            flops_loss.set_penalty(cfg.search.penalty)
 
         # phase 2. architect step (alpha)
 
         alpha_optim.zero_grad()
 
-        if epoch >= cfg.warm_up:
+        if epoch >= cfg.search.warm_up:
             stable = False
 
-            if cfg.unrolled:
+            if cfg.search.unrolled:
                 architect.backward(
                     trn_X, trn_y, val_X, val_y, lr, w_optim, flops_loss
                 )
             else:
 
                 preds, (flops, mem) = model(val_X, temperature)
-                if cfg.use_l1_alpha:
+                if cfg.search.use_l1_alpha:
                     alphas = model.alphas()
                     flat_alphas = torch.cat([x.view(-1) for x in alphas])
-                    l1_regularization = cfg.l1_lambda * torch.norm(
+                    l1_regularization = cfg.search.l1_lambda * torch.norm(
                         flat_alphas, 1
                     )
                     loss = (
@@ -323,12 +326,12 @@ def train(
         loss_w = model.criterion(preds, trn_y)
         loss_w.backward()
         # gradient clipping
-        nn.utils.clip_grad_norm_(model.weights(), cfg.w_grad_clip)
+        nn.utils.clip_grad_norm_(model.weights(), cfg.search.w_grad_clip)
         w_optim.step()
 
         loss_meter.update(loss_w.item(), N)
 
-        if step % cfg.print_freq == 0 or step == len(train_loader) - 1:
+        if step % cfg.env.print_freq == 0 or step == len(train_loader) - 1:
             logger.info(
                 "Train: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} ".format(
                     epoch + 1,
@@ -361,7 +364,7 @@ def train(
 
     logger.info(
         "Train: [{:2d}/{}] Final LOSS {:.3f}".format(
-            epoch + 1, cfg.epochs, loss_meter.avg
+            epoch + 1, cfg.search.epochs, loss_meter.avg
         )
     )
 
@@ -399,7 +402,7 @@ def validate(
             loss = model.criterion(preds, y)
 
             loss_meter.update(loss.item(), N)
-            if step % cfg.print_freq == 0 or step == len(valid_loader) - 1:
+            if step % cfg.env.print_freq == 0 or step == len(valid_loader) - 1:
                 logger.info(
                     "Valid: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} ".format(
                         epoch + 1,
@@ -412,7 +415,7 @@ def validate(
 
     logger.info(
         "Valid: [{:2d}/{}] Final LOSS {:.3f}".format(
-            epoch + 1, cfg.epochs, loss_meter.avg
+            epoch + 1, cfg.search.epochs, loss_meter.avg
         )
     )
     if not best:
@@ -425,22 +428,22 @@ def validate(
 def get_data_loaders(cfg):
 
     # get data with meta info
-    train_data = CropDataset(cfg, train=True)
+    train_data = CropDataset(cfg.dataset, train=True)
 
     # split data to train/validation
     n_train = len(train_data) // 2
     indices = list(range(len(train_data)))
     random.shuffle(indices)
-    if cfg.debug_mode:
-        cfg.train_portion = 0.05
+    if cfg.dataset.debug_mode:
+        cfg.search.train_portion = 0.05
 
-    split = int(np.floor(cfg.train_portion * n_train))
-    leftover = int(np.floor((1 - cfg.train_portion) * n_train))
+    split = int(np.floor(cfg.search.train_portion * n_train))
+    leftover = int(np.floor((1 - cfg.search.train_portion) * n_train))
 
     train_sampler = torch.utils.data.sampler.SubsetRandomSampler(
         indices[:split]
     )
-    if cfg.debug_mode:
+    if cfg.dataset.debug_mode:
         train_sampler_alpha = torch.utils.data.sampler.SubsetRandomSampler(
             indices[:split]
         )
@@ -465,9 +468,9 @@ def get_data_loaders(cfg):
         loaders.append(
             torch.utils.data.DataLoader(
                 train_data,
-                batch_size=cfg.batch_size,
+                batch_size=cfg.dataset.batch_size,
                 sampler=sampler,
-                num_workers=cfg.workers,
+                num_workers=cfg.env.workers,
                 pin_memory=False,
             )
         )

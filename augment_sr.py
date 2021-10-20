@@ -20,57 +20,49 @@ from genotypes import from_str
 def train_setup(cfg):
 
     # INIT FOLDERS & cfg
-    cfg_dataset = copy.copy(cfg.dataset)
-    cfg_arch = copy.copy(cfg.arch)
-    scale = cfg.search.scale
-    channels = cfg.search.channels
-    cfg = cfg.train
-
-    cfg.channels = channels
-    cfg.scale = scale
-
-    cfg.save = utils.get_run_path(cfg.log_dir, "TUNE_" + cfg.run_name)
-
-    logger = utils.get_logger(cfg.save + "/log.txt")
+    cfg.env.save = utils.get_run_path(
+        cfg.env.log_dir, "TUNE_" + cfg.env.run_name
+    )
+    logger = utils.get_logger(cfg.env.save + "/log.txt")
 
     # FIX SEED
-    np.random.seed(cfg.seed)
-    if cfg.gpu != "cpu":
-        torch.cuda.set_device(cfg.gpu)
-    np.random.seed(cfg.seed)
-    torch.manual_seed(cfg.seed)
-    torch.cuda.manual_seed_all(cfg.seed)
+    np.random.seed(cfg.env.seed)
+    if cfg.env.gpu != "cpu":
+        torch.cuda.set_device(cfg.env.gpu)
+    np.random.seed(cfg.env.seed)
+    torch.manual_seed(cfg.env.seed)
+    torch.cuda.manual_seed_all(cfg.env.seed)
     torch.backends.cudnn.benchmark = True
 
-    writer = SummaryWriter(log_dir=os.path.join(cfg.save, "board_train"))
+    writer = SummaryWriter(log_dir=os.path.join(cfg.env.save, "board_train"))
 
     writer.add_hparams(
         hparam_dict={str(k): str(cfg[k]) for k in cfg},
         metric_dict={"tune/train/loss": 0},
     )
 
-    with open(os.path.join(cfg.save, "config.txt"), "w") as f:
+    with open(os.path.join(cfg.env.save, "config.txt"), "w") as f:
         for k, v in cfg.items():
             f.write(f"{str(k)}:{str(v)}\n")
 
-    return cfg, writer, logger, cfg_dataset, cfg_arch
+    return cfg, writer, logger
 
 
 def run_train(cfg):
-    cfg, writer, logger, cfg_dataset, cfg_arch = train_setup(cfg)
+    cfg, writer, logger = train_setup(cfg)
     logger.info("Logger is set - training start")
 
     # set default gpu device id
-    device = cfg.gpu
-    if cfg.gpu != "cpu":
+    device = cfg.env.gpu
+    if cfg.env.gpu != "cpu":
         torch.cuda.set_device(device)
 
     # TODO fix here and passing params from search config too
     # cfg_dataset.subset = None
-    train_data = CropDataset(cfg_dataset, train=True)
-    val_data = CropDataset(cfg_dataset, train=False)
+    train_data = CropDataset(cfg.dateset, train=True)
+    val_data = CropDataset(cfg.dataset, train=False)
 
-    if cfg_dataset.debug_mode:
+    if cfg.dataset.debug_mode:
         indices = list(range(300))
         random.shuffle(indices)
         sampler_train = torch.utils.data.sampler.SubsetRandomSampler(
@@ -83,10 +75,10 @@ def run_train(cfg):
 
     train_loader = torch.utils.data.DataLoader(
         train_data,
-        batch_size=cfg.batch_size,
+        batch_size=cfg.dataset.batch_size,
         sampler=sampler_train,
         # shuffle=True,
-        num_workers=cfg.workers,
+        num_workers=cfg.env.workers,
         pin_memory=False,
     )
 
@@ -95,7 +87,7 @@ def run_train(cfg):
         batch_size=1,
         # sampler=sampler_val,
         shuffle=True,
-        num_workers=cfg.workers,
+        num_workers=cfg.env.workers,
         pin_memory=False,
     )
 
@@ -111,7 +103,7 @@ def run_train(cfg):
     # model = SRResNet(4)
     # model = ESPCN(4)
     model = AugmentCNN(
-        cfg_arch.channels, cfg_arch.scale, genotype, blocks=cfg_arch.blocks
+        cfg.arch.channels, cfg.arch.scale, genotype, blocks=cfg.arch.blocks
     )
 
     model.to(device)
@@ -127,28 +119,23 @@ def run_train(cfg):
     # weights optimizer
     optimizer = torch.optim.Adam(
         model.parameters(),
-        lr=cfg.lr,
-        weight_decay=cfg.weight_decay,
+        lr=cfg.search.lr,
+        weight_decay=cfg.train.weight_decay,
     )
     scheduler = {
         "cosine": torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, cfg.epochs
+            optimizer, cfg.train.epochs
         ),
         "linear": torch.optim.lr_scheduler.StepLR(
             optimizer, step_size=3, gamma=0.7
         ),
     }
 
-    lr_scheduler = scheduler[cfg.lr_scheduler]
+    lr_scheduler = scheduler[cfg.train.lr_scheduler]
 
     best_score = 0.0
     # training loop
-    for epoch in range(cfg.epochs):
-        if cfg.use_drop_prob:
-            drop_prob = cfg.drop_path_prob * (1 - epoch / cfg.epochs)
-            print("DROP PATH", drop_prob)
-            model.drop_path_prob(drop_prob)
-
+    for epoch in range(cfg.train.epochs):
         # training
         train(
             train_loader,
@@ -182,7 +169,7 @@ def run_train(cfg):
             is_best = True
         else:
             is_best = False
-        utils.save_checkpoint(model, cfg.save, is_best)
+        utils.save_checkpoint(model, cfg.env.save, is_best)
         print("")
         writer.add_scalars("psnr/tune", {"val": score_val}, epoch)
 
@@ -225,7 +212,7 @@ def train(
 
         # loss_inter.update(intermediate_l[0].item(), N)
 
-        if step % cfg.print_freq == 0 or step == len(train_loader) - 1:
+        if step % cfg.env.print_freq == 0 or step == len(train_loader) - 1:
             # if step % 3 == 0:
             #     logger.info(f"w skips: {[w.item() for w in model.skip_w]}")
             logger.info(
@@ -267,7 +254,7 @@ def validate(
             loss_meter.update(loss.item(), N)
             val_psnr_meter.update(psnr, N)
 
-        if step % cfg.print_freq == 0 or step == len(valid_loader) - 1:
+        if step % cfg.env.print_freq == 0 or step == len(valid_loader) - 1:
             logger.info(
                 "VAL: [{:3d}/{}] Step {:03d}/{:03d} Loss {losses.avg:.3f} "
                 "PSNR ({score.avg:.3f})".format(
@@ -285,13 +272,13 @@ def validate(
 
     logger.info(
         "Valid: [{:3d}/{}] Final PSNR{:.3f}".format(
-            epoch + 1, cfg.epochs, val_psnr_meter.avg
+            epoch + 1, cfg.train.epochs, val_psnr_meter.avg
         )
     )
 
     indx = random.randint(0, len(preds) - 1)
     utils.save_images(
-        cfg.save, path_l[indx], path_h[indx], preds[indx], epoch, writer
+        cfg.env.save, path_l[indx], path_h[indx], preds[indx], epoch, writer
     )
 
     return val_psnr_meter.avg
