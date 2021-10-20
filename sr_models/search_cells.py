@@ -26,7 +26,7 @@ class Residual(nn.Module):
         return flops, memory
 
 
-class SharedBlock(nn.Module):
+class CommonBlock(nn.Module):
     def __init__(self, c_fixed, c_init, num_layers, gene_type="head", scale=4):
         super().__init__()
 
@@ -86,26 +86,26 @@ class SearchArch(nn.Module):
         self.c_init = c_init
 
         # Generate searchable network with shared weights
-        self.head = SharedBlock(
+        self.head = CommonBlock(
             c_fixed, c_init, arch_pattern["head"], gene_type="head"
         )
 
         self.body = nn.ModuleList()
         for _ in range(body_cells):
-            b = SharedBlock(
+            b = CommonBlock(
                 c_fixed, c_init, arch_pattern["body"], gene_type="body"
             )
-            s = SharedBlock(
+            s = CommonBlock(
                 c_fixed, c_init, arch_pattern["skip"], gene_type="skip"
             )
             self.body.append(Residual(s, b))
 
-        self.upsample = SharedBlock(
+        self.upsample = CommonBlock(
             c_fixed, c_init, arch_pattern["upsample"], gene_type="upsample"
         )
         self.pixel_up = nn.PixelShuffle(scale)
 
-        self.tail = SharedBlock(
+        self.tail = CommonBlock(
             c_fixed, c_init, arch_pattern["tail"], gene_type="tail"
         )
 
@@ -126,10 +126,12 @@ class SearchArch(nn.Module):
             (self.tail, "tail"),
             (self.upsample, "upsample"),
         ]:
+            print(name)
             f, m = func.fetch_info(alphas[name])
             total_flops += f
             total_memory += m
 
+        print(name)
         for cell in self.body:
             f, m = cell.fetch_info(alphas["body"], alphas["skip"])
             total_flops += f
