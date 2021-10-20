@@ -59,7 +59,7 @@ def run_train(cfg):
 
     # TODO fix here and passing params from search config too
     # cfg_dataset.subset = None
-    train_data = CropDataset(cfg.dateset, train=True)
+    train_data = CropDataset(cfg.dataset, train=True)
     val_data = CropDataset(cfg.dataset, train=False)
 
     if cfg.dataset.debug_mode:
