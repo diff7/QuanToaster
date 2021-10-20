@@ -6,6 +6,8 @@ from sr_models import ops_flops as ops
 
 
 def summer(values, increments):
+    print("VALUES :", values)
+    print("INCR :", increments)
     return (v + i for v, i in zip(values, increments))
 
 
