@@ -41,7 +41,7 @@ search:
   l1_lambda: 1
   use_soft_edge: false
   alpha_selector: softmax #softmax #gumbel2k
-  warm_up: 10
+  warm_up: 0
   lr_scheduler: cosine
   w_lr: 1e-3 # lr for weights
   w_lr_min: 0.001 # minimum lr for weights
