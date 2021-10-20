@@ -65,7 +65,9 @@ class CommonBlock(nn.Module):
         flops = 0
         memory = 0
         for layer in self.net:
-            flops, memory = summer((flops, memory), layer.fetch_info(weights))
+            flops, memory = summer(
+                (flops, memory), layer.fetch_weighted_info(alphas)
+            )
         return flops, memory
 
 
