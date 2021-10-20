@@ -140,7 +140,7 @@ def plot_sr(genotype, file_path, caption=None):
             node_n += 1
 
     # body_skip_node
-    body_skip = layers = getattr(genotype, "slip")[0]
+    body_skip = layers = getattr(genotype, "skip")[0]
     g.edge(
         str(body_start),
         str(body_end),
@@ -199,4 +199,4 @@ if __name__ == "__main__":
         plot(genotype.normal, "./examples/normal")
         plot(genotype.reduce, "./examples/reduction")
     else:
-        plot_sr(genotype.normal, "./examples/normal")
+        plot_sr(genotype, "./examples/normal")

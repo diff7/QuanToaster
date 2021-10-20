@@ -1,13 +1,4 @@
-Genotype_SR(head=[[('simple_3x3', 0)],   
-                    [('simple_5x5', 1)]],
-
-                    body=[[('simple_3x3', 0)], 
-                    [('simple_3x3', 1)],   
-                    [('simple_5x5', 5)]],
-
-                    skip=[[('simple_5x5', 5)]],
-
-                    upsample=[[('simple_5x5', 5)]],
-                    
-                    tail=[[('simple_3x3', 1)],   
-                    [('simple_5x5', 5)]])
+Genotype_SR(head=['simple_1x1_grouped_3', 'simple_1x1_grouped_3'], 
+            body=['skip_connect', 'simple_1x1', 'skip_connect'], 
+            tail=['simple_1x1_grouped_3', 'simple_5x5'], 
+            skip=['skip_connect'], upsample=['simple_1x1'])
