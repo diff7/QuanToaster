@@ -173,7 +173,7 @@ def run_search(cfg):
         logger.info("genotype = {}".format(genotype))
 
         # save
-        if best_score < score_val:
+        if best_score > score_val:
             best_score = score_val
             best_flops = best_current_flops
             best_genotype = genotype
