@@ -136,7 +136,7 @@ class SearchArch(nn.Module):
                 (flops, memory), func.fetch_info(alphas[name])
             )
 
-        print(name)
+        print("BODY:")
         for cell in self.body:
             flops, memory = summer(
                 (flops, memory), cell.fetch_info(alphas["body"], alphas["skip"])
