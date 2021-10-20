@@ -77,7 +77,7 @@ def validate(valid_loader, model, device, save_dir):
 
             preds = model(X).clamp(0.0, 1.0)
 
-            psnr = utils.calc_psnr(preds, y)
+            psnr = utils.compute_psnr(preds, y)
             psnr_meter.update(psnr.item(), N)
 
     indx = random.randint(0, len(x_path) - 1)
