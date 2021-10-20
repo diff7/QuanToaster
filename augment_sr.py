@@ -93,7 +93,7 @@ def run_train(cfg):
 
     criterion = nn.L1Loss().to(device)
 
-    with open(cfg.genotype_path, "r") as f:
+    with open(cfg.train.genotype_path, "r") as f:
         genotype = from_str(f.read())
 
     writer.add_text(tag="tune/arch/", text_string=str(genotype))
