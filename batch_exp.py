@@ -15,7 +15,7 @@ from validate_sr import get_model, dataset_loop
 import utils
 
 """
-EXAMPLE: python batch_exp.py -t SR -k penalty -v 0.01 0.05 0.1 0.5 0.7 -d gumbel_plus -r 3 -g 3
+EXAMPLE: python batch_exp.py -t SR -k penalty -v 0.01 0.05 0.1 0.5 0.7 -d gumbel -r 3 -g 3
 """
 
 VAL_CFG_PATH = "./sr_models/valsets4x.yaml"

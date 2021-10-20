@@ -69,4 +69,4 @@ train:
   weight_decay : 0 # weight decay
   print_freq : 200 # print frequency
   epochs : 2 # # of training epochs
-  genotype_path: "./genotype_example_sr.gen"
+  genotype_path: "/home/dev/data_mnt/logs/DEBUG/search/trail_1/SEARCH_batch experiment_penalty_0_trail_1-2021-10-20-12/best_arch.gen"
