@@ -14,13 +14,13 @@ class Residual(nn.Module):
     def forward(self, x, b_weights, s_weights):
         return (self.skip(x, s_weights) + self.body(x, b_weights)) * 0.2 + x
 
-    def fetch_info(self, x, b_weights, s_weights):
+    def fetch_info(self, b_weights, s_weights):
         flops = 0
         memory = 0
         for layer, weights in zip(
             (self.skip, s_weights), (self.body, b_weights)
         ):
-            f, m = layer.fetch_info(x, weights)
+            f, m = layer.fetch_info(weights)
             flops += f
             memory += m
         return flops, memory
@@ -55,17 +55,16 @@ class SharedBlock(nn.Module):
             self.net.append(ops.MixedOp(c_in, c_out, c_fixed, gene_type))
 
     def forward(self, x, alphas):
-        print(self.name)
         for layer, a_w in zip(self.net, alphas):
             x = layer(x, a_w)
         return x
 
-    def fetch_info(self, x, alphas):
+    def fetch_info(self, alphas):
         flops = 0
         memory = 0
         for layer in self.net:
-            flops += layer.fetch_weighted_flops(x, alphas)
-            memory += layer.fetch_weighted_memory(x, alphas)
+            flops += layer.fetch_weighted_flops(alphas)
+            memory += layer.fetch_weighted_memory(alphas)
         return flops, memory
 
 
