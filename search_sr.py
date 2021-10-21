@@ -333,12 +333,13 @@ def train(
 
         if step % cfg.env.print_freq == 0 or step == len(train_loader) - 1:
             logger.info(
-                "Train: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} ".format(
+                "Train: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} Flops: {flops:.2e}".format(
                     epoch + 1,
                     cfg.search.epochs,
                     step,
                     len(train_loader) - 1,
                     losses=loss_meter,
+                    flops=best_current_flops,
                 )
             )
 
@@ -347,7 +348,6 @@ def train(
             best_current_memory,
         ) = model.fetch_current_best_flops_and_memory()
         writer.add_scalar("search/train/loss", loss_w, cur_step)
-
         writer.add_scalar(
             "search/train/best_current_flops", best_current_flops, cur_step
         )

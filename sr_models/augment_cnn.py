@@ -62,13 +62,15 @@ class AugmentCNN(nn.Module):
         for cell in self.body:
             x = cell(x)
         x = self.upsample(x + init)
+        print(self.fetch_flops())
         return self.tail(x) * 0.2 + x
 
     def fetch_flops(self):
-        flops = 0
-        memory = 0
+        sum_flops = 0
+        sum_memory = 0
+        for m in self.modules():
+            if isinstance(m, self.conv_func):
+                sum_flops += m.flops.item()
+                sum_memory += m.memory_size.item()
 
-        for func in [self.head, self.body, self.tail, "tail", self.upsample]:
-            flops, memory = summer((flops, memory), func.fetch_info())
-
-        return flops, memory
+        return sum_flops, sum_memory
