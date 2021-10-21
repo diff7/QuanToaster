@@ -71,6 +71,11 @@ PRIMITIVES_SR = {
 }
 
 
+def from_str(s):
+    genotype = eval(s)
+    return genotype
+
+
 def to_dag_sr(C_fixed, gene, gene_type, c_in=3, c_out=3, scale=4):
     """generate discrete ops from gene"""
     dag = []
