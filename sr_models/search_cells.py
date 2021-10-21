@@ -113,10 +113,11 @@ class SearchArch(nn.Module):
         )
 
     def forward(self, x, alphas):
-        x = self.head(x, alphas["head"])
+        init = self.head(x, alphas["head"])
+        x = init
         for cell in self.body:
             x = cell(x, alphas["body"], alphas["skip"])
-        x = self.pixel_up(self.upsample(x, alphas["upsample"]))
+        x = self.pixel_up(self.upsample(x + init * 0.2, alphas["upsample"]))
         return self.tail(x, alphas["tail"]) * 0.2 + x
 
     def fetch_weighted_flops_and_memory(self, alphas):

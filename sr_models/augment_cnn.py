@@ -43,13 +43,11 @@ class AugmentCNN(nn.Module):
 
         self.head = gt.to_dag_sr(self.c_fixed, genotype.head, gene_type="head")
 
-        fb = []
+        self.body = nn.ModuleList()
         for _ in range(blocks):
             b = gt.to_dag_sr(self.c_fixed, genotype.body, gene_type="body")
             s = gt.to_dag_sr(self.c_fixed, genotype.skip, gene_type="skip")
-            fb.append(Residual(s, b))
-
-        self.body = nn.Sequential(*fb)
+            self.body.append(Residual(s, b))
 
         upsample = gt.to_dag_sr(
             self.c_fixed, genotype.upsample, gene_type="upsample"
@@ -59,9 +57,11 @@ class AugmentCNN(nn.Module):
         self.tail = gt.to_dag_sr(self.c_fixed, genotype.tail, gene_type="tail")
 
     def forward(self, x):
-        x = self.head(x)
-        x = self.body(x)
-        x = self.upsample(x)
+        init = self.head(x)
+        x = init
+        for cell in self.body:
+            x = self.body(x)
+        x = self.upsample(x + init)
         return self.tail(x) * 0.2 + x
 
     def fetch_flops(self):
