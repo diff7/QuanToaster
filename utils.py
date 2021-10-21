@@ -20,51 +20,6 @@ def get_run_path(base_dir, run_name):
     return run_dir
 
 
-def get_data(dataset, data_path, cutout_length, validation):
-    """Get torchvision dataset"""
-    dataset = dataset.lower()
-
-    if dataset == "cifar10":
-        dset_cls = dset.CIFAR10
-        n_classes = 10
-        input_size = 32
-        input_channels = 3
-    elif dataset == "mnist":
-        dset_cls = dset.MNIST
-        n_classes = 10
-        input_size = 28
-        input_channels = 1
-    elif dataset == "fashionmnist":
-        dset_cls = dset.FashionMNIST
-        n_classes = 10
-        input_size = 28
-        input_channels = 1
-    else:
-        raise ValueError(dataset)
-
-    trn_transform, val_transform = preproc.data_transforms(
-        dataset, cutout_length
-    )
-    trn_data = dset_cls(
-        root=data_path, train=True, download=True, transform=trn_transform
-    )
-
-    # assuming shape is NHW or NHWC
-
-    ret = [input_size, input_channels, n_classes, trn_data]
-    if validation:  # append validation data
-        ret.append(
-            dset_cls(
-                root=data_path,
-                train=False,
-                download=True,
-                transform=val_transform,
-            )
-        )
-
-    return ret
-
-
 def get_logger(file_path):
     """Make python logger"""
     # [!] Since tensorboardX use default logger (e.g. logging.info()), we should use custom logger
@@ -112,27 +67,6 @@ class AverageMeter:
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
-
-
-def accuracy(output, target, topk=(1,)):
-    """Computes the precision@k for the specified values of k"""
-    maxk = max(topk)
-    batch_size = target.size(0)
-
-    _, pred = output.topk(maxk, 1, True, True)
-    pred = pred.t()
-    # one-hot case
-    if target.ndimension() > 1:
-        target = target.max(1)[1]
-
-    correct = pred.eq(target.reshape(1, -1).expand_as(pred))
-
-    res = []
-    for k in topk:
-        correct_k = correct[:k].reshape(-1).float().sum(0)
-        res.append(correct_k.mul_(1.0 / batch_size))
-
-    return res
 
 
 def save_checkpoint(state, ckpt_dir, is_best=False):
