@@ -65,6 +65,7 @@ class CommonBlock(nn.Module):
         flops = 0
         memory = 0
         for layer, weight in (self.net, alphas):
+            print("WWW", weight)
             flops, memory = summer(
                 (flops, memory), layer.fetch_weighted_info(weight)
             )
