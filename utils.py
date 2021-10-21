@@ -4,9 +4,7 @@ import math
 import logging
 import shutil
 import torch
-import torchvision.datasets as dset
 import numpy as np
-import preproc
 import time
 
 from PIL import Image
