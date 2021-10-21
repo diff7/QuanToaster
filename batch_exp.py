@@ -6,10 +6,10 @@ import argparse
 from search_sr import run_search
 from augment_sr import run_train
 
-from utils import get_run_path
 from omegaconf import OmegaConf as omg
 
 from validate_sr import get_model, dataset_loop
+import genotype
 import utils
 
 """
@@ -92,7 +92,7 @@ def run_batch():
 
             # get actual run dir with date stamp
 
-            run_path = get_run_path(
+            run_path = utils.get_run_path(
                 cfg.env.log_dir, "SEARCH_" + cfg.env.run_name
             )
 
@@ -107,7 +107,7 @@ def run_batch():
             run_train(cfg)
 
             with open(cfg.train.genotype_path, "r") as f:
-                genotype = utils.from_str(f.read())
+                genotype = genotype.from_str(f.read())
 
             weights_path = os.path.join(cfg.env.save, "best.pth.tar")
 
