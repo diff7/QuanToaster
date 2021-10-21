@@ -315,11 +315,7 @@ def train(
                         + l1_regularization
                     )
                 else:
-                    preds = preds.type(val_y.type())
-                    loss = model.criterion(preds, val_y) + flops_loss(flops).to(
-                        device
-                    )
-
+                    loss = model.criterion(preds, val_y) + flops_loss(flops)
                 loss.backward()
                 alpha_optim.step()
 
@@ -327,7 +323,7 @@ def train(
         w_optim.zero_grad()
         preds, (flops, mem) = model(trn_X, temperature, stable=stable)
 
-        loss_w = model.criterion(preds, trn_y).to(device)
+        loss_w = model.criterion(preds, trn_y)
         loss_w.backward()
         # gradient clipping
         nn.utils.clip_grad_norm_(model.weights(), cfg.search.w_grad_clip)
