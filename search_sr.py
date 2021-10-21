@@ -314,10 +314,10 @@ def train(
                         + flops_loss(flops)
                         + l1_regularization
                     )
-                else:
-                    loss = model.criterion(preds, val_y) + flops_loss(flops)
-                loss.backward()
-                alpha_optim.step()
+                # else:
+                #     loss = model.criterion(preds, val_y) + flops_loss(flops)
+                # loss.backward()
+                # alpha_optim.step()
 
         # phase 1. child network step (w)
         w_optim.zero_grad()
