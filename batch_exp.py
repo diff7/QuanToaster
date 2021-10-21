@@ -126,7 +126,7 @@ def run_batch():
                 cfg.dataset.scale,
                 body_cells=cfg.arch.body_cells,
             )
-            dataset_loop(valid_cfg, model, logger, save_dir, cfg.train.gpu)
+            dataset_loop(valid_cfg, model, logger, save_dir, cfg.env.gpu)
 
 
 if __name__ == "__main__":

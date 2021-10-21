@@ -452,9 +452,9 @@ class MixedOp(nn.Module):
 
 
 if __name__ == "__main__":
-    random_image = torch.randn(3, 48, 256, 256)
+    random_image = torch.randn(3, 36, 256, 256)
 
-    C = 48
+    C = 36
     # Keep stride 1 for all but GrowCo
     stride = 1
 
@@ -492,7 +492,7 @@ if __name__ == "__main__":
     names = []
     flops = []
     for i, primitive in enumerate(PRIMITIVES_SR):
-        func = OPS[primitive](C, stride, affine=True)
+        func = OPS[primitive](C, C, C, stride, affine=True)
         conv = func
 
         x = conv(random_image)
