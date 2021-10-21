@@ -8,7 +8,7 @@ import copy
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from omegaconf import OmegaConf as omg
-from sr_models.test_arch import ManualCNN, ESPCN, SRESPCN, SRResNet
+from sr_models.test_arch import ESPCN, SRESPCN, SRResNet
 
 from sr_models.augment_cnn import AugmentCNN
 import utils
