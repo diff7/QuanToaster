@@ -189,7 +189,7 @@ class SimpleConv(BaseConv):
                 bias=affine,
             ),
             # nn.BatchNorm2d(C_out, affine=True),
-            nn.GELU(),
+            nn.ReLU(),
         )
 
     def forward(self, x):
@@ -224,7 +224,7 @@ class GrowthConv(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.GELU(),
+            nn.ReLU(),
             self.conv_func(
                 C_fixed * growth,
                 C_out,
@@ -235,7 +235,7 @@ class GrowthConv(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.GELU(),
+            nn.ReLU(),
             # nn.BatchNorm2d(C_out, affine=True),
         )
 
@@ -271,7 +271,7 @@ class DecEnc(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.GELU(),
+            nn.ReLU(),
             self.conv_func(
                 C_in // reduce,
                 C_fixed // reduce,
@@ -282,7 +282,7 @@ class DecEnc(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.GELU(),
+            nn.ReLU(),
             self.conv_func(
                 C_fixed // reduce,
                 C_out,
@@ -293,7 +293,7 @@ class DecEnc(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.GELU(),
+            nn.ReLU(),
             # nn.BatchNorm2d(C_out, affine=True),
         )
 
@@ -325,7 +325,7 @@ class DWS(BaseConv):
                 0,
                 bias=False,
             ),
-            nn.GELU(),
+            nn.ReLU(),
             self.conv_func(
                 C_in * 4,
                 C_in,
@@ -336,7 +336,7 @@ class DWS(BaseConv):
                 groups=C_in,
             ),
             # nn.BatchNorm2d(C_out, affine=True),
-            nn.GELU(),
+            nn.ReLU(),
         )
 
     def forward(self, x):
@@ -370,7 +370,7 @@ class FacConv(BaseConv):
                 (padding, 0),
                 bias=False,
             ),
-            nn.GELU(),
+            nn.ReLU(),
             self.conv_func(
                 C_fixed * growth,
                 C_out,
@@ -379,7 +379,7 @@ class FacConv(BaseConv):
                 (0, padding),
                 bias=False,
             ),
-            nn.GELU(),
+            nn.ReLU(),
             # nn.BatchNorm2d(C_out, affine=True),
         )
 
