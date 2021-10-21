@@ -119,7 +119,7 @@ class SearchArch(nn.Module):
         for cell in self.body:
             x = cell(x, alphas["body"], alphas["skip"])
         x = self.pixel_up(self.upsample(x + init * 0.2, alphas["upsample"]))
-        return self.tail(x, alphas["tail"])
+        return self.tail(x, alphas["tail"]) * 0.2 + x
 
     def fetch_weighted_flops_and_memory(self, alphas):
         flops = 0
