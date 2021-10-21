@@ -9,7 +9,7 @@ from augment_sr import run_train
 from omegaconf import OmegaConf as omg
 
 from validate_sr import get_model, dataset_loop
-import genotype
+import genotypes
 import utils
 
 """
@@ -107,7 +107,7 @@ def run_batch():
             run_train(cfg)
 
             with open(cfg.train.genotype_path, "r") as f:
-                genotype = genotype.from_str(f.read())
+                genotype = genotypes.from_str(f.read())
 
             weights_path = os.path.join(cfg.env.save, "best.pth.tar")
 
