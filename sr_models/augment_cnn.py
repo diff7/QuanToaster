@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from sr_models import ops_flops as ops
 import genotypes as gt
-from flops import ConvFlops
+from sr_models.flops import ConvFlops
 
 
 def summer(values, increments):
