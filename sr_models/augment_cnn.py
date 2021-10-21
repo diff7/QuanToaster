@@ -64,7 +64,7 @@ class AugmentCNN(nn.Module):
         x = self.upsample(x)
         return self.tail(x) * 0.2 + x
 
-    def fetch_weighted_flops_and_memory(self):
+    def fetch_flops(self):
         flops = 0
         memory = 0
 

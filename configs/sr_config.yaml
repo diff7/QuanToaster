@@ -23,7 +23,7 @@ arch:
 env:
   run_name: 'DEBUG'
   gpu: 0
-  log_dir: /home/dev/data_mnt/logs
+  log_dir: /home/dev/data_main/LOGS/SR/
   im_dir: 'arch_images'  
   workers: 4 
   seed : 777 
