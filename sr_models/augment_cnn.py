@@ -60,7 +60,7 @@ class AugmentCNN(nn.Module):
         init = self.head(x)
         x = init
         for cell in self.body:
-            x = self.cell(x)
+            x = cell(x)
         x = self.upsample(x + init)
         return self.tail(x) * 0.2 + x
 
