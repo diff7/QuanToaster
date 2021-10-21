@@ -315,9 +315,11 @@ def train(
                         + l1_regularization
                     )
                 else:
+                    preds = preds.type(val_y.type())
                     loss = model.criterion(preds, val_y) + flops_loss(flops).to(
                         device
                     )
+
                 loss.backward()
                 alpha_optim.step()
 
