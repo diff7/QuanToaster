@@ -5,6 +5,10 @@ from sr_models import ops_flops as ops
 import genotypes as gt
 
 
+def summer(values, increments):
+    return (v + i for v, i in zip(values, increments))
+
+
 class Residual(nn.Module):
     def __init__(self, skip, body):
         super().__init__()
@@ -13,6 +17,13 @@ class Residual(nn.Module):
 
     def forward(self, x):
         return (self.skip(x) + self.body(x)) * 0.2 + x
+
+    def fetch_weighted_info(self):
+        flops = 0
+        memory = 0
+        for layer in (self.skip, self.body):
+            flops, memory = summer((flops, memory), layer.fetch_info())
+        return flops, memory
 
 
 class AugmentCNN(nn.Module):
@@ -64,7 +75,11 @@ class AugmentCNN(nn.Module):
             self.c_fixed
         ), f"Input size {size_in}, does not match fixed channels {self.c_fixed}"
 
-    def fetch_flops(self):
-        return sum(
-            sum(op.fetch_info()[0] for op in block) for block in self.dag
-        )
+    def fetch_weighted_flops_and_memory(self):
+        flops = 0
+        memory = 0
+
+        for func in [self.head, self.body, self.tail, "tail", self.upsample]:
+            flops, memory = summer((flops, memory), func.fetch_info())
+
+        return flops, memory
