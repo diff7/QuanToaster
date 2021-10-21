@@ -22,8 +22,9 @@ class Residual(nn.Module):
         flops = 0
         memory = 0
         for layer, weights in zip(
-            (self.skip, self.body), (s_weights, b_weights)
+            (self.body, self.skip), (b_weights, s_weights)
         ):
+            print(weights)
             flops, memory = summer((flops, memory), layer.fetch_info(weights))
         return flops, memory
 
@@ -129,7 +130,7 @@ class SearchArch(nn.Module):
             (self.tail, "tail"),
             (self.upsample, "upsample"),
         ]:
-            print("WWW", alphas[name])
+
             flops, memory = summer(
                 (flops, memory), func.fetch_info(alphas[name])
             )
