@@ -34,12 +34,12 @@ class LogHandler:
         logger.addHandler(self.stream_handler)
         logger.setLevel(logging.INFO)
 
-        self.loger = logger
+        self.logger = logger
         return self.logger
 
     def close(self):
-        self.removeHandler(self.file_handler)
-        self.removeHandler(self.stream_handler)
+        self.logger.removeHandler(self.file_handler)
+        self.logger.removeHandler(self.stream_handler)
 
 
 def get_logger(file_path):
