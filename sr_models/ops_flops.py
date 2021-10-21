@@ -445,7 +445,7 @@ class MixedOp(nn.Module):
         memory = 0
 
         for w, op in zip(weights, self._ops):
-            print("W:", w.shape, len(self._ops), flops)
+            print("W:", w.shape, len(self._ops), flops, w)
             flops, memory = self.summer(
                 (flops, memory), (v for v in op.fetch_info())
             )
