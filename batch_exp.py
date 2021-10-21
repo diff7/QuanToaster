@@ -18,7 +18,7 @@ EXAMPLE: python batch_exp.py -k penalty -v 0.01 0.05 0.1 0.5 0.7 -d gumbel -r 3 
 
 VAL_CFG_PATH = "./sr_models/valsets4x.yaml"
 
-configs = {"SR": "./configs/sr_config.yaml", "CLS": "./configs/config.yaml"}
+config = "./configs/sr_config.yaml"
 
 parser = argparse.ArgumentParser()
 
@@ -28,14 +28,6 @@ parser.add_argument(
     type=str,
     default="penalty",
     help="argument to run different experiments",
-)
-
-parser.add_argument(
-    "-t",
-    "--task",
-    type=str,
-    default="penalty",
-    help="SR or CLS",
 )
 
 parser.add_argument(
@@ -68,7 +60,7 @@ def run_batch():
     values = args.values
     base_run_name = args.name
 
-    cfg = omg.load(configs[args.task])
+    cfg = omg.load(config)
 
     log_dir = cfg.env.log_dir
     assert (key in cfg.train) or (
