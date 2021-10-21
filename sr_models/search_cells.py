@@ -24,7 +24,7 @@ class Residual(nn.Module):
         for layer, weights in zip(
             (self.body, self.skip), (b_weights, s_weights)
         ):
-            print(weights)
+            print("WOWOW", weights)
             flops, memory = summer((flops, memory), layer.fetch_info(weights))
         return flops, memory
 
