@@ -24,7 +24,7 @@ class Residual(nn.Module):
         for layer, weights in zip(
             (self.body, self.skip), (b_weights, s_weights)
         ):
-            print("WOWOW", weights)
+
             flops, memory = summer((flops, memory), layer.fetch_info(weights))
         return flops, memory
 
@@ -66,6 +66,7 @@ class CommonBlock(nn.Module):
         flops = 0
         memory = 0
         for layer, weight in (self.net, alphas):
+            print("WOWOW", weight)
             flops, memory = summer(
                 (flops, memory), layer.fetch_weighted_info(weight)
             )
