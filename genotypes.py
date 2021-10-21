@@ -7,8 +7,6 @@ from collections import namedtuple
 import torch
 import torch.nn as nn
 from sr_models import ops_flops as ops_sr
-from models import ops_flops as ops_cls
-
 
 Genotype_SR = namedtuple("Genotype_SR", "head body tail skip upsample")
 
@@ -102,7 +100,7 @@ def to_dag_sr(C_fixed, gene, gene_type, c_in=3, c_out=3, scale=4):
 
 
 def parse_sr(alpha, name):
-    
+
     gene = []
 
     for i, edges in enumerate(alpha):
