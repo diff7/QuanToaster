@@ -443,7 +443,7 @@ class MixedOp(nn.Module):
     def fetch_weighted_info(self, weights):
         flops = 0
         memory = 0
-
+        print("W BIG", weights.shape)
         for w, op in zip(weights, self._ops):
             print("W:", w.shape, len(self._ops), flops, w)
             flops, memory = self.summer(
