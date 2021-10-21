@@ -67,8 +67,7 @@ def run_batch():
         key in cfg.search
     ), f"{key} is not found in config"
 
-    for mode in ["train", "search"]:
-        cfg[mode].gpu = args.gpu
+    cfg.env.gpu = args.gpu
 
     for r in range(1, args.repeat + 1):
         for mode in ["train", "search"]:

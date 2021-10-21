@@ -64,17 +64,6 @@ class AugmentCNN(nn.Module):
         x = self.upsample(x)
         return self.tail(x) * 0.2 + x
 
-    def drop_path_prob(self, p):
-        """Set drop path probability"""
-        for module in self.modules():
-            if isinstance(module, ops.DropPath_):
-                module.p = p
-
-    def assertion_in(self, size_in):
-        assert int(size_in[1]) == int(
-            self.c_fixed
-        ), f"Input size {size_in}, does not match fixed channels {self.c_fixed}"
-
     def fetch_weighted_flops_and_memory(self):
         flops = 0
         memory = 0

@@ -397,24 +397,6 @@ def drop_path_(x, drop_prob, training):
     return x
 
 
-class DropPath_(BaseConv):
-    def __init__(self, p=0.0):
-        """[!] DropPath is inplace module
-        Args:
-            p: probability of an path to be zeroed.
-        """
-        super().__init__()
-        self.p = p
-
-    def extra_repr(self):
-        return "p={}, inplace".format(self.p)
-
-    def forward(self, x):
-        drop_path_(x, self.p, self.training)
-
-        return x
-
-
 class Identity(BaseConv):
     def __init__(self):
         super().__init__()
@@ -435,40 +417,6 @@ class Zero(BaseConv):
 
         # re-sizing by stride
         return x[:, :, :: self.stride, :: self.stride] * self.zero
-
-
-class AssertWrapper(nn.Module):
-    """
-    1. Checks that image size does not change.
-    2. Checks that mage input channels are the same as output channels.
-    """
-
-    def __init__(self, func, channels):
-
-        super(AssertWrapper, self).__init__()
-        self.channels = channels
-        self.func = func
-        self.func_name = func.__class__.__name__
-
-    def assertion_in(self, size_in):
-        assert (
-            size_in[1] == self.channels
-        ), f"Input size {size_in}, does not match fixed channels {self.channels}, called from {self.func_name}"
-
-    def assertion_out(self, size_in, size_out):
-        assert (
-            size_in == size_out
-        ), f"Output size {size_out} does not match input size {size_in}, called from {self.func_name}"
-
-    def forward(self, x):
-        b, c, w, h = x.shape
-        self.assertion_in((b, c, w, h))
-        x = self.func(x) + x
-        self.assertion_out((b, c, w, h), x.shape)
-        return
-
-    def fetch_info(self):
-        return self.func.fetch_info()
 
 
 class MixedOp(nn.Module):
@@ -545,7 +493,7 @@ if __name__ == "__main__":
     flops = []
     for i, primitive in enumerate(PRIMITIVES_SR):
         func = OPS[primitive](C, stride, affine=True)
-        conv = AssertWrapper(func, channels=C)
+        conv = func
 
         x = conv(random_image)
         flops.append(conv.fetch_info()[0])
