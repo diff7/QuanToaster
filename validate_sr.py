@@ -50,11 +50,11 @@ def run_val(model, cfg_val, save_dir, device):
     score_val = validate(val_loader, model, device, save_dir)
     random_image = torch.randn(1, 3, 32, 32).cuda(device)
     _ = model(random_image)
-    flops_32 = model.fetch_flops()
+    flops_32, _ = model.fetch_info()
 
     random_image = torch.randn(1, 3, 256, 256).cuda(device)
     _ = model(random_image)
-    flops_256 = model.fetch_flops()
+    flops_256, _ = model.fetch_info()
 
     mb_params = utils.param_size(model)
     return score_val, flops_32, flops_256, mb_params
