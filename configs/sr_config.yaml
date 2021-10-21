@@ -6,7 +6,7 @@ dataset:
   batch_size: 32
   crop_size: 32 # small image,  40x4=160, pathces are 200x200
   files_list:  /home/dev/data_main/SR/train_sets_txt/
-  debug_mode: True # run on a small porion of data
+  debug_mode: False # run on a small porion of data
   
 arch:
   channels: 3
@@ -22,7 +22,7 @@ arch:
 
 env:
   run_name: 'SFOTMAX_VANILLA'
-  gpu: 0
+  gpu: 1
   log_dir: /home/dev/data_main/LOGS/SR/
   im_dir: 'arch_images'  
   workers: 4 
