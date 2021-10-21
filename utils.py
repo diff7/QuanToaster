@@ -8,7 +8,6 @@ import numpy as np
 import time
 
 from PIL import Image
-from genotypes import from_str
 
 
 def get_run_path(base_dir, run_name):
