@@ -9,7 +9,7 @@ import logging
 # Weighted Soft Edge in forward
 # Gumbel Final flops are not correct
 
-from models.gumbel_top2 import gumbel_top2k
+from sr_models.gumbel_top2 import gumbel_top2k
 
 
 class SearchCNNController(nn.Module):
