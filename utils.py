@@ -17,6 +17,31 @@ def get_run_path(base_dir, run_name):
     return run_dir
 
 
+class LogHandler:
+    def __init__(self, file_path):
+        self.file_path = file_path
+
+    def create(self):
+        logger = logging.getLogger(self.file_path.split("/")[-1])
+        log_format = "%(asctime)s | %(message)s"
+        formatter = logging.Formatter(log_format, datefmt="%m/%d %I:%M:%S %p")
+        self.file_handler = logging.FileHandler(self.file_path)
+        self.file_handler.setFormatter(formatter)
+        self.stream_handler = logging.StreamHandler()
+        self.stream_handler.setFormatter(formatter)
+
+        logger.addHandler(self.file_handler)
+        logger.addHandler(self.stream_handler)
+        logger.setLevel(logging.INFO)
+
+        self.loger = logger
+        return self.logger
+
+    def close(self):
+        self.removeHandler(self.file_handler)
+        self.removeHandler(self.stream_handler)
+
+
 def get_logger(file_path):
     """Make python logger"""
     # [!] Since tensorboardX use default logger (e.g. logging.info()), we should use custom logger

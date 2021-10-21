@@ -26,7 +26,8 @@ def train_setup(cfg):
         cfg.env.log_dir, "SEARCH_" + cfg.env.run_name
     )
 
-    logger = utils.get_logger(cfg.env.save + "/log.txt")
+    log_handler = utils.LogHandler(cfg.env.save + "/log.txt")
+    logger = log_handler.create()
 
     # FIX SEED
     np.random.seed(cfg.env.seed)
@@ -47,11 +48,11 @@ def train_setup(cfg):
         for k, v in cfg.items():
             f.write(f"{str(k)}:{str(v)}\n")
 
-    return cfg, writer, logger
+    return cfg, writer, logger, log_handler
 
 
 def run_search(cfg):
-    cfg, writer, logger = train_setup(cfg)
+    cfg, writer, logger, log_handler = train_setup(cfg)
     logger.info("Logger is set - training start")
 
     # set default gpu device id
@@ -222,6 +223,7 @@ def run_search(cfg):
         logger.info("Best Genotype = {}".format(best_genotype))
 
     # FINISH TRAINING
+    log_handler.close()
     logging.shutdown()
     del model
 

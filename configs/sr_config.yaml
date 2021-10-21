@@ -18,10 +18,10 @@ arch:
       tail: 2
       body: 3
       upsample: 1
-  body_cells: 1
+  body_cells: 2
 
 env:
-  run_name: 'DEBUG'
+  run_name: 'SFOTMAX_VANILLA'
   gpu: 0
   log_dir: /home/dev/data_main/LOGS/SR/
   im_dir: 'arch_images'  

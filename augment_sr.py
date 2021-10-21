@@ -23,8 +23,8 @@ def train_setup(cfg):
     cfg.env.save = utils.get_run_path(
         cfg.env.log_dir, "TUNE_" + cfg.env.run_name
     )
-    logger = utils.get_logger(cfg.env.save + "/log.txt")
-
+    log_handler = utils.LogHandler(cfg.env.save + "/log.txt")
+    logger = log_handler.create()
     # FIX SEED
     np.random.seed(cfg.env.seed)
     if cfg.env.gpu != "cpu":
@@ -45,11 +45,11 @@ def train_setup(cfg):
         for k, v in cfg.items():
             f.write(f"{str(k)}:{str(v)}\n")
 
-    return cfg, writer, logger
+    return cfg, writer, logger, log_handler
 
 
 def run_train(cfg):
-    cfg, writer, logger = train_setup(cfg)
+    cfg, writer, logger, log_handler = train_setup(cfg)
     logger.info("Logger is set - training start")
 
     # set default gpu device id
@@ -180,6 +180,7 @@ def run_train(cfg):
     logger.info("Final best PSNR = {:.4f}".format(best_score))
 
     # FINISH TRAINING
+    log_handler.close()
     logging.shutdown()
     del model
 
