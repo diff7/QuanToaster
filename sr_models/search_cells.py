@@ -139,6 +139,4 @@ class SearchArch(nn.Module):
             flops, memory = summer(
                 (flops, memory), cell.fetch_info(alphas["body"], alphas["skip"])
             )
-        print(flops)
-        print(alphas)
         return flops, memory
