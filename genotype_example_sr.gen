@@ -1,4 +1,4 @@
-Genotype_SR(head=['simple_1x1_grouped_3', 'simple_1x1_grouped_3'], 
-            body=['simple_1x1', 'simple_1x1', 'simple_1x1'], 
+Genotype_SR(head=['simple_5x5', 'simple_1x1_grouped_3'], 
+            body=['simple_1x1', 'simple_5x5', 'simple_1x1'], 
             tail=['simple_1x1_grouped_3', 'simple_5x5'], 
             skip=['simple_5x5'], upsample=['simple_1x1'])
