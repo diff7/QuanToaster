@@ -5,7 +5,7 @@ dataset:
   train_portion: 0.2
   batch_size: 32
   crop_size: 45 # small image,  40x4=160, pathces are 200x200
-  files_list:  /home/dev/data_main/SR/
+  files_list:  /home/dev/data_main/SR
   debug_mode: True # run on a small porion of data
   
 arch:
