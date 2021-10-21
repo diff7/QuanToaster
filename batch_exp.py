@@ -2,11 +2,9 @@
 
 import os
 import argparse
-from search import run_search as run_search_cls
-from augment import run_train as run_train_cls
 
-from search_sr import run_search as run_search_sr
-from augment_sr import run_train as run_train_sr
+from search_sr import run_search
+from augment_sr import run_train
 
 from utils import get_run_path
 from omegaconf import OmegaConf as omg
@@ -15,16 +13,10 @@ from validate_sr import get_model, dataset_loop
 import utils
 
 """
-EXAMPLE: python batch_exp.py -t SR -k penalty -v 0.01 0.05 0.1 0.5 0.7 -d gumbel -r 3 -g 3
+EXAMPLE: python batch_exp.py -k penalty -v 0.01 0.05 0.1 0.5 0.7 -d gumbel -r 3 -g 3
 """
 
 VAL_CFG_PATH = "./sr_models/valsets4x.yaml"
-
-functions = {
-    "SR": [run_search_sr, run_train_sr],
-    "CLS": [run_search_cls, run_train_cls],
-}
-
 
 configs = {"SR": "./configs/sr_config.yaml", "CLS": "./configs/config.yaml"}
 
@@ -76,7 +68,6 @@ def run_batch():
     values = args.values
     base_run_name = args.name
 
-    run_search, run_train = functions[args.task]
     cfg = omg.load(configs[args.task])
 
     log_dir = cfg.env.log_dir

@@ -1,6 +1,6 @@
 dataset:
-  data_processed_hr: '/home/dev/data_mnt/SR/DIV2K/processed/HR' 
-  data_processed_lr:  '/home/dev/data_mnt/SR/DIV2K/processed/HR' 
+  data_processed_hr: '/home/dev/data_mnt/SR/DIV2K/processed_50/HR' 
+  data_processed_lr:  '/home/dev/data_main/SR/DIV2K/processed_50/HR' 
   val_folder: '/valid/'
   train_folder: '/train/'
   scale: 4
@@ -8,7 +8,7 @@ dataset:
   workers: 10
   train_portion: 0.2
   batch_size: 32
-  crop_size: 45 # small image,  60x4=240, pathces are 200x200
+  crop_size: 45 # small image,  40x4=160, pathces are 200x200
   files_list: /home/dev/data_mnt/SR
   debug_mode: True # run on a small porion of data
   
