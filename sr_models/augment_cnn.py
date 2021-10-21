@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from sr_models import ops_flops as ops
 import genotypes as gt
+from flops import ConvFlops
 
 
 def summer(values, increments):
@@ -69,7 +70,7 @@ class AugmentCNN(nn.Module):
         sum_flops = 0
         sum_memory = 0
         for m in self.modules():
-            if isinstance(m, self.conv_func):
+            if isinstance(m, ConvFlops):
                 sum_flops += m.flops.item()
                 sum_memory += m.memory_size.item()
 
