@@ -21,8 +21,8 @@ arch:
   body_cells: 2
 
 env:
-  run_name: 'SFOTMAX_VANILLA'
-  gpu: 2
+  run_name: 'DRY RUN'
+  gpu: 1
   log_dir: /home/dev/data_main/LOGS/SR/
   im_dir: 'arch_images'  
   workers: 4 
@@ -64,5 +64,5 @@ train:
   lr : 1e-3 # lr for weights
   weight_decay : 0 # weight decay
   print_freq : 200 # print frequency
-  epochs : 1 # # of training epochs
+  epochs : 60 # # of training epochs
   genotype_path: "./genotype_example_sr.gen"
