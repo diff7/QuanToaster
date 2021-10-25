@@ -491,7 +491,7 @@ if __name__ == "__main__":
     names = []
     flops = []
     for i, primitive in enumerate(PRIMITIVES_SR):
-        func = OPS[primitive](C, C, C, stride, affine=True)
+        func = OPS[primitive](C, C, C, stride, affine=False)
         conv = func
 
         x = conv(random_image)
