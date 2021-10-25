@@ -11,13 +11,14 @@ def summer(values, increments):
 
 
 class Residual(nn.Module):
-    def __init__(self, skip, body):
+    def __init__(self, skip, body,rf):
         super().__init__()
         self.skip = skip
         self.body = body
+        self.rf = rf
 
     def forward(self, x):
-        return (self.skip(x) + self.body(x)) * 0.2 + x
+        return (self.skip(x) + self.body(x)) * self.rf + x
 
     def fetch_weighted_info(self):
         flops = 0
@@ -30,7 +31,7 @@ class Residual(nn.Module):
 class AugmentCNN(nn.Module):
     """Augmented CNN model"""
 
-    def __init__(self, c_in, c_fixed, scale, genotype, blocks=4):
+    def __init__(self, c_in, c_fixed, scale, genotype, blocks=4, rf=0.2):
 
         """
         Args:
@@ -39,6 +40,7 @@ class AugmentCNN(nn.Module):
             C: # of starting model channels
         """
         super().__init__()
+        self.rf = rf
         self.c_fixed = c_fixed  # c_init * repeat_factor
         self.repeat_factor = c_in * (scale ** 2)
 
@@ -48,7 +50,7 @@ class AugmentCNN(nn.Module):
         for _ in range(blocks):
             b = gt.to_dag_sr(self.c_fixed, genotype.body, gene_type="body")
             s = gt.to_dag_sr(self.c_fixed, genotype.skip, gene_type="skip")
-            self.body.append(Residual(s, b))
+            self.body.append(Residual(s, b,rf=self.rf))
 
         upsample = gt.to_dag_sr(
             self.c_fixed, genotype.upsample, gene_type="upsample"
@@ -62,8 +64,8 @@ class AugmentCNN(nn.Module):
         x = init
         for cell in self.body:
             x = cell(x)
-        x = self.upsample(x + init * 0.2)
-        return self.tail(x) * 0.2 + x
+        x = self.upsample(x + init * self.rf)
+        return self.tail(x) * self.rf + x
 
     def fetch_info(self):
         sum_flops = 0
