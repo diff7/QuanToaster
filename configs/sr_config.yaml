@@ -44,7 +44,7 @@ search:
   w_momentum: 0.9 # momentum for weights
   w_weight_decay: 3e-6 # weight decay for weights
   w_grad_clip: 5 # gradient clipping for weights
-  epochs: 20 # n of training epochs
+  epochs: 10 # n of training epochs
   temperature_start: 1e1
   temp_red: 0.6
   alpha_lr:  3e-4 #3e-4 #lr for alpha
