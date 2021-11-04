@@ -7,6 +7,7 @@ import torch
 import numpy as np
 import time
 
+import shutil
 from PIL import Image
 
 
@@ -15,6 +16,13 @@ def get_run_path(base_dir, run_name):
     run_dir = os.path.join(base_dir, run_dir)
     os.makedirs(run_dir, exist_ok=True)
     return run_dir
+
+
+def save_scripts(run_path):
+    dest = os.path.join(run_path, "code_copy/")
+    if os.path.exists(dest):
+        shutil.rmtree(dest)
+    shutil.copytree("./", dest)
 
 
 class LogHandler:

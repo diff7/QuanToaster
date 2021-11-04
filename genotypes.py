@@ -4,9 +4,8 @@
     - dag: real ops (can be mixed or discrete, but Genotype has only discrete information itself)
 """
 from collections import namedtuple
-import torch
 import torch.nn as nn
-from sr_models import ops_flops as ops_sr
+from sr_models import quant_ops as ops_sr
 
 Genotype_SR = namedtuple("Genotype_SR", "head body tail skip upsample")
 
@@ -24,7 +23,7 @@ PRIMITIVES = [
 
 
 body = [
-#    "skip_connect",
+    #    "skip_connect",
     "conv_5x1_1x5",
     "conv_3x1_1x3",
     "simple_3x3",
@@ -45,9 +44,9 @@ body = [
     "decenc_5x5_2",
     "decenc_5x5_8",
     "decenc_3x3_8",
-    "decenc_3x3_4_g3",
-    "decenc_3x3_2_g3",
-    "decenc_5x5_2_g3",
+    # "decenc_3x3_4_g3",
+    # "decenc_3x3_2_g3",
+    # "decenc_5x5_2_g3",
 ]
 head = [
     # "skip_connect",
@@ -79,7 +78,7 @@ def from_str(s):
 def to_dag_sr(C_fixed, gene, gene_type, c_in=3, c_out=3, scale=4):
     """generate discrete ops from gene"""
     dag = []
-    for i, op_name in enumerate(gene):
+    for i, (op_name, bit) in enumerate(gene):
         C_in, C_out, = (
             C_fixed,
             C_fixed,
@@ -98,8 +97,8 @@ def to_dag_sr(C_fixed, gene, gene_type, c_in=3, c_out=3, scale=4):
             C_in = C_fixed
             C_out = C_fixed
 
-        print(gene_type, op_name, C_in, C_out, C_fixed)
-        op = ops_sr.OPS[op_name](C_in, C_out, C_fixed, 1, False)
+        print(gene_type, op_name, C_in, C_out, C_fixed, bit)
+        op = ops_sr.OPS[op_name](C_in, C_out, [bit], C_fixed, 1, False)
         dag.append(op)
     return nn.Sequential(*dag)
 

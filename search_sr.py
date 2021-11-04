@@ -65,6 +65,7 @@ def run_search(cfg):
     model = SearchCNNController(
         cfg.arch.channels,
         cfg.arch.c_fixed,
+        cfg.arch.bits,
         cfg.arch.scale,
         criterion,
         cfg.arch.arch_pattern,

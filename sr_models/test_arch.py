@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from sr_models import ops_flops as ops_sr
-from sr_models.flops import BaseConv
+from sr_models import quant_ops as ops_sr
+from sr_models.quant_conv import BaseConv
 
 
 class FromGENE(nn.Module):

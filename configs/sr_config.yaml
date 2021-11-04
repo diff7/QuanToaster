@@ -9,6 +9,7 @@ dataset:
   debug_mode: False # run on a small porion of data
   
 arch:
+  bits: [1,2,3,4,8]
   channels: 3
   c_fixed: 36
   scale: 4
@@ -18,11 +19,11 @@ arch:
       tail: 2
       body: 3
       upsample: 1
-  body_cells: 2
+  body_cells: 1
 
 env:
-  run_name: 'AFFINE_FALSE'
-  gpu: 2
+  run_name: 'WARM UP 10 8bits'
+  gpu: 1
   log_dir: /home/dev/data_main/LOGS/SR/
   im_dir: 'arch_images'  
   workers: 4 
@@ -59,6 +60,7 @@ search:
     gamma: 1e-6
   
 train:
+  warm_up: 10
   lr_scheduler: linear
   batch_size : 16 # batch size
   lr : 1e-3 # lr for weights

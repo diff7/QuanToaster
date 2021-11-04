@@ -23,6 +23,7 @@ def train_setup(cfg):
     cfg.env.save = utils.get_run_path(
         cfg.env.log_dir, "TUNE_" + cfg.env.run_name
     )
+    utils.save_scripts(cfg.env.save)
     log_handler = utils.LogHandler(cfg.env.save + "/log.txt")
     logger = log_handler.create()
     # FIX SEED
@@ -121,6 +122,7 @@ def run_train(cfg):
     )
 
     # weights optimizer
+    print(model.state_dict().keys())
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=cfg.train.lr,
@@ -140,6 +142,11 @@ def run_train(cfg):
     best_score = 0.0
     # training loop
     for epoch in range(cfg.train.epochs):
+        if cfg.train.warm_up > epoch:
+            model.set_fp()
+        else:
+            model.set_quant()
+
         # training
         train(
             train_loader,
@@ -205,6 +212,9 @@ def train(
     model.train()
 
     for step, (X, y, _, _) in enumerate(train_loader):
+        if step == 2:
+            bit_ops, memory = model.fetch_info()
+            logger.info(f"BIT OPS: {bit_ops:4e} MEM: {memory:4e}")
         X, y = X.to(device, non_blocking=True), y.to(device, non_blocking=True)
         N = X.size(0)
         optimizer.zero_grad()

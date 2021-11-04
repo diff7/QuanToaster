@@ -19,6 +19,7 @@ class SearchCNNController(nn.Module):
         self,
         c_init,
         c_fixed,
+        bits,
         scale,
         criterion,
         arch_pattern,
@@ -44,7 +45,7 @@ class SearchCNNController(nn.Module):
             params = nn.ParameterList()
             for _ in range(arch_pattern[name]):
                 params.append(
-                    nn.Parameter(torch.ones(len(gt.PRIMITIVES_SR[name])))
+                    nn.Parameter(torch.ones(8 * len(gt.PRIMITIVES_SR[name])))
                 )
             self.alphas[name] = params
 
@@ -57,7 +58,9 @@ class SearchCNNController(nn.Module):
             for n, p in self.alphas[name].named_parameters():
                 self._alphas.append((n, p))
 
-        self.net = SearchArch(c_init, c_fixed, scale, arch_pattern, body_cells)
+        self.net = SearchArch(
+            c_init, c_fixed, bits, scale, arch_pattern, body_cells
+        )
 
     def get_alphas(self, func):
         alphass_projected = dict()
