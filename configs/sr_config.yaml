@@ -64,7 +64,7 @@ train:
   lr_scheduler: cosine
   batch_size : 16 # batch size
   lr : 1e-3 # lr for weights
-  weight_decay : 5e-4 # weight decay
+  weight_decay : 0 # weight decay
   print_freq : 200 # print frequency
   epochs : 30 # # of training epochs
   genotype_path: "./genotype_example_sr.gen"
