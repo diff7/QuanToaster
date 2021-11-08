@@ -39,7 +39,7 @@ class AugmentCNN(nn.Module):
         """
         super().__init__()
         self.rf = rf
-        self.c_fixed = c_fixed  # c_init * repeat_factor
+        self.c_fixed = c_fixed
         self.head = gt.to_dag_sr(self.c_fixed, genotype.head, gene_type="head")
 
         self.body = nn.ModuleList()

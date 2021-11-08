@@ -197,9 +197,9 @@ class QAConv2d(nn.Module):
         self.activ = HWGQ(self.bit)
         self.conv = QuantConv(**kwargs)
 
-    def set_fp(self):
-        self.activ = HWGQ(32)
-        self.bit = 32
+    def set_fp(self, bit=32):
+        self.activ = HWGQ(bit)
+        self.bit = bit
 
     def set_quant(self):
         self.activ = HWGQ(self.bit_orig)

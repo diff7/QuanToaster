@@ -7,15 +7,13 @@ from sr_models.quant_conv import count_upsample_flops
 import genotypes as gt
 
 
-# check without skip no drop path
-# check with SGD
-# lower exp is sinlge path
-
 OPS = {
     "zero": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: Zero(
         stride, zero=0
     ),
-    "skip_connect": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: Identity(),
+    "skip_connect": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: Identity(
+        shared
+    ),
     "conv_5x1_1x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: FacConv(
         C_in,
         C_out,
@@ -397,7 +395,7 @@ class SimpleConv(BaseConv):
             )
         )
 
-        # nn.BatchNorm2d(C_out, affine=False),
+        nn.BatchNorm2d(C_out, affine=False),
 
     def forward(self, x):
         return self.net(x)
@@ -619,8 +617,8 @@ def drop_path_(x, drop_prob, training):
 
 
 class Identity(BaseConv):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, shared):
+        super().__init__(shared=shared)
 
     def forward(self, x):
         return x

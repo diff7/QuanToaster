@@ -98,7 +98,9 @@ def to_dag_sr(C_fixed, gene, gene_type, c_in=3, c_out=3, scale=4):
             C_out = C_fixed
 
         print(gene_type, op_name, C_in, C_out, C_fixed, bit)
-        op = ops_sr.OPS[op_name](C_in, C_out, [bit], C_fixed, 1, False)
+        op = ops_sr.OPS[op_name](
+            C_in, C_out, [bit], C_fixed, 1, False, shared=False
+        )
         dag.append(op)
     return nn.Sequential(*dag)
 

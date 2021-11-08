@@ -222,7 +222,8 @@ def train(
         loss = criterion(preds, y)
         loss_meter.update(loss.item(), N)
         loss.backward()
-
+        grad_norm = utils.grad_norm(model)
+        # torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
         optimizer.step()
 
         # loss_inter.update(intermediate_l[0].item(), N)
@@ -231,16 +232,18 @@ def train(
             # if step % 3 == 0:
             #     logger.info(f"w skips: {[w.item() for w in model.skip_w]}")
             logger.info(
-                "Train: [{:3d}/{}] Step {:03d}/{:03d} Loss {losses.avg:.4f} ".format(
+                "Train: [{:3d}/{}] Step {:03d}/{:03d} Loss {losses.avg:.4f} Grad norm {grad_norm:3e}".format(
                     epoch + 1,
                     cfg.train.epochs,
                     step,
                     len(train_loader) - 1,
                     losses=loss_meter,
+                    grad_norm=grad_norm,
                 )
             )
 
         writer.add_scalar("tune/train/loss", loss_meter.avg, cur_step)
+        writer.add_scalar("tune/train/grad_norm", grad_norm, cur_step)
 
         cur_step += 1
 

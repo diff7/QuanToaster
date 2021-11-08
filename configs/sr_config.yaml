@@ -22,7 +22,7 @@ arch:
   body_cells: 1
 
 env:
-  run_name: 'WARM UP 10 8bits'
+  run_name: 'DEBUG 8444'
   gpu: 1
   log_dir: /home/dev/data_main/LOGS/SR/
   im_dir: 'arch_images'  
@@ -60,11 +60,11 @@ search:
     gamma: 1e-6
   
 train:
-  warm_up: 10
-  lr_scheduler: linear
-  batch_size : 16 # batch size
+  warm_up: 0
+  lr_scheduler: cosine
+  batch_size : 64 # batch size
   lr : 1e-3 # lr for weights
-  weight_decay : 0 # weight decay
+  weight_decay : 5e-4 # weight decay
   print_freq : 200 # print frequency
   epochs : 30 # # of training epochs
   genotype_path: "./genotype_example_sr.gen"
