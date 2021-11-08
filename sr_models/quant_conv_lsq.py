@@ -99,7 +99,6 @@ class LsqQuan(nn.Module):
 
     def forward(self, x):
         if self.bit >= 32:
-            print("fp32")
             return x
 
         if self.per_channel:
