@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from sr_models.quant_conv import BaseConv
-from sr_models.quant_conv import count_upsample_flops
+from sr_models.quant_conv_lsq import count_upsample_flops
 
 import genotypes as gt
 
