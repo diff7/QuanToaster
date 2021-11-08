@@ -223,7 +223,7 @@ def train(
         loss_meter.update(loss.item(), N)
         loss.backward()
         grad_norm = utils.grad_norm(model)
-        # torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
+        torch.nn.utils.clip_grad_value_(model.parameters(), 5)
         optimizer.step()
 
         # loss_inter.update(intermediate_l[0].item(), N)
