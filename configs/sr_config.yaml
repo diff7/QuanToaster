@@ -60,7 +60,7 @@ search:
     gamma: 1e-6
   
 train:
-  warm_up: 1
+  warm_up: 0
   lr_scheduler: cosine
   batch_size : 16 # batch size
   lr : 1e-3 # lr for weights
