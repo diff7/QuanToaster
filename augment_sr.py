@@ -218,12 +218,12 @@ def train(
         X, y = X.to(device, non_blocking=True), y.to(device, non_blocking=True)
         N = X.size(0)
         optimizer.zero_grad()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
         preds = model(X)
         loss = criterion(preds, y)
         loss_meter.update(loss.item(), N)
         loss.backward()
         grad_norm = utils.grad_norm(model)
-        torch.nn.utils.clip_grad_norm_(model.parameters(), 5)
         optimizer.step()
 
         # loss_inter.update(intermediate_l[0].item(), N)
