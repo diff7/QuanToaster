@@ -116,7 +116,7 @@ class QuantConv(nn.Conv2d):
         if type(value) == tuple:
             return value
 
-    def forward(self, input_x, quantized_act, quantized_weight):
+    def forward(self, input_x, quantized_weight):
         """
         BATCH x C x W x H
 
@@ -137,7 +137,7 @@ class QuantConv(nn.Conv2d):
         self.flops.copy_(tmp)
         del tmp
 
-        return self._conv_forward(quantized_act, quantized_weight)
+        return self._conv_forward(input_x, quantized_weight)
 
     def compute_out(self, input_size, spatial="w"):
 
