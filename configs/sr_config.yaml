@@ -23,7 +23,7 @@ arch:
 
 env:
   run_name: 'LSQ WARM UP UNIFORM 4'
-  gpu: 1
+  gpu: 0
   log_dir: /home/dev/data_main/LOGS/SR/
   im_dir: 'arch_images'  
   workers: 4 
@@ -60,7 +60,7 @@ search:
     gamma: 1e-6
   
 train:
-  warm_up: 10
+  warm_up: 0
   lr_scheduler: cosine
   batch_size : 16 # batch size
   lr : 1e-3 # lr for weights
