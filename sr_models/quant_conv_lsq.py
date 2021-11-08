@@ -107,7 +107,7 @@ class LsqQuan(nn.Module):
             s_grad_scale = 1.0 / ((self.thd_pos * x.numel()) ** 0.5)
         s_scale = grad_scale(self.s, s_grad_scale)
 
-        x = x / torch.clip((s_scale + 1e-5), 1e10)
+        x = x / s_scale
         x = torch.clamp(x, self.thd_neg, self.thd_pos)
         x = round_pass(x)
         x = x * s_scale
