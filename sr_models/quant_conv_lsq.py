@@ -186,7 +186,7 @@ class QAConv2d(nn.Module):
         self._set_q_fucntions(self.bit)
 
     def forward(self, input_x):
-        quantized_weight = self.quan_w_fn(self.weight)
+        quantized_weight = self.quan_w_fn(self.conv.weight)
         quantized_act = self.quan_a_fn(input_x)
         out = self.conv(quantized_act, quantized_weight)
         return out
