@@ -218,7 +218,7 @@ def train(
         X, y = X.to(device, non_blocking=True), y.to(device, non_blocking=True)
         N = X.size(0)
         optimizer.zero_grad()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
+        # torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
         preds = model(X)
         loss = criterion(preds, y)
         loss_meter.update(loss.item(), N)
