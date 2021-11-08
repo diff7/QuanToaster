@@ -1,7 +1,7 @@
 """ CNN for network augmentation """
 import torch.nn as nn
 import genotypes as gt
-from sr_models.quant_conv import QAConv2d
+from sr_models.quant_conv_lsq import QAConv2d
 
 
 def summer(values, increments):
