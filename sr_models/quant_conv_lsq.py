@@ -4,6 +4,47 @@
 import torch
 import torch.nn as nn
 
+""" HWGQ """
+
+
+class _hwgq(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x, step):
+        y = torch.round(x / step) * step
+        return y
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        return grad_output, None
+
+
+class HWGQ(nn.Module):
+    def __init__(self, bit=2):
+        super(HWGQ, self).__init__()
+        self.bit = bit
+        if bit < 32:
+            self.step = hwgq_steps[bit]
+        else:
+            self.step = None
+
+    def forward(self, x):
+        if self.bit >= 32:
+            return x.clamp(min=0.0)
+        lvls = float(2 ** self.bit - 1)
+        clip_thr = self.step * lvls
+        y = x.clamp(min=0.0, max=clip_thr)
+        return _hwgq.apply(y, self.step)
+
+
+hwgq_steps = {
+    1: 1.0576462792297525,
+    2: 0.6356366866203315,
+    3: 0.3720645813370479,
+    4: 0.21305606790772952,
+    8: 0.020300567823662602,
+    16: 9.714825915156693e-05,
+}
+
 
 """  LSQ  """
 
@@ -171,9 +212,7 @@ class QAConv2d(nn.Module):
 
     # can be used to modify bits during the training
     def _set_q_fucntions(self, bit):
-        self.quan_a_fn = LsqQuan(
-            bit, all_positive=True, symmetric=False, per_channel=False
-        )
+        self.quan_a_fn = HWGQ(bit)
         self.quan_w_fn = LsqQuan(
             bit, all_positive=False, symmetric=False, per_channel=True
         )
