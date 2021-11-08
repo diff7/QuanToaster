@@ -137,7 +137,7 @@ class QuantConv(nn.Conv2d):
         self.flops.copy_(tmp)
         del tmp
 
-        return self._conv_forward(input_x, quantized_weight)
+        return self._conv_forward(input_x, quantized_weight, bias=None)
 
     def compute_out(self, input_size, spatial="w"):
 
