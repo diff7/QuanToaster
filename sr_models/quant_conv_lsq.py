@@ -24,6 +24,7 @@ class LsqQuan(nn.Module):
     def __init__(
         self, bit, all_positive=False, symmetric=False, per_channel=True
     ):
+        super(LsqQuan, self).__init__()
         self.bit = bit
         if all_positive:
             assert not symmetric, "Positive quantization cannot be symmetric"
