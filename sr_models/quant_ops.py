@@ -376,7 +376,7 @@ class SimpleConv(BaseConv):
         padding,
         dilation=1,
         groups=1,
-        affine=True,
+        affine=False,
         shared=False,
     ):
         super().__init__(shared=shared)
