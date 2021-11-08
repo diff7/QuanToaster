@@ -110,7 +110,7 @@ class LsqQuan(nn.Module):
         x = x / s_scale
         x = torch.clamp(x, self.thd_neg, self.thd_pos)
         x = round_pass(x)
-        x = x * s_scale
+        x = x * (s_scale + 1e-5)
         return x
 
 
