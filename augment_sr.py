@@ -122,7 +122,6 @@ def run_train(cfg):
     )
 
     # weights optimizer
-    print(model.state_dict().keys())
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=cfg.train.lr,

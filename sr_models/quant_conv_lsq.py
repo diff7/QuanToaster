@@ -106,10 +106,10 @@ class LsqQuan(nn.Module):
         else:
             s_grad_scale = 1.0 / ((self.thd_pos * x.numel()) ** 0.5)
         s_scale = grad_scale(self.s, s_grad_scale)
-        x = x / (s_scale + 1e-8)
+        x = x / (s_scale)
         x = torch.clamp(x, self.thd_neg, self.thd_pos)
         x = round_pass(x)
-        x = x * (s_scale + 1e-8)
+        x = x * (s_scale)
         return x
 
 
@@ -238,17 +238,27 @@ class SharedQAConv2d(nn.Module):
     def __init__(self, **kwargs):
         super(SharedQAConv2d, self).__init__()
         self.bits = kwargs.pop("bits")
-        self.acts = [HWGQ(bit) for bit in self.bits]
         self.conv = QuantConv(**kwargs)
+        self.acts = [HWGQ(bit) for bit in self.bits]
+        self.q_fn = []
+        for bit in self.bits:
+            self.q_fn.append(
+                LsqQuan(
+                    bit, all_positive=False, symmetric=False, per_channel=True
+                )
+            )
+            self.q_fn[-1].init_from(self.conv.weight)
+
         self.alphas = [1] * len(self.bits)
 
-    def forward(self, input):
-        outs = []
-        for alpha, bit, act in zip(self.alphas, self.bits, self.acts):
-            out = act(input)
-            out = alpha * self.conv(out, bit)
-        outs.append(out)
-        return sum(outs)
+    def forward(self, input_x):
+        weights = []
+        acts = []
+        for alpha, act, q_fn in zip(self.alphas, self.acts, self.q_fn):
+            weights.append(alpha * q_fn(self.conv.weight))
+            acts.append(alpha * act(input_x))
+
+        return self.conv(sum(acts), sum(weights))
 
     def _fetch_info(self):
         bit_ops, mem = 0, 0

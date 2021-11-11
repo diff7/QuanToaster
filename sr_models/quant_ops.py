@@ -643,6 +643,7 @@ class MixedOp(nn.Module):
     def __init__(self, C_in, C_out, bits, C_fixed, gene_type, stride=1):
         super().__init__()
         self._ops = nn.ModuleList()
+        self.bits = bits
         for primitive in gt.PRIMITIVES_SR[gene_type]:
             func = OPS[primitive](
                 C_in, C_out, bits, C_fixed, stride, affine=False, shared=True
@@ -657,7 +658,7 @@ class MixedOp(nn.Module):
         """
 
         outs = []
-        for alphas, op in zip(weights.chunk(len(self._ops)), self._ops):
+        for alphas, op in zip(weights.chunk(len(self.bits)), self._ops):
             op.set_alphas(alphas)
             outs.append(op(x))
         return sum(outs)
@@ -665,7 +666,7 @@ class MixedOp(nn.Module):
     def fetch_weighted_info(self, weights):
         flops = 0
         memory = 0
-        for alphas, op in zip(weights.chunk(len(self._ops)), self._ops):
+        for alphas, op in zip(weights.chunk(len(self.bits)), self._ops):
             op.set_alphas(alphas)
             f, m = op.fetch_info()
             flops += f

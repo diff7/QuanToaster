@@ -6,10 +6,10 @@ dataset:
   batch_size: 32
   crop_size: 45 # small image,  40x4=160, pathces are 200x200
   files_list:  /home/dev/data_main/SR/DIV2K/processed_200_st70/HR
-  debug_mode: False # run on a small porion of data
+  debug_mode: True # run on a small porion of data
   
 arch:
-  bits: [1,2,3,4,8]
+  bits: [2,3,4,8]
   channels: 3
   c_fixed: 36
   scale: 4
@@ -22,8 +22,8 @@ arch:
   body_cells: 1
 
 env:
-  run_name: 'LSQ BASE 8'
-  gpu: 0
+  run_name: 'LSQ BASE 4 LR 1e-3'
+  gpu: 2
   log_dir: /home/dev/data_main/LOGS/SR/
   im_dir: 'arch_images'  
   workers: 4 
