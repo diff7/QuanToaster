@@ -438,10 +438,14 @@ def get_data_loaders(cfg):
     indices = list(range(len(train_data)))
     random.shuffle(indices)
     if cfg.dataset.debug_mode:
-        cfg.search.train_portion = 0.01
+        cfg.dataset.train_portion = 0.01
 
-    split = int(np.floor(cfg.search.train_portion * n_train))
-    leftover = int(np.floor((1 - cfg.search.train_portion) * n_train))
+    split = int(np.floor(cfg.dataset.train_portion * n_train))
+    leftover = int(
+        np.floor(
+            (1 - cfg.dataset.train_portion) * n_train * cfg.dataset.val_portion
+        )
+    )
 
     train_sampler = torch.utils.data.sampler.SubsetRandomSampler(
         indices[:split]

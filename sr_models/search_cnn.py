@@ -112,7 +112,7 @@ class SearchCNNController(nn.Module):
     def genotype(self):
         gene = dict()
         for name in self.alphas_names:
-            gene[name] = gt.parse_sr(self.alphas[name], name)
+            gene[name] = gt.parse_sr(self.alphas[name], name, self.bits)
         return gt.Genotype_SR(**gene)
 
     def weights(self):

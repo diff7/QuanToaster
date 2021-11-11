@@ -24,15 +24,15 @@ PRIMITIVES = [
 
 body = [
     #    "skip_connect",
-    # "conv_5x1_1x5",
-    # "conv_3x1_1x3",
+    "conv_5x1_1x5",
+    "conv_3x1_1x3",
     "simple_3x3",
     # "simple_1x1",
     "simple_5x5",
-    # "simple_1x1_grouped_full",
-    # "simple_3x3_grouped_full",
-    # "simple_5x5_grouped_full",
-    # "simple_1x1_grouped_3",
+    "simple_1x1_grouped_full",
+    "simple_3x3_grouped_full",
+    "simple_5x5_grouped_full",
+    "simple_1x1_grouped_3",
     "simple_3x3_grouped_3",
     "simple_5x5_grouped_3",
     "DWS_3x3",
@@ -50,8 +50,8 @@ body = [
 ]
 head = [
     # "skip_connect",
-    # "conv_5x1_1x5",
-    # "conv_3x1_1x3",
+    "conv_5x1_1x5",
+    "conv_3x1_1x3",
     "simple_3x3",
     # "simple_1x1",
     "simple_5x5",
@@ -105,20 +105,19 @@ def to_dag_sr(C_fixed, gene, gene_type, c_in=3, c_out=3, scale=4):
     return nn.Sequential(*dag)
 
 
-def parse_sr(alpha, name, bits=1):
+def parse_sr(alpha, name, bits=[2]):
     gene = []
     for edges in alpha:
         best_bit = 0
         best_idx = 0
         best_val = 0
-        for bit, edge in enumerate(edges.chunk(bits)):
+        for bit, edge in enumerate(edges.chunk(len(bits))):
             max_val = edge.max()
-            func_idx = edge.argmax()  # ignore 'none'
+            func_idx = edge.argmax()
             if max_val > best_val:
                 best_val = max_val
                 best_idx = func_idx
                 best_bit = bit
-
         prim = PRIMITIVES_SR[name][best_idx]
-        gene.append((prim, best_bit))
+        gene.append((prim, bits[best_bit]))
     return gene
