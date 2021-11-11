@@ -239,9 +239,6 @@ class SharedQAConv2d(nn.Module):
             mem += alpha * m * bit
         return bit_ops, mem
 
-    def set_alphas(self, alphas):
-        self.alphas = alphas
-
 
 class BaseConv(nn.Module):
     def __init__(self, *args, **kwargs):
@@ -251,11 +248,6 @@ class BaseConv(nn.Module):
             self.conv_func = SharedQAConv2d
         else:
             self.conv_func = QAConv2d
-
-    def set_alphas(self, alphas):
-        for m in self.modules():
-            if isinstance(m, self.conv_func):
-                m.set_alphas(alphas)
 
     def fetch_info(self):
         sum_flops = 0

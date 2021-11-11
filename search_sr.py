@@ -341,7 +341,7 @@ def train(
 
         if step % cfg.env.print_freq == 0 or step == len(train_loader) - 1:
             logger.info(
-                "Train: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} Flops: {flops:.2e}".format(
+                "Train: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} BitOPS: {flops:.4e}".format(
                     epoch + 1,
                     cfg.search.epochs,
                     step,
@@ -386,7 +386,6 @@ def validate(
     best=False,
     temperature=1,
 ):
-    psnr_meter = utils.AverageMeter()
     loss_meter = utils.AverageMeter()
 
     model.eval()
@@ -439,7 +438,7 @@ def get_data_loaders(cfg):
     indices = list(range(len(train_data)))
     random.shuffle(indices)
     if cfg.dataset.debug_mode:
-        cfg.search.train_portion = 0.05
+        cfg.search.train_portion = 0.01
 
     split = int(np.floor(cfg.search.train_portion * n_train))
     leftover = int(np.floor((1 - cfg.search.train_portion) * n_train))

@@ -24,15 +24,15 @@ PRIMITIVES = [
 
 body = [
     #    "skip_connect",
-    "conv_5x1_1x5",
-    "conv_3x1_1x3",
+    # "conv_5x1_1x5",
+    # "conv_3x1_1x3",
     "simple_3x3",
-    "simple_1x1",
+    # "simple_1x1",
     "simple_5x5",
     # "simple_1x1_grouped_full",
     # "simple_3x3_grouped_full",
     # "simple_5x5_grouped_full",
-    "simple_1x1_grouped_3",
+    # "simple_1x1_grouped_3",
     "simple_3x3_grouped_3",
     "simple_5x5_grouped_3",
     "DWS_3x3",
@@ -42,22 +42,22 @@ body = [
     "decenc_3x3_4",
     "decenc_3x3_2",
     "decenc_5x5_2",
-    "decenc_5x5_8",
-    "decenc_3x3_8",
+    # "decenc_5x5_8",
+    # "decenc_3x3_8",
     # "decenc_3x3_4_g3",
     # "decenc_3x3_2_g3",
     # "decenc_5x5_2_g3",
 ]
 head = [
     # "skip_connect",
-    "conv_5x1_1x5",
-    "conv_3x1_1x3",
+    # "conv_5x1_1x5",
+    # "conv_3x1_1x3",
     "simple_3x3",
-    "simple_1x1",
+    # "simple_1x1",
     "simple_5x5",
     "growth2_5x5",
     "growth2_3x3",
-    "simple_1x1_grouped_3",
+    # "simple_1x1_grouped_3",
     "simple_3x3_grouped_3",
     "simple_5x5_grouped_3",
 ]
@@ -105,13 +105,20 @@ def to_dag_sr(C_fixed, gene, gene_type, c_in=3, c_out=3, scale=4):
     return nn.Sequential(*dag)
 
 
-def parse_sr(alpha, name):
-
+def parse_sr(alpha, name, bits=1):
     gene = []
+    for edges in alpha:
+        best_bit = 0
+        best_idx = 0
+        best_val = 0
+        for bit, edge in enumerate(edges.chunk(bits)):
+            max_val = edge.max()
+            func_idx = edge.argmax()  # ignore 'none'
+            if max_val > best_val:
+                best_val = max_val
+                best_idx = func_idx
+                best_bit = bit
 
-    for i, edges in enumerate(alpha):
-        func_idx = edges.argmax()  # ignore 'none'
-        prim = PRIMITIVES_SR[name][func_idx]
-        gene.append(prim)
-
+        prim = PRIMITIVES_SR[name][best_idx]
+        gene.append((prim, best_bit))
     return gene

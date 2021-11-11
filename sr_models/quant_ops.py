@@ -650,7 +650,7 @@ class MixedOp(nn.Module):
             )
             self._ops.append(func)
 
-    def forward(self, x, weights):
+    def forward(self, x, alpha_vec):
         """
         Args:
             x: input
@@ -658,15 +658,15 @@ class MixedOp(nn.Module):
         """
 
         outs = []
-        for alphas, op in zip(weights.chunk(len(self.bits)), self._ops):
+        for alphas, op in zip(alpha_vec.chunk(len(self.bits)), self._ops):
             op.set_alphas(alphas)
             outs.append(op(x))
         return sum(outs)
 
-    def fetch_weighted_info(self, weights):
+    def fetch_weighted_info(self, alpha_vec):
         flops = 0
         memory = 0
-        for alphas, op in zip(weights.chunk(len(self.bits)), self._ops):
+        for alphas, op in zip(alpha_vec.chunk(len(self.bits)), self._ops):
             op.set_alphas(alphas)
             f, m = op.fetch_info()
             flops += f

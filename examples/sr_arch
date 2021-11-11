@@ -4,23 +4,19 @@ digraph {
 rankdir=LR
 	Input [fillcolor=darkseagreen2]
 	Input -> 1 [label="HEAD
-simple_1x1_grouped_3" fillcolor=lightblue]
-	1 -> 2 [label="HEAD
-simple_1x1_grouped_3" fillcolor=lightblue]
+simple_5x5/bit:8" fillcolor=lightblue]
+	1 -> 2 [label="BODY
+skip_connect/bit:2" fillcolor=lightblue]
 	2 -> 3 [label="BODY
-simple_1x1" fillcolor=lightblue]
-	3 -> 4 [label="BODY
-simple_1x1" fillcolor=lightblue]
-	4 -> 5 [label="BODY
-simple_1x1" fillcolor=lightblue]
-	5 -> 6 [label="UPSAMPLE
-simple_1x1+PS" fillcolor=darkseagreen2]
-	6 -> 7 [label="TAIL
-simple_1x1_grouped_3" fillcolor=lightblue]
-	7 -> 8 [label="TAIL
-simple_5x5" fillcolor=lightblue]
-	2 -> 5 [label="skip
-simple_5x5" fillcolor=gray]
-	2 -> 5 [label=plain_skip fillcolor=gray]
-	6 -> 8 [label=skip fillcolor=gray]
+skip_connect/bit:2" fillcolor=lightblue]
+	3 -> 4 [label="UPSAMPLE
+simple_3x3/bit:4+PS" fillcolor=darkseagreen2]
+	4 -> 5 [label="TAIL
+simple_3x3/bit:4" fillcolor=lightblue]
+	5 -> 6 [label="TAIL
+simple_3x3/bit:4" fillcolor=lightblue]
+	1 -> 4 [label="skip
+skip_connect/bit:4" fillcolor=gray]
+	1 -> 4 [label=plain_skip fillcolor=gray]
+	4 -> 6 [label=skip fillcolor=gray]
 }
