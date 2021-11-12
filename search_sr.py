@@ -438,7 +438,7 @@ def get_data_loaders(cfg):
     indices = list(range(len(train_data)))
     random.shuffle(indices)
     if cfg.dataset.debug_mode:
-        cfg.dataset.train_portion = 0.01
+        cfg.dataset.train_portion = 0.005
 
     split = int(np.floor(cfg.dataset.train_portion * n_train))
     leftover = int(

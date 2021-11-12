@@ -41,7 +41,7 @@ def plot_sr(genotype, file_path, caption=None):
             g.edge(
                 str(node_n),
                 str(node_n + 1),
-                label=f"{name.upper()}\n{f[0]}/bit:{f[1]}+PS",
+                label=f"{name.upper()}\n{f[0]}\nbit:{f[1]}+PS",
                 fillcolor="darkseagreen2",
             )
             node_n += 1
@@ -56,7 +56,7 @@ def plot_sr(genotype, file_path, caption=None):
             g.edge(
                 current_n,
                 str(node_n + 1),
-                label=f"{name.upper()}\n{op}/bit:{bit}",
+                label=f"{name.upper()}\n{op}\nbit:{bit}",
                 fillcolor="lightblue",
             )
             node_n += 1
@@ -66,7 +66,7 @@ def plot_sr(genotype, file_path, caption=None):
     g.edge(
         str(body_start),
         str(body_end),
-        label=f"skip\n{body_skip[0]}/bit:{body_skip[1]}",
+        label=f"skip\n{body_skip[0]}\nbit:{body_skip[1]}",
         fillcolor="gray",
     )
     g.edge(
