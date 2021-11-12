@@ -658,9 +658,12 @@ class MixedOp(nn.Module):
         """
 
         outs = []
-        for alphas, op in zip(alpha_vec.chunk(len(self.bits)), self._ops):
+        # print("ALPHA SHAPE:", alpha_vec.shape)
+        for alphas, op in zip(alpha_vec.chunk(len(self._ops)), self._ops):
+            # print("ALPHA BIT:", alphas.shape)
             op.set_alphas(alphas)
             outs.append(op(x))
+            # print("ALPHA OUTS:", outs[-1].shape)
         return sum(outs)
 
     def fetch_weighted_info(self, alpha_vec):

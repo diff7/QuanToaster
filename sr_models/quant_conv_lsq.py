@@ -253,13 +253,13 @@ class SharedQAConv2d(nn.Module):
         self.alphas = [1] * len(self.bits)
 
     def forward(self, input_x):
-        weights = torch.zeros_like(self.conv.weight)
-        acts = torch.zeros_like(input_x)
+        weights = []
+        acts = []
         for alpha, act, q_fn in zip(self.alphas, self.acts, self.q_fn):
-            weights += alpha * q_fn(self.conv.weight)
-            acts += alpha * act(input_x)
+            weights.append(alpha * q_fn(self.conv.weight))
+            acts.append(alpha * act(input_x))
 
-        return self.conv(acts, weights)
+        return self.conv(sum(acts), sum(weights))
 
     def _fetch_info(self):
         bit_ops, mem = 0, 0

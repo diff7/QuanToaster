@@ -24,24 +24,24 @@ PRIMITIVES = [
 
 body = [
     #    "skip_connect",
-    "conv_5x1_1x5",
-    "conv_3x1_1x3",
+    # "conv_5x1_1x5",
+    # "conv_3x1_1x3",
     "simple_3x3",
     # "simple_1x1",
     "simple_5x5",
-    "simple_1x1_grouped_full",
-    "simple_3x3_grouped_full",
-    "simple_5x5_grouped_full",
-    "simple_1x1_grouped_3",
+    # "simple_1x1_grouped_full",
+    # "simple_3x3_grouped_full",
+    # "simple_5x5_grouped_full",
+    # "simple_1x1_grouped_3",
     "simple_3x3_grouped_3",
     "simple_5x5_grouped_3",
     "DWS_3x3",
     "DWS_5x5",
-    "growth2_5x5",
-    "growth2_3x3",
-    "decenc_3x3_4",
-    "decenc_3x3_2",
-    "decenc_5x5_2",
+    # "growth2_5x5",
+    # "growth2_3x3",
+    # "decenc_3x3_4",
+    # "decenc_3x3_2",
+    # "decenc_5x5_2",
     # "decenc_5x5_8",
     # "decenc_3x3_8",
     # "decenc_3x3_4_g3",
@@ -50,16 +50,16 @@ body = [
 ]
 head = [
     # "skip_connect",
-    "conv_5x1_1x5",
-    "conv_3x1_1x3",
+    # "conv_5x1_1x5",
+    # "conv_3x1_1x3",
     "simple_3x3",
-    # "simple_1x1",
+    "simple_1x1",
     "simple_5x5",
-    "growth2_5x5",
-    "growth2_3x3",
+    # "growth2_5x5",
+    # "growth2_3x3",
     # "simple_1x1_grouped_3",
-    "simple_3x3_grouped_3",
-    "simple_5x5_grouped_3",
+    # "simple_3x3_grouped_3",
+    # "simple_5x5_grouped_3",
 ]
 PRIMITIVES_SR = {
     "head": head,
@@ -106,18 +106,19 @@ def to_dag_sr(C_fixed, gene, gene_type, c_in=3, c_out=3, scale=4):
 
 
 def parse_sr(alpha, name, bits=[2]):
+    n_ops = len(alpha) // len(bits)
     gene = []
     for edges in alpha:
         best_bit = 0
-        best_idx = 0
+        best_op = 0
         best_val = 0
-        for bit, edge in enumerate(edges.chunk(len(bits))):
+        for op_idx, edge in enumerate(edges.chunk(n_ops)):
             max_val = edge.max()
-            func_idx = edge.argmax()
+            bit_idx = edge.argmax()
             if max_val > best_val:
                 best_val = max_val
-                best_idx = func_idx
-                best_bit = bit
-        prim = PRIMITIVES_SR[name][best_idx]
+                best_op = op_idx
+                best_bit = bit_idx
+        prim = PRIMITIVES_SR[name][best_op]
         gene.append((prim, bits[best_bit]))
     return gene

@@ -81,10 +81,10 @@ def run_search(cfg):
     flops_loss = FlopsLoss(model.n_ops)
 
     # weights optimizer
-    w_optim = torch.optim.SGD(
+    w_optim = torch.optim.Adam(
         model.weights(),
         cfg.search.w_lr,
-        momentum=cfg.search.w_momentum,
+        # momentum=cfg.search.w_momentum,
         weight_decay=cfg.search.w_weight_decay,
     )
     # alphas optimizer
@@ -434,7 +434,7 @@ def get_data_loaders(cfg):
     train_data = CropDataset(cfg.dataset, train=True)
 
     # split data to train/validation
-    n_train = len(train_data) // 2
+    n_train = len(train_data)
     indices = list(range(len(train_data)))
     random.shuffle(indices)
     if cfg.dataset.debug_mode:
