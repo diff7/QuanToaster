@@ -669,7 +669,7 @@ class MixedOp(nn.Module):
     def fetch_weighted_info(self, alpha_vec):
         flops = 0
         memory = 0
-        for alphas, op in zip(alpha_vec.chunk(len(self.bits)), self._ops):
+        for alphas, op in zip(alpha_vec.chunk(len(self._ops)), self._ops):
             op.set_alphas(alphas)
             f, m = op.fetch_info()
             flops += f

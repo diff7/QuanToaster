@@ -81,7 +81,7 @@ def run_search(cfg):
     flops_loss = FlopsLoss(model.n_ops)
 
     # weights optimizer
-    w_optim = torch.optim.Adam(
+    w_optim = torch.optim.SGD(
         model.weights(),
         cfg.search.w_lr,
         # momentum=cfg.search.w_momentum,

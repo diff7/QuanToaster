@@ -114,7 +114,7 @@ if __name__ == "__main__":
     valid_cfg = omg.load(CFG_PATH)
     run_name = "TEST_2"
     genotype_path = "./genotype_example_sr.gen"
-    weights_path = "/home/dev/data/logs/TUNE_TEST-2021-10-11-18/best.pth.tar"
+    weights_path = "/home/dev/data_main/LOGS/QUANT/first_bigger_set/trail_1/TUNE_batch experiment_penalty_0_trail_1-2021-11-13-17/best.pth.tar"
     log_dir = "/home/dev/data/logs/VAL_LOGS"
     save_dir = os.path.join(log_dir, run_name)
     os.makedirs(save_dir, exist_ok=True)
@@ -132,9 +132,9 @@ if __name__ == "__main__":
         weights_path,
         device,
         genotype,
-        c_fixed,
+        c_fixed=36,
         channels=3,
-        repeat_factor=4,
-        blocks=2,
+        scale=4,
+        body_cells=2,
     )
     dataset_loop(valid_cfg, model, logger, save_dir, device)
