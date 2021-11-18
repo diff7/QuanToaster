@@ -86,6 +86,9 @@ class SearchCNNController(nn.Module):
         (flops, mem) = self.net.fetch_weighted_flops_and_memory(weight_alphas)
         return out, (flops, mem)
 
+    def get_max_alphas(self):
+        return self.get_alphas(self.get_max)
+
     def forward_current_best(self, x):
         weight_alphass = self.get_alphas(self.get_max)
         return self.net(x, weight_alphass)

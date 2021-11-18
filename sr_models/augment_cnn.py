@@ -61,7 +61,7 @@ class AugmentCNN(nn.Module):
         x = init
         for cell in self.body:
             x = cell(x)
-        # CURRENT CHANGE prev score 27.944
+
         x = self.upsample(x * self.rf + init)
         return self.tail(x) + x
 

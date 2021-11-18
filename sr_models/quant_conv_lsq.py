@@ -264,7 +264,8 @@ class SharedQAConv2d(nn.Module):
     def _fetch_info(self):
         bit_ops, mem = 0, 0
         b, m = self.conv._fetch_info()
-        for alpha, bit in zip(self.bits, self.alphas):
+
+        for bit, alpha in zip(self.bits, self.alphas):
             bit_ops += alpha * b * bit
             mem += alpha * m * bit
         return bit_ops, mem

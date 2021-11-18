@@ -127,19 +127,19 @@ class SearchArch(nn.Module):
     def fetch_weighted_flops_and_memory(self, alphas):
         flops = 0
         memory = 0
-
         for func, name in [
             (self.head, "head"),
             (self.tail, "tail"),
             (self.upsample, "upsample"),
         ]:
 
-            flops, memory = summer(
-                (flops, memory), func.fetch_info(alphas[name])
-            )
+            f, m = func.fetch_info(alphas[name])
+            flops += f
+            memory += m
 
         for cell in self.body:
-            flops, memory = summer(
-                (flops, memory), cell.fetch_info(alphas["body"], alphas["skip"])
-            )
+            f, m = cell.fetch_info(alphas["body"], alphas["skip"])
+            flops += f
+            memory += m
+
         return flops, memory

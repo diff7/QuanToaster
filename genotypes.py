@@ -20,16 +20,16 @@ body = [
     # "simple_1x1_grouped_full",
     # "simple_3x3_grouped_full",
     # "simple_5x5_grouped_full",
-    "simple_1x1_grouped_3",
-    "simple_3x3_grouped_3",
-    "simple_5x5_grouped_3",
+    # "simple_1x1_grouped_3",
+    # "simple_3x3_grouped_3",
+    # "simple_5x5_grouped_3",
     # "DWS_3x3",
     # "DWS_5x5",
     # "growth2_5x5",
     # "growth2_3x3",
     # "decenc_3x3_4",
-    "decenc_3x3_2",
-    "decenc_5x5_2",
+    # "decenc_3x3_2",
+    # "decenc_5x5_2",
     # "decenc_5x5_8",
     # "decenc_3x3_8",
     # "decenc_3x3_4_g3",
@@ -37,16 +37,16 @@ body = [
     # "decenc_5x5_2_g3",
 ]
 head = [
-    # "conv_5x1_1x5",
-    # "conv_3x1_1x3",
+    "conv_5x1_1x5",
+    "conv_3x1_1x3",
     "simple_3x3",
     # "simple_1x1",
-    "simple_5x5",
+    # "simple_5x5",
     # "growth2_5x5",
     # "growth2_3x3",
     # "simple_1x1_grouped_3",
-    "simple_3x3_grouped_3",
-    "simple_5x5_grouped_3",
+    # "simple_3x3_grouped_3",
+    # "simple_5x5_grouped_3",
 ]
 PRIMITIVES_SR = {
     "head": head,
@@ -105,7 +105,9 @@ def parse_sr(alpha, name, bits=[2]):
             if max_val > best_val:
                 best_val = max_val
                 best_op = op_idx
-                best_bit = bit_idx
+                best_bit = bit_idx.item()
+
+        print(f"{name} best_op {best_op} best_bit {best_bit}")
         prim = PRIMITIVES_SR[name][best_op]
-        gene.append((prim, bits[best_bit.item()]))
+        gene.append((prim, bits[best_bit]))
     return gene

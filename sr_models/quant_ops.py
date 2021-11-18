@@ -679,6 +679,7 @@ class MixedOp(nn.Module):
 
 
 if __name__ == "__main__":
+    print("Get blocks weights for 4 bits")
     random_image = torch.randn(3, 36, 256, 256)
 
     C = 36
@@ -717,7 +718,7 @@ if __name__ == "__main__":
     names = []
     flops = []
     for i, primitive in enumerate(PRIMITIVES_SR):
-        func = OPS[primitive](C, C, C, stride, affine=False)
+        func = OPS[primitive](C, C, [8], C, stride, affine=False)
         conv = func
 
         x = conv(random_image)
