@@ -162,7 +162,7 @@ class alphaSelector:
         assert name in ["softmax", "gumbel", "gumbel2k"]
         self.name = name
 
-    def __call__(self, vector, temperature=1, dim=-1):
+    def __call__(self, vector, temperature=1, dim=0):
 
         if self.name == "gumbel":
             return F.gumbel_softmax(vector, temperature, hard=False)

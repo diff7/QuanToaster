@@ -1,6 +1,5 @@
 """ Search cell """
 import os
-from types import new_class
 import torch
 import torch.nn as nn
 import random
@@ -81,7 +80,7 @@ def run_search(cfg):
     flops_loss = FlopsLoss(model.n_ops)
 
     # weights optimizer
-    w_optim = torch.optim.SGD(
+    w_optim = torch.optim.Adam(
         model.weights(),
         cfg.search.w_lr,
         # momentum=cfg.search.w_momentum,
@@ -94,6 +93,8 @@ def run_search(cfg):
         betas=(0.5, 0.999),
         weight_decay=cfg.search.alpha_weight_decay,
     )
+
+    scaler = torch.cuda.amp.GradScaler()
 
     scheduler = {
         "cosine": torch.optim.lr_scheduler.CosineAnnealingLR(
@@ -131,6 +132,7 @@ def run_search(cfg):
             architect,
             w_optim,
             alpha_optim,
+            scaler,
             lr,
             epoch,
             writer,
@@ -158,17 +160,17 @@ def run_search(cfg):
             temperature=temperature,
         )
 
-        score_val_unsummed = validate(
-            val_loader,
-            model,
-            epoch,
-            logger,
-            writer,
-            cfg,
-            device,
-            best=True,
-            temperature=temperature,
-        )
+        # score_val_unsummed = validate(
+        #     val_loader,
+        #     model,
+        #     epoch,
+        #     logger,
+        #     writer,
+        #     cfg,
+        #     device,
+        #     best=True,
+        #     temperature=temperature,
+        # )
 
         # log genotype
         genotype = model.genotype()
@@ -215,13 +217,12 @@ def run_search(cfg):
         writer.add_scalars(
             "loss/search", {"val": best_score, "train": score_train}, epoch
         )
-        writer.add_scalars(
-            "loss_val_unsummed/search", {"val": score_val_unsummed}, epoch
-        )
+
         writer.add_scalar("search/train/temperature", temperature, epoch)
 
         logger.info("Final best LOSS = {:.3f}".format(best_score))
         logger.info("Best Genotype = {}".format(best_genotype))
+        log_weigths_hist(model, writer, epoch)
 
     # FINISH TRAINING
     log_handler.close()
@@ -257,6 +258,7 @@ def train(
     architect,
     w_optim,
     alpha_optim,
+    scaler,
     lr,
     epoch,
     writer,
@@ -304,7 +306,6 @@ def train(
                     trn_X, trn_y, val_X, val_y, lr, w_optim, flops_loss
                 )
             else:
-
                 preds, (flops, mem) = model(val_X, temperature)
                 if cfg.search.use_l1_alpha:
                     alphas = model.alphas()
@@ -323,14 +324,18 @@ def train(
                 alpha_optim.step()
 
         # phase 1. child network step (w)
-        w_optim.zero_grad()
-        preds, (flops, mem) = model(trn_X, temperature, stable=stable)
 
-        loss_w = model.criterion(preds, trn_y)
-        loss_w.backward()
+        w_optim.zero_grad()
+        with torch.cuda.amp.autocast():
+            preds, (flops, mem) = model(trn_X, temperature, stable=stable)
+            loss_w = model.criterion(preds, trn_y)
+        scaler.scale(loss_w).backward()
+
         # gradient clipping
-        nn.utils.clip_grad_norm_(model.weights(), cfg.search.w_grad_clip)
-        w_optim.step()
+        # nn.utils.clip_grad_norm_(model.weights(), cfg.search.w_grad_clip)
+
+        scaler.step(w_optim)
+        scaler.update()
 
         loss_meter.update(loss_w.item(), N)
 
@@ -350,7 +355,7 @@ def train(
                     flops=best_current_flops,
                 )
             )
-
+        # print("NORMS: ", grad_norm(model))
         writer.add_scalar("search/train/loss", loss_w, cur_step)
         writer.add_scalar(
             "search/train/best_current_flops", best_current_flops, cur_step
@@ -438,7 +443,7 @@ def get_data_loaders(cfg):
     indices = list(range(len(train_data)))
     random.shuffle(indices)
     if cfg.dataset.debug_mode:
-        cfg.dataset.train_portion = 0.005
+        cfg.dataset.train_portion = 0.1
 
     split = int(np.floor(cfg.dataset.train_portion * n_train))
     leftover = int(
@@ -484,6 +489,14 @@ def get_data_loaders(cfg):
     return loaders
 
 
+def log_weigths_hist(model, tb_logger, epoch):
+    for name, weight in model.named_parameters():
+        if "weight" in name:
+            if "head" in name or "body" in name:
+                tb_logger.add_histogram(name, weight, epoch)
+                tb_logger.add_histogram(f"{name}.grad", weight.grad, epoch)
+
+
 class FlopsLoss:
     def __init__(self, n_ops, reduce=4):
         self.n_ops = n_ops / reduce
@@ -499,6 +512,28 @@ class FlopsLoss:
     def __call__(self, weighted_flops):
         l = (weighted_flops - self.min) / (self.norm - self.min)
         return l * self.penalty
+
+
+# def grad_norm(model):
+#     norms = {}
+#     norms["body"] = 0
+#     norms["head"] = 0
+#     norms["tail"] = 0
+#     for name, p in model.named_parameters():
+#         if ("body" in name) or ("head" in name) or ("tail" in name):
+#             if p.grad is not None:
+#                 param_norm = p.grad.detach().data.norm(2)
+#                 if "body" in name:
+#                     norms["body"] += param_norm.item() ** 2
+
+#                 if "head" in name:
+#                     norms["head"] += param_norm.item() ** 2
+#                     print("head", param_norm.item())
+
+#                 if "tail" in name:
+#                     norms["tail"] += param_norm.item() ** 2
+#                     print("tail", param_norm.item())
+#     return norms
 
 
 if __name__ == "__main__":

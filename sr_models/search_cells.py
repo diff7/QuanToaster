@@ -9,12 +9,12 @@ def summer(values, increments):
 
 class Residual(nn.Module):
     def __init__(self, skip, body):
-        super().__init__()
+        super(Residual, self).__init__()
         self.skip = skip
         self.body = body
 
     def forward(self, x, b_weights, s_weights):
-        return (self.skip(x, s_weights) + self.body(x, b_weights)) * 0.2 + x
+        return (self.skip(x, s_weights) + self.body(x, b_weights)) + x
 
     def fetch_info(self, b_weights, s_weights):
         flops = 0
@@ -31,7 +31,7 @@ class CommonBlock(nn.Module):
     def __init__(
         self, c_fixed, c_init, bits, num_layers, gene_type="head", scale=4
     ):
-        super().__init__()
+        super(CommonBlock, self).__init__()
 
         self.net = nn.ModuleList()
         self.name = gene_type
