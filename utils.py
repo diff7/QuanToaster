@@ -233,3 +233,47 @@ def save_images(
     target.save(f"{results_dir}/taret_step_{cur_iter}.png")
     input_img.save(f"{results_dir}/input_step_{cur_iter}.png")
     out_image.save(f"{results_dir}/out_image_step_{cur_iter}.png")
+
+
+class FlopsScheduler:
+    def __init__(
+        self, start_reg=0, start_after=0, reg_step=0, step=1, max_reg=1e10
+    ):
+        self.start_after = start_after
+        self.cur_reg = start_reg
+        self.step = step
+        self.reg_step = reg_step
+        self.max_reg = max_reg
+        self.cur_epoch = start_after
+        self.register = False
+
+    def __call__(self, epoch):
+        if epoch > self.cur_epoch:
+            self.cur_epoch = epoch + self.step
+            self.set_reg()
+        if self.cur_epoch - 1 == epoch:
+            self.register = True
+        else:
+            self.register = False
+        return self.cur_reg
+
+    def set_reg(self):
+        if self.cur_reg < self.max_reg:
+            self.cur_reg += self.reg_step
+
+
+class FlopsLoss:
+    def __init__(self, n_ops, reduce=4):
+        self.n_ops = n_ops / reduce
+        self.norm = 0
+
+    def set_norm(self, norm):
+        self.norm = norm.detach() * self.n_ops
+        self.min = norm.detach() / self.n_ops
+
+    def set_penalty(self, penalty):
+        self.penalty = float(penalty)
+
+    def __call__(self, weighted_flops):
+        l = (weighted_flops - self.min) / (self.norm - self.min)
+        return l * self.penalty

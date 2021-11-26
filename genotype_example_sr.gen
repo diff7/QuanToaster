@@ -1,10 +1,5 @@
 # first bigger
-Genotype_SR(head=[('simple_3x3', 8), ('simple_3x3', 8)], 
-body=[('simple_1x1_grouped_3', 8), ('conv_5x1_1x5', 8), ('conv_5x1_1x5', 8)], 
-tail=[('simple_5x5', 8), ('simple_3x3', 8)], 
-skip=[('simple_3x3_grouped_3', 8)], 
-upsample=[('simple_3x3_grouped_3', 8)])
-
+Genotype_SR(head=[('simple_3x3_grouped_3', 8), ('simple_5x5_grouped_3', 8)], body=[('simple_3x3', 8), ('simple_3x3', 8), ('simple_3x3', 8)], tail=[('simple_3x3_grouped_3', 8), ('simple_5x5_grouped_3', 8)], skip=[('simple_3x3', 8)], upsample=[('simple_5x5_grouped_3', 8)])
 
 #small set
 #Genotype_SR(head=[('simple_5x5', 8), ('simple_5x5', 8)], 

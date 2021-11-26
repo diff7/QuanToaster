@@ -7,7 +7,7 @@ dataset:
   batch_size: 32
   crop_size: 45 # small image,  40x4=160, pathces are 200x200
   files_list:  /home/dev/data_main/SR/DIV2K/processed_200_st70/HR
-  debug_mode: False # run on a small porion of data
+  debug_mode: True # run on a small porion of data
   
 arch:
   bits: [4,8]
@@ -23,7 +23,7 @@ arch:
   body_cells: 2
 
 env:
-  run_name: 'DEBUG_SGD_momentum'
+  run_name: 'LoadSaved'
   gpu: 3
   log_dir: /home/dev/data_main/LOGS/QUANT
   im_dir: 'arch_images'  
@@ -32,20 +32,27 @@ env:
   print_freq: 60 # print frequency
  
 search:
+  load_path: /home/dev/data_main/LOGS/QUANT/ADAM_amp/trail_1/SEARCH_batch experiment_penalty_0.003_trail_1-2021-11-20-17/checkpoint.pth.tar
   penalty: 0.0
   use_adjuster: false
   unrolled: false
   use_l1_alpha: false
   l1_lambda: 1
   alpha_selector: softmax #softmax #gumbel
-  warm_up: 0
+  reg_sched:
+    start_reg: 0
+    reg_step: 0.001
+    start_after: 2
+    step: 4
+    max_reg: 0.005
+
   lr_scheduler: cosine
-  w_lr: 1e-4 # lr for weights
+  w_lr: 1e-5 # lr for weights
   w_lr_min: 0.001 # minimum lr for weights
   w_momentum: 0.9 # momentum for weights
   w_weight_decay: 3e-8 # weight decay for weights
   w_grad_clip: 5 # gradient clipping for weights
-  epochs: 15 # n of training epochs
+  epochs: 20 # n of training epochs
   temperature_start: 1e1
   temp_red: 0.6
   alpha_lr:  3e-4 #3e-4 #lr for alpha

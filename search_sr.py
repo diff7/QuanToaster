@@ -73,11 +73,23 @@ def run_search(cfg):
         alpha_selector=cfg.search.alpha_selector,
     )
 
+    if cfg.search.load_path is not None:
+        saved_model = torch.load(cfg.search.load_path)
+        model.load_state_dict(saved_model.state_dict())
+        print(f"loaded a model from: {cfg.search.load_path}")
+
     if cfg.search.use_adjuster:
         ConstrainAdjuster = ArchConstrains(**cfg.search.adjuster, device=device)
     model = model.to(device)
 
-    flops_loss = FlopsLoss(model.n_ops)
+    flops_loss = utils.FlopsLoss(model.n_ops)
+    FlopsReg = utils.FlopsScheduler(
+        start_reg=cfg.search.reg_sched.start_reg,
+        reg_step=cfg.search.reg_sched.reg_step,
+        start_after=cfg.search.reg_sched.start_after,
+        step=cfg.search.reg_sched.step,
+        max_reg=cfg.search.reg_sched.max_reg,
+    )
 
     # weights optimizer
     w_optim = torch.optim.Adam(
@@ -121,7 +133,7 @@ def run_search(cfg):
 
         model.print_alphas(logger, cfg.search.temperature_start)
 
-        if epoch > cfg.search.warm_up:
+        if FlopsReg(epoch) > 0:
             temperature *= cfg.search.temp_red
 
         # training
@@ -142,6 +154,7 @@ def run_search(cfg):
             cur_step,
             flops_loss,
             temperature,
+            FlopsReg,
         )
 
         if cfg.search.use_adjuster:
@@ -160,23 +173,20 @@ def run_search(cfg):
             temperature=temperature,
         )
 
-        # score_val_unsummed = validate(
-        #     val_loader,
-        #     model,
-        #     epoch,
-        #     logger,
-        #     writer,
-        #     cfg,
-        #     device,
-        #     best=True,
-        #     temperature=temperature,
-        # )
-
         # log genotype
         genotype = model.genotype()
         logger.info("genotype = {}".format(genotype))
 
         # save
+        if FlopsReg.register:
+            with open(
+                os.path.join(
+                    cfg.env.save, f"arch_ep_{epoch}_reg_{FlopsReg(epoch)}.gen"
+                ),
+                "w",
+            ) as f:
+                f.write(str(genotype))
+
         if best_score > score_val:
             best_score = score_val
             best_flops = best_current_flops
@@ -216,6 +226,9 @@ def run_search(cfg):
         print("best current", best_current_flops)
         writer.add_scalars(
             "loss/search", {"val": best_score, "train": score_train}, epoch
+        )
+        writer.add_scalar(
+            "search/train/reg_scheduler", FlopsReg(epoch), cur_step
         )
 
         writer.add_scalar("search/train/temperature", temperature, epoch)
@@ -268,6 +281,7 @@ def train(
     cur_step,
     flops_loss,
     temperature,
+    FlopsReg,
 ):
     loss_meter = utils.AverageMeter()
 
@@ -298,30 +312,25 @@ def train(
 
         alpha_optim.zero_grad()
 
-        if epoch >= cfg.search.warm_up:
+        if FlopsReg(epoch) > 0:
             stable = False
 
-            if cfg.search.unrolled:
-                architect.backward(
-                    trn_X, trn_y, val_X, val_y, lr, w_optim, flops_loss
+            preds, (flops, mem) = model(val_X, temperature)
+            if cfg.search.use_l1_alpha:
+                alphas = model.alphas()
+                flat_alphas = torch.cat([x.view(-1) for x in alphas])
+                l1_regularization = cfg.search.l1_lambda * torch.norm(
+                    flat_alphas, 1
+                )
+                loss = (
+                    model.criterion(preds, val_y)
+                    + flops_loss(flops)
+                    + l1_regularization
                 )
             else:
-                preds, (flops, mem) = model(val_X, temperature)
-                if cfg.search.use_l1_alpha:
-                    alphas = model.alphas()
-                    flat_alphas = torch.cat([x.view(-1) for x in alphas])
-                    l1_regularization = cfg.search.l1_lambda * torch.norm(
-                        flat_alphas, 1
-                    )
-                    loss = (
-                        model.criterion(preds, val_y)
-                        + flops_loss(flops)
-                        + l1_regularization
-                    )
-                else:
-                    loss = model.criterion(preds, val_y) + flops_loss(flops)
-                loss.backward()
-                alpha_optim.step()
+                loss = model.criterion(preds, val_y) + flops_loss(flops)
+            loss.backward()
+            alpha_optim.step()
 
         # phase 1. child network step (w)
 
@@ -336,7 +345,7 @@ def train(
 
         scaler.step(w_optim)
         scaler.update()
-
+        flops_loss.set_penalty(FlopsReg(epoch))
         loss_meter.update(loss_w.item(), N)
 
         (
@@ -443,7 +452,7 @@ def get_data_loaders(cfg):
     indices = list(range(len(train_data)))
     random.shuffle(indices)
     if cfg.dataset.debug_mode:
-        cfg.dataset.train_portion = 0.1
+        cfg.dataset.train_portion = 0.001
 
     split = int(np.floor(cfg.dataset.train_portion * n_train))
     leftover = int(
@@ -495,23 +504,6 @@ def log_weigths_hist(model, tb_logger, epoch):
             if "head" in name or "body" in name:
                 tb_logger.add_histogram(name, weight, epoch)
                 tb_logger.add_histogram(f"{name}.grad", weight.grad, epoch)
-
-
-class FlopsLoss:
-    def __init__(self, n_ops, reduce=4):
-        self.n_ops = n_ops / reduce
-        self.norm = 0
-
-    def set_norm(self, norm):
-        self.norm = norm.detach() * self.n_ops
-        self.min = norm.detach() / self.n_ops
-
-    def set_penalty(self, penalty):
-        self.penalty = float(penalty)
-
-    def __call__(self, weighted_flops):
-        l = (weighted_flops - self.min) / (self.norm - self.min)
-        return l * self.penalty
 
 
 # def grad_norm(model):
