@@ -7,7 +7,7 @@ dataset:
   batch_size: 32
   crop_size: 45 # small image,  40x4=160, pathces are 200x200
   files_list:  /home/dev/data_main/SR/DIV2K/processed_200_st70/HR
-  debug_mode: True # run on a small porion of data
+  debug_mode: False # run on a small porion of data
   
 arch:
   bits: [4,8]
@@ -23,7 +23,7 @@ arch:
   body_cells: 2
 
 env:
-  run_name: 'LoadSaved'
+  run_name: 'PRE_TRAIN'
   gpu: 3
   log_dir: /home/dev/data_main/LOGS/QUANT
   im_dir: 'arch_images'  
@@ -32,7 +32,7 @@ env:
   print_freq: 60 # print frequency
  
 search:
-  load_path: /home/dev/data_main/LOGS/QUANT/ADAM_amp/trail_1/SEARCH_batch experiment_penalty_0.003_trail_1-2021-11-20-17/checkpoint.pth.tar
+  load_path: #/home/dev/data_main/LOGS/QUANT/ADAM_amp/trail_1/SEARCH_batch experiment_penalty_0.003_trail_1-2021-11-20-17/best.pth.tar
   penalty: 0.0
   use_adjuster: false
   unrolled: false
@@ -42,12 +42,12 @@ search:
   reg_sched:
     start_reg: 0
     reg_step: 0.001
-    start_after: 2
+    start_after: 20
     step: 4
     max_reg: 0.005
 
   lr_scheduler: cosine
-  w_lr: 1e-5 # lr for weights
+  w_lr: 1e-3 # lr for weights
   w_lr_min: 0.001 # minimum lr for weights
   w_momentum: 0.9 # momentum for weights
   w_weight_decay: 3e-8 # weight decay for weights

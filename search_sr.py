@@ -74,8 +74,7 @@ def run_search(cfg):
     )
 
     if cfg.search.load_path is not None:
-        saved_model = torch.load(cfg.search.load_path)
-        model.load_state_dict(saved_model.state_dict())
+        model = torch.load(cfg.search.load_path)
         print(f"loaded a model from: {cfg.search.load_path}")
 
     if cfg.search.use_adjuster:
@@ -92,10 +91,10 @@ def run_search(cfg):
     )
 
     # weights optimizer
-    w_optim = torch.optim.Adam(
+    w_optim = torch.optim.SGD(
         model.weights(),
         cfg.search.w_lr,
-        # momentum=cfg.search.w_momentum,
+        momentum=cfg.search.w_momentum,
         weight_decay=cfg.search.w_weight_decay,
     )
     # alphas optimizer
