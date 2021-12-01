@@ -75,8 +75,11 @@ class ConvFlops(nn.Module):
 
         w_out = self.compute_out(w_in, "w")
         h_out = self.compute_out(h_in, "h")
-
-        tmp = torch.tensor(c_in * w_in * h_in, dtype=torch.float).to(device)
+        try:
+            tmp = torch.tensor(c_in * w_in * h_in, dtype=torch.float).to(device)
+        except Exception as e:
+            print("DEBUG", c_in, w_in, h_in, device) # DEBUG 72 45 45 cuda:3
+            raise e
         self.memory_size.copy_(tmp)
         tmp = torch.tensor(
             self.param_size * w_out * h_out, dtype=torch.float

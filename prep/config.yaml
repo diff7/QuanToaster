@@ -2,10 +2,10 @@ data: '/home/dev/data/SR/DIV2K/'
 data_hr:  '/home/dev/data_main/SR/DIV2K/HR'
 data_lr:  '/home/dev/data_main/DIV2K/LR'
 
-data_processed_hr: '/home/dev/data/SR/DIV2K/processed_200/HR'
-data_processed_lr: '/home/dev/data/SR/DIV2K/processed_200/LR'
+data_processed_hr: '/home/dev/data_main/SR/DIV2K/processed_200_st70/HR'
+data_processed_lr: '/home/dev/data_main/SR/DIV2K/processed_200_st70/LR'
 val_folder: '/valid/'
 train_folder: '/train/'
 scale: 4
 patch_size: 200
-stride: 40
+stride: 70

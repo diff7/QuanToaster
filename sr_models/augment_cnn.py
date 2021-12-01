@@ -62,8 +62,9 @@ class AugmentCNN(nn.Module):
         x = init
         for cell in self.body:
             x = cell(x)
-        x = self.upsample(x + init * 0.2)
-        return self.tail(x) * 0.2 + x
+        # CURRENT CHANGE
+        x = self.upsample(x * 0.2 + init)
+        return self.tail(x) + x
 
     def fetch_info(self):
         sum_flops = 0

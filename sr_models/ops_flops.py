@@ -426,7 +426,7 @@ class MixedOp(nn.Module):
         super().__init__()
         self._ops = nn.ModuleList()
         for primitive in gt.PRIMITIVES_SR[gene_type]:
-            func = OPS[primitive](C_in, C_out, C_fixed, stride, affine=True)
+            func = OPS[primitive](C_in, C_out, C_fixed, stride, affine=False)
             self._ops.append(func)
 
     def summer(self, values, increments):
@@ -491,7 +491,7 @@ if __name__ == "__main__":
     names = []
     flops = []
     for i, primitive in enumerate(PRIMITIVES_SR):
-        func = OPS[primitive](C, C, C, stride, affine=True)
+        func = OPS[primitive](C, C, C, stride, affine=False)
         conv = func
 
         x = conv(random_image)
