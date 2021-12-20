@@ -1,4 +1,5 @@
-Genotype_SR(head=['simple_5x5', 'simple_3x3_grouped_3'],
-body=['simple_3x3', 'simple_5x5', 'simple_5x5'],
-tail=['simple_3x3_grouped_3', 'simple_5x5'],
-skip=['simple_5x5'], upsample=['simple_5x5'])
+Genotype_SR(
+head=['growth2_5x5', 'simple_1x1_grouped_3'], 
+body=['conv_5x1_1x5', 'conv_5x1_1x5', 'conv_5x1_1x5'], 
+tail=['simple_5x5_grouped_3', 'simple_3x3'], 
+skip=['decenc_3x3_2'], upsample=['simple_1x1'])

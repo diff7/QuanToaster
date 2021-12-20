@@ -16,7 +16,7 @@ class Residual(nn.Module):
         self.body = body
 
     def forward(self, x, b_weights, s_weights):
-        return (self.skip(x, s_weights) + self.body(x, b_weights)) * 0.2 + x
+        return (self.skip(x, s_weights) + self.body(x, b_weights)) + x
 
     def fetch_info(self, b_weights, s_weights):
         flops = 0
@@ -118,7 +118,7 @@ class SearchArch(nn.Module):
         x = init
         for cell in self.body:
             x = cell(x, alphas["body"], alphas["skip"])
-        x = self.pixel_up(self.upsample(x * 0.2 + init, alphas["upsample"]))
+        x = self.pixel_up(self.upsample(x + init, alphas["upsample"]))
         return self.tail(x, alphas["tail"]) + x
 
     def fetch_weighted_flops_and_memory(self, alphas):

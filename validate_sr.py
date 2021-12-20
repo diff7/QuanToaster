@@ -5,6 +5,7 @@ import logging
 from omegaconf import OmegaConf as omg
 from genotypes import from_str
 from sr_models.augment_cnn import AugmentCNN
+from sr_models.test_arch import LongSRCNN
 import utils
 from sr_base.datasets import ValidationSet
 from genotypes import from_str
@@ -19,14 +20,18 @@ def get_model(
     channels=3,
     scale=4,
     body_cells=4,
+    arch_type="genotype"
 ):
-    model = AugmentCNN(
-        channels,
-        c_fixed,
-        scale,
-        genotype,
-        blocks=body_cells,
-    )
+    if arch_type == "genotype":
+        model = AugmentCNN(
+            channels,
+            c_fixed,
+            scale,
+            genotype,
+            blocks=body_cells,
+        )
+    elif arch_type == "LongSRCNN":
+        model = LongSRCNN(channels, scale, blocks=body_cells)
 
     model_ = torch.load(weights_path, map_location="cpu")
     model.load_state_dict(model_)

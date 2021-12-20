@@ -7,16 +7,18 @@ from PIL import Image
 
 def plot_sr(genotype, file_path, caption=None):
     """make DAG plot and save to file_path as .png"""
-    edge_attr = {"fontsize": "20", "fontname": "times"}
+    edge_attr = {"fontsize": "20", "fontname": "helvetica", "penwidth": "1.5", "arrowsize": "1.0", "arrowhead": "vee"}
     node_attr = {
         "style": "filled",
-        "shape": "rect",
+        "shape": "doublecircle",
         "align": "center",
         "fontsize": "20",
         "height": "0.5",
         "width": "0.5",
         "penwidth": "2",
-        "fontname": "times",
+        "fontname": "helvetica",
+        "color": "black",
+        "fillcolor": "gold1"
     }
     g = Digraph(
         format="png", edge_attr=edge_attr, node_attr=node_attr, engine="dot"
@@ -24,7 +26,7 @@ def plot_sr(genotype, file_path, caption=None):
     g.body.extend(["rankdir=LR"])
 
     # input nodes
-    g.node("Input", fillcolor="darkseagreen2")
+    g.node("Input", fillcolor="chartreuse1")
 
     parts = ["head", "body", "upsample", "tail"]
 
@@ -32,12 +34,32 @@ def plot_sr(genotype, file_path, caption=None):
     for name in parts:
         layers = getattr(genotype, name)
         if name == "body":
-            body_start = node_n
-            body_end = node_n + len(parts) - 1
+            body_start = node_n + 1
+            body_end = node_n + len(layers) + 1 
+            g.node(
+                str(node_n),
+                fillcolor="gray",
+                width="0.6",
+                fixedsize="True",
+                shape="triangle",
+                orientation="90",
+                fontsize="18"
+            )
+            node_n += 1
+            g.edge(
+                str(node_n - 1),
+                str(node_n),
+                arrowhead="none"
+            )
 
         if name == "upsample":
             f = getattr(genotype, "upsample")[0]
-
+            g.node(
+                str(node_n + 1),
+                fillcolor="deepskyblue",
+                fixedsize="True",
+                width="1.0"
+            )
             g.edge(
                 str(node_n),
                 str(node_n + 1),
@@ -60,6 +82,22 @@ def plot_sr(genotype, file_path, caption=None):
                 fillcolor="lightblue",
             )
             node_n += 1
+        if name == "body":
+            g.node(
+                str(node_n + 1),
+                fillcolor="gray",
+                width="0.6",
+                fixedsize="True",
+                shape="triangle",
+                orientation="270",
+                fontsize="18"
+            )
+            node_n += 1
+            g.edge(
+                str(node_n - 1),
+                str(node_n),
+                arrowhead="none"
+            )
 
     # body_skip_node
     body_skip = getattr(genotype, "skip")[0]
@@ -74,15 +112,34 @@ def plot_sr(genotype, file_path, caption=None):
         str(body_end),
         label=f"plain_skip",
         fillcolor="gray",
+        style="dashed"
     )
 
+    g.edge(
+        str(body_start - 1),
+        str(body_end + 1),
+        label=f"skip",
+        fillcolor="gray",
+        style="dashed"
+    )
     # tail skip
     g.edge(
         str(pixel_up_node),
         str(node_n),
         label=f"skip",
         fillcolor="gray",
+        style="dashed"
     )
+
+    # layers = getattr(genotype, "body")
+    # for i, op in enumerate(layers):
+    #     g.edge(
+    #         f"b.{i}",
+    #         f"b.{i + 1}",
+    #         label=f"BODY\n{op}",
+    #         width="1000.",
+            
+    #     )
 
     # add image caption
     if caption:

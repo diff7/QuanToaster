@@ -193,7 +193,7 @@ def run_search(cfg, writer, logger, log_handler):
         logger.info("genotype = {}".format(genotype))
 
         # save
-        if best_score > score_val:
+        if best_score >= score_val:
             best_score = score_val
             best_flops = best_current_flops
             best_genotype = genotype
@@ -261,7 +261,10 @@ def log_genotype(
     im_normal = plot_sr(genotype, plot_path + "-normal", caption)
 
     im_normal = np.array(
-        im_normal.resize((int(im_normal.size[0] / 3), int(im_normal.size[1] // 3)), PIL.Image.ANTIALIAS)
+        im_normal.resize(
+            (int(im_normal.size[0] / 3), int(im_normal.size[1] // 3)),
+            PIL.Image.ANTIALIAS,
+        )
     )
     writer.add_image(
         tag=f"SR_im_normal_best_{best}",
@@ -338,6 +341,7 @@ def train(
                 loss.backward()
             if step == len(train_loader) - 1:
                 log_weigths_hist(model, writer, epoch, True)
+                grad_norm(model, writer, epoch)
 
             alpha_optim.step()
 
@@ -345,15 +349,16 @@ def train(
         w_optim.zero_grad()
         preds, (flops, mem) = model(trn_X, temperature, stable=stable)
 
-        loss_w = model.criterion(preds, trn_y, epoch)
+        loss_w, init_loss = model.criterion(preds, trn_y, epoch, get_initial=True)
         loss_w.backward()
         # gradient clipping
         nn.utils.clip_grad_norm_(model.weights(), cfg.search.w_grad_clip)
         if step == len(train_loader) - 1:
             log_weigths_hist(model, writer, epoch, False)
+            grad_norm(model, writer, epoch)
         w_optim.step()
 
-        loss_meter.update(loss_w.item(), N)
+        loss_meter.update(init_loss.item(), N)
 
         (
             best_current_flops,
@@ -520,7 +525,7 @@ class SparseCrit(nn.Module):
     def init_alpha(self, alphas):
         self.alphas = alphas
 
-    def forward(self, pred, target, epoch):
+    def forward(self, pred, target, epoch, get_initial=False):
         alpha = self.alphas()
         if self.type == "entropy":
             self.update(epoch)
@@ -530,19 +535,24 @@ class SparseCrit(nn.Module):
                 torch.stack([torch.sum(torch.mul(i, torch.log(i))) for i in alpha_prob])
             )
             loss2 = -ent_loss
-            return loss1 + self.coef * self.weight1 * self.weight2 * loss2
+            res = loss1 + self.coef * self.weight1 * self.weight2 * loss2
+            return res if not get_initial else (res, loss1)
         elif self.type == "none":
-            return self.loss(pred, target)
+            loss1 = self.loss(pred, target)
+            res = loss1
+            return res if not get_initial else (res, loss1)
         elif self.type == "l1":
             loss1 = self.loss(pred, target)
             flat_alphas = torch.cat([x.view(-1) for x in alpha])
             l1_regularization = self.coef * torch.norm(flat_alphas, 1)
-            return loss1 + l1_regularization
+            res = loss1 + l1_regularization
+            return res if not get_initial else (res, loss1)
         elif self.type == "l1_softmax":
             loss1 = self.loss(pred, target)
-            flat_alphas = torch.cat([F.softmax(x, dim=-1).view(-1) for x in alpha])
+            flat_alphas = torch.cat([torch.exp(x).view(-1) for x in alpha])
             l1_regularization = self.coef * torch.norm(flat_alphas, 1)
-            return loss1 + l1_regularization
+            res = loss1 + l1_regularization
+            return res if not get_initial else (res, loss1)
 
     def update(self, epoch):
         warm_up = self.epochs // 4
@@ -571,28 +581,31 @@ def log_weigths_hist(model, tb_logger, epoch, log_alpha=False):
                 )
 
 
-def grad_norm(model):
+def grad_norm(model, tb_logger, epoch):
     norms = {}
-    norms["body"] = 0
-    norms["head"] = 0
-    norms["tail"] = 0
+    norms["body"] = []
+    norms["head"] = []
+    norms["tail"] = []
     for name, p in model.named_parameters():
         if ("body" in name) or ("head" in name) or ("tail" in name):
             if p.grad is not None:
-                param_norm = p.grad.detach().data.norm(2)
+                param_norm = p.grad.detach().data.norm(1)
                 if "body" in name:
-                    norms["body"] += param_norm.item() ** 2
-                    print("body", param_norm.item())
+                    norms["body"] += [param_norm.item()]
+                    # print("body", param_norm.item())
 
                 if "head" in name:
-                    norms["head"] += param_norm.item() ** 2
-                    print("head", param_norm.item())
+                    norms["head"] += [param_norm.item()]
+                    # print("head", param_norm.item())
 
                 if "tail" in name:
-                    norms["tail"] += param_norm.item() ** 2
-                    print("tail", param_norm.item())
+                    norms["tail"] += [param_norm.item()]
+                    # print("tail", param_norm.item())
             else:
                 print(f"NONE GRAD in {name}")
+    for k in norms:
+        norms[k] = np.mean(norms[k])
+    tb_logger.add_scalars(f"search/grad_norms", norms, epoch)
     return norms
 
 

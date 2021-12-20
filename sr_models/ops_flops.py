@@ -152,9 +152,7 @@ class BSup(nn.Module):
         else:
             x = x_de_pscaled
 
-        assert (
-            x.shape == shape_in
-        ), f"shape mismatch in BSup {shape_in} {x.shape}"
+        assert x.shape == shape_in, f"shape mismatch in BSup {shape_in} {x.shape}"
 
         return x
 
@@ -175,9 +173,10 @@ class SimpleConv(BaseConv):
         dilation=1,
         groups=1,
         affine=True,
+        with_relu=True,
     ):
         super().__init__()
-        self.net = nn.Sequential(
+        modules = [
             self.conv_func(
                 C_in,
                 C_out,
@@ -189,8 +188,10 @@ class SimpleConv(BaseConv):
                 bias=affine,
             ),
             # nn.BatchNorm2d(C_out, affine=True),
-            nn.ReLU(),
-        )
+        ]
+        if with_relu:
+            modules += [nn.ReLU()]
+        self.net = nn.Sequential(*modules)
 
     def forward(self, x):
         return self.net(x)
@@ -303,37 +304,16 @@ class DecEnc(BaseConv):
 
 class DWS(BaseConv):
     def __init__(
-        self,
-        C_in,
-        C_out,
-        C_fixed,
-        kernel_size,
-        stride,
-        padding,
-        affine=True,
-        growth=1,
+        self, C_in, C_out, C_fixed, kernel_size, stride, padding, affine=True, growth=1,
     ):
         super().__init__()
 
         self.net = nn.Sequential(
             # nn.BatchNorm2d(C_out, affine=affine),
-            self.conv_func(
-                C_in,
-                C_in * 4,
-                1,
-                1,
-                0,
-                bias=False,
-            ),
+            self.conv_func(C_in, C_in * 4, 1, 1, 0, bias=False,),
             nn.ReLU(),
             self.conv_func(
-                C_in * 4,
-                C_in,
-                kernel_size,
-                1,
-                padding,
-                bias=False,
-                groups=C_in,
+                C_in * 4, C_in, kernel_size, 1, padding, bias=False, groups=C_in,
             ),
             # nn.BatchNorm2d(C_out, affine=True),
             nn.ReLU(),
@@ -502,10 +482,7 @@ if __name__ == "__main__":
     max_flops = max(flops)
     flops_normalized = [f / max_flops for f in flops]
     names_sorted = [
-        n
-        for f, n in sorted(
-            zip(flops_normalized, names), key=lambda pair: pair[0]
-        )
+        n for f, n in sorted(zip(flops_normalized, names), key=lambda pair: pair[0])
     ]
     flops_normalized = sorted(flops_normalized)
     print("\n## SORTED AND NORMALIZED ##\n")

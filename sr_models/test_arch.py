@@ -1,7 +1,51 @@
 import torch
 import torch.nn as nn
 from sr_models import ops_flops as ops_sr
-from sr_models.flops import BaseConv
+from sr_models.flops import BaseConv, ConvFlops
+from sr_models.ops_flops import SimpleConv
+import genotypes as gt
+from sr_models.augment_cnn import Residual
+
+
+class LongSRCNN(nn.Module):
+    def __init__(self, c_in=3, scale=4, blocks=0):
+        super().__init__()
+        self.blocks = blocks
+        self.upsample = nn.Upsample(scale_factor=scale, mode="bicubic")
+        self.conv1 = SimpleConv(
+            c_in, 32, 32, kernel_size=3, stride=1, padding=3 // 2
+        )
+        self.conv2 = SimpleConv(
+            32, 32, 32, kernel_size=3, stride=1, padding=3 // 2
+        )
+        self.body = nn.ModuleList() if blocks > 0 else []
+        for _ in range(blocks):
+            b = gt.to_dag_sr(32, ["conv_5x1_1x5", "conv_5x1_1x5"], gene_type="body")
+            s = gt.to_dag_sr(32, ["decenc_3x3_2"], gene_type="skip")
+            self.body.append(Residual(s, b, rf=1))
+
+        self.conv_out = SimpleConv(
+            32, c_in, 32, kernel_size=3, stride=1, padding=3 // 2
+        )
+
+    def forward(self, x):
+        x = self.upsample(x)
+        x = self.conv1(x)
+        init = self.conv2(x)
+        x = init
+        for cell in self.body:
+            x = cell(x)
+        out = self.conv_out(x + init)
+        return out
+
+    def fetch_info(self):
+        sum_flops = 0
+        sum_memory = 0
+        for m in self.modules():
+            if isinstance(m, ConvFlops):
+                sum_flops += m.flops.item()
+                sum_memory += m.memory_size.item()
+        return sum_flops, sum_memory
 
 
 class FromGENE(nn.Module):
@@ -12,7 +56,6 @@ class FromGENE(nn.Module):
                            [('sep_conv_3x3', 1), ('growth4_3x3', 2)],
                            [('growth4_3x3', 3), ('skip_connect', 0)]],
                            normal_concat=range(4, 6))
-
     """
 
     def __init__(self, c_init, repeat_factor):
@@ -26,9 +69,7 @@ class FromGENE(nn.Module):
         self.sep_conv_5x5 = ops_sr.OPS["sep_conv_5x5"](self.c_fixed, 1, True)
         self.sep_conv_3x3 = ops_sr.OPS["sep_conv_3x3"](self.c_fixed, 1, True)
         self.growth4_3x3 = ops_sr.OPS["growth4_3x3"](self.c_fixed, 1, True)
-        self.growth4_3x3_final = ops_sr.OPS["growth4_3x3"](
-            self.c_fixed, 1, True
-        )
+        self.growth4_3x3_final = ops_sr.OPS["growth4_3x3"](self.c_fixed, 1, True)
 
         self.pixelup = nn.Sequential(
             nn.PixelShuffle(int(repeat_factor ** (1 / 2))), nn.PReLU()
@@ -59,9 +100,7 @@ class SRESPCN(BaseConv):
             nn.Tanh(),
             self.conv_func(64, 32, kernel=3, stride=1, padding=1),
             nn.Tanh(),
-            self.conv_func(
-                32, 3 * (scale_factor ** 2), kernel=3, stride=1, padding=1
-            ),
+            self.conv_func(32, 3 * (scale_factor ** 2), kernel=3, stride=1, padding=1),
             nn.PixelShuffle(scale_factor),
             nn.Sigmoid(),
         )
@@ -95,9 +134,7 @@ class ESPCN(BaseConv):
 
         # Sub-pixel convolution layer
         self.sub_pixel = nn.Sequential(
-            self.conv_func(
-                32, 3 * (scale_factor ** 2), kernel=3, stride=1, padding=1
-            ),
+            self.conv_func(32, 3 * (scale_factor ** 2), kernel=3, stride=1, padding=1),
             nn.PixelShuffle(scale_factor),
             nn.Sigmoid(),
         )
@@ -141,9 +178,7 @@ class ResidualBlock(nn.Module):
 class UpsampleBlock(nn.Module):
     """Base PixelShuffle Upsample Block"""
 
-    def __init__(
-        self, n_upsamples: int, channels: int, kernel_size: int, activation
-    ):
+    def __init__(self, n_upsamples: int, channels: int, kernel_size: int, activation):
         super().__init__()
 
         layers = []
@@ -181,9 +216,7 @@ class SRResNet(nn.Module):
         Number of stacked residual blocks
     """
 
-    def __init__(
-        self, scale_factor: int, channels: int = 3, num_blocks: int = 700
-    ):
+    def __init__(self, scale_factor: int, channels: int = 3, num_blocks: int = 700):
         super().__init__()
 
         # Pre Residual Blocks
@@ -205,11 +238,7 @@ class SRResNet(nn.Module):
         ]
         self.res_blocks.append(
             nn.Conv2d(
-                in_channels=64,
-                out_channels=64,
-                kernel_size=3,
-                stride=1,
-                padding=1,
+                in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1,
             )
         )
         self.res_blocks.append(nn.BatchNorm2d(num_features=64))
@@ -218,16 +247,11 @@ class SRResNet(nn.Module):
         # Upsamples
         n_upsamples = 1 if scale_factor == 2 else 2
         self.upsample = UpsampleBlock(
-            n_upsamples=n_upsamples,
-            channels=64,
-            kernel_size=3,
-            activation=nn.PReLU,
+            n_upsamples=n_upsamples, channels=64, kernel_size=3, activation=nn.PReLU,
         )
 
         self.upsample = nn.Sequential(
-            nn.Conv2d(
-                64, 3 * (scale_factor ** 2), kernel_size=3, stride=1, padding=1
-            ),
+            nn.Conv2d(64, 3 * (scale_factor ** 2), kernel_size=3, stride=1, padding=1),
             nn.PReLU(),
             nn.PixelShuffle(scale_factor),
         )
@@ -235,11 +259,7 @@ class SRResNet(nn.Module):
         # Output layer
         self.tail = nn.Sequential(
             nn.Conv2d(
-                in_channels=3,
-                out_channels=64,
-                kernel_size=5,
-                stride=1,
-                padding=5 // 2,
+                in_channels=3, out_channels=64, kernel_size=5, stride=1, padding=5 // 2,
             ),
             nn.PReLU(),
             nn.Conv2d(

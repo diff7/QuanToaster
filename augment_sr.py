@@ -8,21 +8,21 @@ import copy
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from omegaconf import OmegaConf as omg
-from sr_models.test_arch import ESPCN, SRESPCN, SRResNet
+from sr_models.test_arch import ESPCN, SRESPCN, SRResNet, LongSRCNN
 
 from sr_models.augment_cnn import AugmentCNN
 import utils
 from sr_base.datasets import CropDataset
 
 from genotypes import from_str
+import genotypes
+from validate_sr import get_model, dataset_loop
 
 
 def train_setup(cfg):
 
     # INIT FOLDERS & cfg
-    cfg.env.save_path = utils.get_run_path(
-        cfg.env.log_dir, "TUNE_" + cfg.env.run_name
-    )
+    cfg.env.save_path = utils.get_run_path(cfg.env.log_dir, "TUNE_" + cfg.env.run_name)
     log_handler = utils.LogHandler(cfg.env.save_path + "/log.txt")
     logger = log_handler.create()
     # FIX SEED
@@ -48,7 +48,7 @@ def train_setup(cfg):
     return cfg, writer, logger, log_handler
 
 
-def run_train(cfg, writer, logger, log_handler):
+def run_train(cfg, writer, logger, log_handler, arch_type="genotype"):
     # cfg, writer, logger, log_handler = train_setup(cfg)
     logger.info("Logger is set - training start")
 
@@ -65,9 +65,7 @@ def run_train(cfg, writer, logger, log_handler):
     if cfg.dataset.debug_mode:
         indices = list(range(300))
         random.shuffle(indices)
-        sampler_train = torch.utils.data.sampler.SubsetRandomSampler(
-            indices[:150]
-        )
+        sampler_train = torch.utils.data.sampler.SubsetRandomSampler(indices[:150])
     else:
         sampler_train = torch.utils.data.sampler.SubsetRandomSampler(
             list(range(len(train_data)))
@@ -102,13 +100,22 @@ def run_train(cfg, writer, logger, log_handler):
     # model = ManualCNN(cfg.channels, cfg.repeat_factor)
     # model = SRResNet(4)
     # model = ESPCN(4)
-    model = AugmentCNN(
-        cfg.arch.channels,
-        cfg.arch.c_fixed,
-        cfg.arch.scale,
-        genotype,
-        blocks=cfg.arch.body_cells,
-    )
+
+    if arch_type == "genotype":
+        model = AugmentCNN(
+            cfg.arch.channels,
+            cfg.arch.c_fixed,
+            cfg.arch.scale,
+            genotype,
+            blocks=cfg.arch.body_cells,
+        )
+    elif arch_type == "LongSRCNN":
+        model = LongSRCNN(cfg.arch.channels, cfg.arch.scale, blocks=cfg.train.blocks)
+
+    if not cfg.train.checkpoint is None:
+        model.load_state_dict(torch.load(cfg.train.checkpoint))
+        model.eval()
+        print(f"GOT CHECKPOINT FROM: {cfg.train.checkpoint}")
 
     model.to(device)
 
@@ -116,23 +123,18 @@ def run_train(cfg, writer, logger, log_handler):
     mb_params = utils.param_size(model)
     logger.info("Model size = {:.3f} MB".format(mb_params))
     writer.add_text(
-        tag="ModelParams",
-        text_string=str("Model size = {:.3f} MB".format(mb_params)),
+        tag="ModelParams", text_string=str("Model size = {:.3f} MB".format(mb_params)),
     )
 
     # weights optimizer
     optimizer = torch.optim.Adam(
-        model.parameters(),
-        lr=cfg.train.lr,
-        weight_decay=cfg.train.weight_decay,
+        model.parameters(), lr=cfg.train.lr, weight_decay=cfg.train.weight_decay,
     )
     scheduler = {
         "cosine": torch.optim.lr_scheduler.CosineAnnealingLR(
             optimizer, cfg.train.epochs
         ),
-        "linear": torch.optim.lr_scheduler.StepLR(
-            optimizer, step_size=3, gamma=0.7
-        ),
+        "linear": torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.7),
     }
 
     lr_scheduler = scheduler[cfg.train.lr_scheduler]
@@ -156,15 +158,7 @@ def run_train(cfg, writer, logger, log_handler):
         # validation
         cur_step = (epoch + 1) * len(train_loader)
         score_val = validate(
-            val_loader,
-            model,
-            criterion,
-            epoch,
-            cur_step,
-            writer,
-            logger,
-            device,
-            cfg,
+            val_loader, model, criterion, epoch, cur_step, writer, logger, device, cfg,
         )
 
         # save
@@ -186,15 +180,7 @@ def run_train(cfg, writer, logger, log_handler):
 
 
 def train(
-    train_loader,
-    model,
-    optimizer,
-    criterion,
-    epoch,
-    writer,
-    logger,
-    device,
-    cfg,
+    train_loader, model, optimizer, criterion, epoch, writer, logger, device, cfg,
 ):
 
     loss_meter = utils.AverageMeter()
@@ -247,9 +233,7 @@ def validate(
 
     with torch.no_grad():
         for step, (X, y, path_l, path_h) in enumerate(valid_loader):
-            X, y = X.to(device, non_blocking=True), y.to(
-                device, non_blocking=True
-            )
+            X, y = X.to(device, non_blocking=True), y.to(device, non_blocking=True)
             N = 1  # N = X.size(0)
 
             preds = model(X).clamp(0.0, 1.0)
@@ -290,7 +274,29 @@ def validate(
 
 
 if __name__ == "__main__":
+    VAL_CFG_PATH = "./sr_models/valsets4x.yaml"
     CFG_PATH = "./configs/sr_config.yaml"
     cfg = omg.load(CFG_PATH)
     cfg, writer, logger, log_handler = train_setup(cfg)
     run_train(cfg, writer, logger, log_handler)
+
+    # VALIDATE:
+    with open(cfg.train.genotype_path, "r") as f:
+        genotype = genotypes.from_str(f.read())
+    weights_path = os.path.join(cfg.env.save_path, "best.pth.tar")
+    logger = utils.get_logger(cfg.env.save_path + "/validation_log.txt")
+    save_dir = os.path.join(cfg.env.save_path, "FINAL_VAL")
+    os.makedirs(save_dir, exist_ok=True)
+    logger.info(genotype)
+    valid_cfg = omg.load(VAL_CFG_PATH)
+
+    model = get_model(
+        weights_path,
+        cfg.env.gpu,
+        genotype,
+        cfg.arch.c_fixed,
+        cfg.arch.channels,
+        cfg.dataset.scale,
+        body_cells=cfg.arch.body_cells,
+    )
+    dataset_loop(valid_cfg, model, logger, save_dir, cfg.env.gpu)

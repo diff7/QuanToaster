@@ -31,7 +31,7 @@ class Residual(nn.Module):
 class AugmentCNN(nn.Module):
     """Augmented CNN model"""
 
-    def __init__(self, c_in, c_fixed, scale, genotype, blocks=4, rf=0.2):
+    def __init__(self, c_in, c_fixed, scale, genotype, blocks=4, rf=1):
 
         """
         Args:

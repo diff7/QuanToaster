@@ -1,26 +1,30 @@
 digraph {
-	node [align=center fontname=times fontsize=20 height=0.5 penwidth=2 shape=rect style=filled width=0.5]
-	edge [fontname=times fontsize=20]
+	node [align=center color=black fillcolor=gold1 fontname=helvetica fontsize=20 height=0.5 penwidth=2 shape=doublecircle style=filled width=0.5]
+	edge [arrowhead=vee arrowsize=1.0 fontname=helvetica fontsize=20 penwidth=1.5]
 rankdir=LR
-	Input [fillcolor=darkseagreen2]
+	Input [fillcolor=chartreuse1]
 	Input -> 1 [label="HEAD
-simple_1x1_grouped_3" fillcolor=lightblue]
+growth2_5x5" fillcolor=lightblue]
 	1 -> 2 [label="HEAD
 simple_1x1_grouped_3" fillcolor=lightblue]
-	2 -> 3 [label="BODY
-simple_1x1" fillcolor=lightblue]
+	2 [fillcolor=gray fixedsize=True fontsize=18 orientation=90 shape=triangle width=0.6]
+	2 -> 3 [arrowhead=none]
 	3 -> 4 [label="BODY
-simple_1x1" fillcolor=lightblue]
+conv_5x1_1x5" fillcolor=lightblue]
 	4 -> 5 [label="BODY
-simple_1x1" fillcolor=lightblue]
-	5 -> 6 [label="UPSAMPLE
+conv_5x1_1x5" fillcolor=lightblue]
+	6 [fillcolor=gray fixedsize=True fontsize=18 orientation=270 shape=triangle width=0.6]
+	5 -> 6 [arrowhead=none]
+	7 [fillcolor=deepskyblue fixedsize=True width=1.0]
+	6 -> 7 [label="UPSAMPLE
 simple_1x1+PS" fillcolor=darkseagreen2]
-	6 -> 7 [label="TAIL
-simple_1x1_grouped_3" fillcolor=lightblue]
 	7 -> 8 [label="TAIL
-simple_5x5" fillcolor=lightblue]
-	2 -> 5 [label="skip
-simple_5x5" fillcolor=gray]
-	2 -> 5 [label=plain_skip fillcolor=gray]
-	6 -> 8 [label=skip fillcolor=gray]
+simple_5x5_grouped_3" fillcolor=lightblue]
+	8 -> 9 [label="TAIL
+simple_3x3" fillcolor=lightblue]
+	3 -> 5 [label="skip
+decenc_3x3_2" fillcolor=gray]
+	3 -> 5 [label=plain_skip fillcolor=gray style=dashed]
+	2 -> 6 [label=skip fillcolor=gray style=dashed]
+	7 -> 9 [label=skip fillcolor=gray style=dashed]
 }
