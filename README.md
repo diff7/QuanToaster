@@ -1,4 +1,6 @@
-### FULL Precision VS Joint quantization:
+# QuanToaster - Quatization Optimal Architechture searcher
+
+### Full precision NAS VS Joint quantization:
 To search with different bit-widths set desired bit-widths in sr_config.arch.bits. <br>
 <br>
 Examples:  <br>
@@ -19,5 +21,5 @@ python batch_exp.py -v 0 0.001 0.005 -d gumbel -r 3 -g 3 <br>
 
 
 ### To modify search space:
-1. Edit genotypes.py to set specific functions to each block. <br>
+1. Edit genotypes.py to set specific functions for each block. <br>
 2. To edit number of operations in each block and the number of repeated cells change sr_config.arch.arch_pattern. <br>
