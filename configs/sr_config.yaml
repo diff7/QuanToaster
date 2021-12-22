@@ -9,7 +9,7 @@ dataset:
   debug_mode: True # run on a small porion of data
   
 arch:
-  bits: [8,4]
+  bits: [32,4]
   channels: 3
   c_fixed: 36
   scale: 4
@@ -60,5 +60,5 @@ train:
   lr : 1e-4 # lr for weights
   weight_decay : 0 # weight decay
   print_freq : 200 # print frequency
-  epochs : 3 # # of training epochs
+  epochs : 30 # # of training epochs
   genotype_path: /home/dev/data_main/LOGS/QUANT/bilevel_search_v2/trail_1/SEARCH_batch experiment_penalty_0.1_trail_1-2021-12-18-15/best_arch.gen

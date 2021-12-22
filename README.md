@@ -16,3 +16,8 @@ python batch_exp.py -v 0 0.001 0.005 -d gumbel -r 3 -g 3 <br>
 -r number of repears <br>
 -g gpu number <br>
 -v values for flops penalty or regularizations <br>
+
+
+### To modify search space:
+1. Edit genotypes.py to set specific functions to each block. <br>
+2. To edit number of operations in each block and the number of repeated cells change sr_config.arch.arch_pattern. <br>
