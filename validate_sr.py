@@ -113,14 +113,14 @@ if __name__ == "__main__":
     CFG_PATH = "./sr_models/valsets4x.yaml"
     valid_cfg = omg.load(CFG_PATH)
     run_name = "TEST_2"
-    genotype_path = "./genotype_example_sr.gen"
-    weights_path = "/home/dev/data_main/LOGS/QUANT/first_bigger_set/trail_1/TUNE_batch experiment_penalty_0_trail_1-2021-11-13-17/best.pth.tar"
-    log_dir = "/home/dev/data/logs/VAL_LOGS"
+    genotype_path = "/home/dev/data_main/LOGS/QUANT/bilevel_search_v2/trail_1/SEARCH_batch experiment_penalty_0.1_trail_1-2021-12-18-15/best_arch.gen"
+    weights_path = "/home/dev/data_main/LOGS/QUANT/bilevel_search_v2/trail_1/TUNE_batch experiment_penalty_0.1_trail_1-2021-12-18-21/best.pth.tar"
+    log_dir = "/home/dev/data_main/LOGS/QUANT/"
     save_dir = os.path.join(log_dir, run_name)
     os.makedirs(save_dir, exist_ok=True)
     channels = 3
     repeat_factor = 16
-    device = 0
+    device = 1
 
     with open(genotype_path, "r") as f:
         genotype = from_str(f.read())
@@ -135,6 +135,6 @@ if __name__ == "__main__":
         c_fixed=36,
         channels=3,
         scale=4,
-        body_cells=2,
+        body_cells=3,
     )
     dataset_loop(valid_cfg, model, logger, save_dir, device)

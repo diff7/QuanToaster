@@ -29,7 +29,7 @@ class Residual(nn.Module):
 class AugmentCNN(nn.Module):
     """Augmented CNN model"""
 
-    def __init__(self, c_in, c_fixed, scale, genotype, blocks=4, rf=0.2):
+    def __init__(self, c_in, c_fixed, scale, genotype, blocks=4, rf=1):
 
         """
         Args:
@@ -40,12 +40,18 @@ class AugmentCNN(nn.Module):
         super().__init__()
         self.rf = rf
         self.c_fixed = c_fixed
-        self.head = gt.to_dag_sr(self.c_fixed, genotype.head, gene_type="head")
+        self.head = gt.to_dag_sr(
+            self.c_fixed, genotype.head, gene_type="head", c_in=c_in
+        )
 
         self.body = nn.ModuleList()
         for _ in range(blocks):
-            b = gt.to_dag_sr(self.c_fixed, genotype.body, gene_type="body")
-            s = gt.to_dag_sr(self.c_fixed, genotype.skip, gene_type="skip")
+            b = gt.to_dag_sr(
+                self.c_fixed, genotype.body, gene_type="body", c_in=c_in
+            )
+            s = gt.to_dag_sr(
+                self.c_fixed, genotype.skip, gene_type="skip", c_in=c_in
+            )
             self.body.append(Residual(s, b, rf=self.rf))
 
         upsample = gt.to_dag_sr(
@@ -53,7 +59,9 @@ class AugmentCNN(nn.Module):
         )
 
         self.upsample = nn.Sequential(upsample, nn.PixelShuffle(scale))
-        self.tail = gt.to_dag_sr(self.c_fixed, genotype.tail, gene_type="tail")
+        self.tail = gt.to_dag_sr(
+            self.c_fixed, genotype.tail, gene_type="tail", c_in=c_in
+        )
         self.quant_mode = True
 
     def forward(self, x):
@@ -62,7 +70,7 @@ class AugmentCNN(nn.Module):
         for cell in self.body:
             x = cell(x)
 
-        x = self.upsample(x * self.rf + init)
+        x = self.upsample(x + init)
         return self.tail(x) + x
 
     def set_fp(self):

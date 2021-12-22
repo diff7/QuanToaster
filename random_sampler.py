@@ -82,7 +82,7 @@ def train_loop(cfg):
 
             run_train(cfg)
 
-            weights_path = os.path.join(cfg.env.save, "best.pth.tar")
+            weights_path = os.path.join(cfg.env.save_path, "best.pth.tar")
 
             # VALIDATE:
             logger = utils.get_logger(run_path + "/validation_log.txt")

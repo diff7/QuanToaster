@@ -624,8 +624,8 @@ class Identity(BaseConv):
 
 
 class Zero(BaseConv):
-    def __init__(self, stride, zero=1e-15):
-        super().__init__()
+    def __init__(self, stride, zero=1e-25, shared=True):
+        super().__init__(shared=shared)
         self.stride = stride
         self.zero = zero
 

@@ -20,11 +20,11 @@ from genotypes import from_str
 def train_setup(cfg):
 
     # INIT FOLDERS & cfg
-    cfg.env.save = utils.get_run_path(
+    cfg.env.save_path = utils.get_run_path(
         cfg.env.log_dir, "TUNE_" + cfg.env.run_name
     )
-    utils.save_scripts(cfg.env.save)
-    log_handler = utils.LogHandler(cfg.env.save + "/log.txt")
+    utils.save_scripts(cfg.env.save_path)
+    log_handler = utils.LogHandler(cfg.env.save_path + "/log.txt")
     logger = log_handler.create()
     # FIX SEED
     np.random.seed(cfg.env.seed)
@@ -35,14 +35,16 @@ def train_setup(cfg):
     torch.cuda.manual_seed_all(cfg.env.seed)
     torch.backends.cudnn.benchmark = True
 
-    writer = SummaryWriter(log_dir=os.path.join(cfg.env.save, "board_train"))
+    writer = SummaryWriter(
+        log_dir=os.path.join(cfg.env.save_path, "board_train")
+    )
 
     writer.add_hparams(
         hparam_dict={str(k): str(cfg[k]) for k in cfg},
         metric_dict={"tune/train/loss": 0},
     )
 
-    with open(os.path.join(cfg.env.save, "config.txt"), "w") as f:
+    with open(os.path.join(cfg.env.save_path, "config.txt"), "w") as f:
         for k, v in cfg.items():
             f.write(f"{str(k)}:{str(v)}\n")
 
@@ -179,7 +181,7 @@ def run_train(cfg):
             is_best = True
         else:
             is_best = False
-        utils.save_checkpoint(model, cfg.env.save, is_best)
+        utils.save_checkpoint(model, cfg.env.save_path, is_best)
         print("")
         writer.add_scalars("psnr/tune", {"val": score_val}, epoch)
 
@@ -295,7 +297,12 @@ def validate(
 
     indx = random.randint(0, len(preds) - 1)
     utils.save_images(
-        cfg.env.save, path_l[indx], path_h[indx], preds[indx], epoch, writer
+        cfg.env.save_path,
+        path_l[indx],
+        path_h[indx],
+        preds[indx],
+        epoch,
+        writer,
     )
 
     return val_psnr_meter.avg

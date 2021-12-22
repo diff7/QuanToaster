@@ -108,7 +108,7 @@ def run_batch():
             with open(cfg.train.genotype_path, "r") as f:
                 genotype = genotypes.from_str(f.read())
 
-            weights_path = os.path.join(cfg.env.save, "best.pth.tar")
+            weights_path = os.path.join(cfg.env.save_path, "best.pth.tar")
 
             # VALIDATE:
             logger = utils.get_logger(run_path + "/validation_log.txt")

@@ -21,7 +21,6 @@ class SearchCNNController(nn.Module):
         c_fixed,
         bits,
         scale,
-        criterion,
         arch_pattern,
         body_cells=2,
         device_ids=None,
@@ -29,7 +28,6 @@ class SearchCNNController(nn.Module):
     ):
         super().__init__()
         self.body_cells = body_cells
-        self.criterion = criterion
         if device_ids is None:
             device_ids = list(range(torch.cuda.device_count()))
         self.device_ids = device_ids

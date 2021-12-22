@@ -11,55 +11,77 @@ Genotype_SR = namedtuple("Genotype_SR", "head body tail skip upsample")
 
 
 body = [
-    "skip_connect",
-    "conv_5x1_1x5",
-    "conv_3x1_1x3",
     "simple_3x3",
-    # "simple_1x1",
     "simple_5x5",
-    # "simple_1x1_grouped_full",
-    # "simple_3x3_grouped_full",
-    # "simple_5x5_grouped_full",
-    # "simple_1x1_grouped_3",
     "simple_3x3_grouped_3",
     "simple_5x5_grouped_3",
-    "DWS_3x3",
-    "DWS_5x5",
     "decenc_3x3_2",
     "decenc_5x5_2",
-    # "growth2_5x5",
-    # "growth2_3x3",
-    # "decenc_3x3_4",
-    # "decenc_3x3_2",
-    # "decenc_5x5_2",
-    # "decenc_5x5_8",
-    # "decenc_3x3_8",
-    # "decenc_3x3_4_g3",
-    # "decenc_3x3_2_g3",
-    # "decenc_5x5_2_g3",
+    'simple_1x1_grouped_3',
+    'simple_1x1', 
 ]
+
 head = [
-    # "skip_connect",
-    "conv_5x1_1x5",
-    "conv_3x1_1x3",
     "simple_3x3",
-    # "simple_1x1",
     "simple_5x5",
     "growth2_5x5",
     "growth2_3x3",
-    # "simple_1x1_grouped_3",
     "simple_3x3_grouped_3",
     "simple_5x5_grouped_3",
+    'simple_1x1_grouped_3',
+    'simple_1x1', 
 ]
+
+tail = [
+    "simple_3x3",
+    "simple_5x5",
+    "growth2_5x5",
+    "growth2_3x3",
+    "simple_3x3_grouped_3",
+    "simple_5x5_grouped_3",
+    'simple_1x1_grouped_3',
+    'simple_1x1', 
+]
+
+upsample = [
+    "conv_5x1_1x5",
+    "conv_3x1_1x3",
+    "simple_3x3",
+    "simple_5x5",
+    "growth2_5x5",
+    "growth2_3x3",
+    "decenc_3x3_2",
+    "decenc_5x5_2",
+    "simple_3x3_grouped_3",
+    "simple_5x5_grouped_3",
+    'simple_1x1_grouped_3',
+    'simple_1x1', 
+]
+
+skip = [
+    "decenc_3x3_2",
+    "decenc_5x5_2",
+    "simple_3x3",
+    "simple_5x5",
+]
+
+PRIMITIVES_SR = {
+    "head": head,
+    "body": body,
+    "skip": skip,
+    "tail": tail,
+    "upsample": upsample,
+}
 
 
 PRIMITIVES_SR = {
     "head": head,
     "body": body,
-    "skip": body,
-    "tail": head,
-    "upsample": head,
+    "skip": skip,
+    "tail": tail,
+    "upsample": upsample,
 }
+
 
 
 def from_str(s):
