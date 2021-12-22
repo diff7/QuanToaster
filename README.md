@@ -6,8 +6,8 @@ Examples:
 3. sr_config.arch.bits = [32,4] will perform mixed precision search for all specified bit-widths, proper relu activations for 32 bit-widths will be used.
 
 ### Batach experiments:
-python batch_exp.py -v 0 0.001 0.005 -d gumbel -r 3 -g 3
--d experiment out directory
--r number of repears
--g gpu number
--v values for flops penalty or regularizations
+python batch_exp.py -v 0 0.001 0.005 -d gumbel -r 3 -g 3 <br>
+-d experiment out directory <br>
+-r number of repears <br>
+-g gpu number <br>
+-v values for flops penalty or regularizations <br>
