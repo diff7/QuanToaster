@@ -1,4 +1,4 @@
-# QuanToaster - Quantization Optimal Architechture searcher
+# QuanTOAStER - Quantization Optimal Architechture Searcher
 
 ### Full precision NAS VS Joint quantization:
 To search with different bit-widths set desired bit-widths in sr_config.arch.bits. <br>
