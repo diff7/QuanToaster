@@ -10,7 +10,7 @@ Examples:  <br>
 <br>
 <br>
 
-### Batach experiments: <br>
+### Batch experiments: <br>
 python batch_exp.py -v 0 0.001 0.005 -d gumbel -r 3 -g 3 <br>
 -d experiment out directory <br>
 -r number of repears <br>
