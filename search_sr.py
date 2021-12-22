@@ -1,8 +1,6 @@
 """ Search cell """
 import os
-from types import new_class
 import PIL
-from PIL.Image import Image
 import torch
 import torch.nn as nn
 import random
@@ -13,7 +11,6 @@ from torch.utils.tensorboard import SummaryWriter
 
 import utils
 from sr_models.search_cnn import SearchCNNController
-from architect import Architect, ArchConstrains
 from sr_base.datasets import CropDataset
 from visualize import plot_sr
 import math
@@ -88,9 +85,6 @@ def run_search(cfg):
     )
 
     criterion.init_alpha(model.alphas_weights)
-
-    if cfg.search.use_adjuster:
-        ConstrainAdjuster = ArchConstrains(**cfg.search.adjuster, device=device)
     model = model.to(device)
 
     flops_loss = FlopsLoss(model.n_ops)
@@ -131,10 +125,6 @@ def run_search(cfg):
 
     lr_scheduler = scheduler[cfg.search.lr_scheduler]
 
-    architect = Architect(
-        model, cfg.search.w_momentum, cfg.search.w_weight_decay
-    )
-
     # training loop
     best_score = 1e3
     cur_step = 0
@@ -154,7 +144,6 @@ def run_search(cfg):
             train_loader_alpha,
             model,
             criterion,
-            architect,
             w_optim,
             alpha_optim,
             lr,
@@ -168,10 +157,6 @@ def run_search(cfg):
             temperature,
         )
         lr_scheduler.step()
-
-        if cfg.search.use_adjuster:
-            ConstrainAdjuster.adjust(model)
-
         # validation
         score_val = validate(
             val_loader,
@@ -287,7 +272,6 @@ def train(
     train_alpha_loader,
     model,
     criterion,
-    architect,
     w_optim,
     alpha_optim,
     lr,
@@ -327,27 +311,15 @@ def train(
             flops_loss.set_norm(flops_norm)
             flops_loss.set_penalty(cfg.search.penalty)
 
-        # phase 2. architect step (alpha)
-
         alpha_optim.zero_grad()
 
         if epoch >= cfg.search.warm_up:
             stable = False
-            if cfg.search.unrolled:
-                architect.backward(
-                    trn_X,
-                    trn_y,
-                    val_X,
-                    val_y,
-                    lr,
-                    alpha_optim,
-                    flops_loss,
-                    epoch,
-                )
-            else:
-                preds, (flops, mem) = model(val_X, temperature)
-                loss = criterion(preds, val_y, epoch) + flops_loss(flops)
-                loss.backward()
+            
+            preds, (flops, mem) = model(val_X, temperature)
+            loss = criterion(preds, val_y, epoch) + flops_loss(flops)
+            loss.backward()
+
             if step == len(train_loader) - 1:
                 log_weigths_hist(model, writer, epoch, True)
 

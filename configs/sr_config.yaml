@@ -1,6 +1,5 @@
 dataset:
   scale: 4
-  subset: #/home/dev/data_main/CORESETS/vmlinuz.txt
   workers: 10
   val_portion: 0.3
   train_portion: 0.3
@@ -32,11 +31,8 @@ env:
   print_freq: 60 # print frequency
  
 search:
-  load_path: /home/dev/data_main/LOGS/QUANT/SEARCH_PRETRAIN_V2-2021-12-10-17/best.pth.tar
+  load_path: #/home/dev/data_main/LOGS/QUANT/SEARCH_PRETRAIN_V2-2021-12-10-17/best.pth.tar
   penalty: 0.0
-  use_adjuster: false
-  unrolled: false
-  use_l1_alpha: false
   l1_lambda: 1
   alpha_selector: softmax #softmax #gumbel
   warm_up: 0
@@ -56,13 +52,6 @@ search:
   alpha_lr:  3e-3 #3e-4 #lr for alpha
   alpha_weight_decay: 0 #1e-3 #weight decay for alpha
   train_portion: 0.5  # portion of training data
-  adjuster: 
-    lr: 0.001
-    CL: 2e+7
-    CH: 1e+8 # set some big value if no upper bound 
-    max_iter: 100
-    verbose: true
-    gamma: 1e-6
   
 train:
   warm_up: 0

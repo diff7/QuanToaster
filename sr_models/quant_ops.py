@@ -302,63 +302,6 @@ OPS = {
 }
 
 
-class BSup(nn.Module):
-    def __init__(self, mode, repeat_factor, residual=False):
-        super(BSup, self).__init__()
-        self.residual = residual
-        self.repeat_factor = repeat_factor // 3
-        self.mode = mode
-
-        if mode == "nearest":
-            align_corners = None
-        else:
-            align_corners = True
-        self.upsample = nn.Upsample(
-            scale_factor=self.repeat_factor ** (1 / 2),
-            mode=mode,
-            align_corners=align_corners,
-        )
-        self.space_to_depth = torch.nn.functional.pixel_unshuffle
-
-        self.last_shape_out = ()
-
-    def fetch_info(self):
-        flops = 0
-        mem = 0
-        flops = count_upsample_flops(self.mode, self.last_shape_out)
-        if self.residual:
-            flops += torch.prod(torch.tensor(self.last_shape_out)[1:])
-
-        return flops, mem
-
-    def mean_by_c(self, image, repeat_factor):
-        b, d, w, h = image.shape
-        image = image.reshape([b, d // repeat_factor, repeat_factor, w, h])
-        return image.mean(2)
-
-    def forward(self, x):
-        shape_in = x.shape
-        # Input C*scale, W, H
-        # x_mean = C, W, H
-        x_mean = self.mean_by_c(x, self.repeat_factor)
-        # upsample C, W*scale^1/2, H^scale^1/2
-        x_upsample = self.upsample(x_mean)
-        self.last_shape_out = x_upsample.shape
-        # x_upscaled = C*scale, W, H
-        x_de_pscaled = self.space_to_depth(
-            x_upsample, int(self.repeat_factor ** (1 / 2))
-        )
-        if self.residual:
-            x = (x + x_de_pscaled) / 2
-        else:
-            x = x_de_pscaled
-
-        assert (
-            x.shape == shape_in
-        ), f"shape mismatch in BSup {shape_in} {x.shape}"
-
-        return x
-
 
 class SimpleConv(BaseConv):
     """Standard conv

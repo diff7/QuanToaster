@@ -78,7 +78,7 @@ class HWGQ(nn.Module):
 
     def forward(self, x):
         if self.bit >= 32:
-            return x.clamp(min=0.0)
+            return nn.functional.relu(x)
         lvls = float(2 ** self.bit - 1)
         clip_thr = self.step * lvls
         y = x.clamp(min=0.0, max=clip_thr)

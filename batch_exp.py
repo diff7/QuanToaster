@@ -13,7 +13,7 @@ import genotypes
 import utils
 
 """
-EXAMPLE: python batch_exp.py -k penalty -v 0 0.001 0.005 -d gumbel -r 3 -g 3
+EXAMPLE: python batch_exp.py -v 0 0.001 0.005 -d gumbel -r 3 -g 3
 """
 
 VAL_CFG_PATH = "./sr_models/valsets4x.yaml"
@@ -21,14 +21,6 @@ VAL_CFG_PATH = "./sr_models/valsets4x.yaml"
 config = "./configs/sr_config.yaml"
 
 parser = argparse.ArgumentParser()
-
-parser.add_argument(
-    "-k",
-    "--key",
-    type=str,
-    default="penalty",
-    help="argument to run different experiments",
-)
 
 parser.add_argument(
     "-v",
@@ -56,7 +48,7 @@ args = parser.parse_args()
 
 
 def run_batch():
-    key = args.key
+    key = 'penalty'
     values = args.values
     base_run_name = args.name
 

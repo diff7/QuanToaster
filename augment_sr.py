@@ -8,7 +8,7 @@ import copy
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from omegaconf import OmegaConf as omg
-from sr_models.test_arch import ESPCN, SRESPCN, SRResNet
+from sr_models.custom_arch import ESPCN, SRESPCN, SRResNet
 
 from sr_models.augment_cnn import AugmentCNN
 import utils
@@ -80,7 +80,6 @@ def run_train(cfg):
         train_data,
         batch_size=cfg.dataset.batch_size,
         sampler=sampler_train,
-        # shuffle=True,
         num_workers=cfg.env.workers,
         pin_memory=False,
     )
@@ -88,7 +87,6 @@ def run_train(cfg):
     val_loader = torch.utils.data.DataLoader(
         val_data,
         batch_size=1,
-        # sampler=sampler_val,
         shuffle=True,
         num_workers=cfg.env.workers,
         pin_memory=False,
@@ -102,9 +100,6 @@ def run_train(cfg):
     writer.add_text(tag="tune/arch/", text_string=str(genotype))
     print(genotype)
 
-    # model = ManualCNN(cfg.channels, cfg.repeat_factor)
-    # model = SRResNet(4)
-    # model = ESPCN(4)
     model = AugmentCNN(
         cfg.arch.channels,
         cfg.arch.c_fixed,

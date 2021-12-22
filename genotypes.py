@@ -1,8 +1,7 @@
-""" Genotypes
-    - Genotype: normal/reduce gene + normal/reduce cell output connection (concat)
-    - gene: discrete ops information (w/o output connection)
-    - dag: real ops (can be mixed or discrete, but Genotype has only discrete information itself)
 """
+Specify detailed search space for the architechture.
+"""
+
 from collections import namedtuple
 import torch.nn as nn
 from sr_models import quant_ops as ops_sr
