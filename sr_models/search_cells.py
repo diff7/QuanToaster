@@ -43,11 +43,11 @@ class CommonBlock(nn.Module):
 
             if i == 0 and gene_type == "head":
                 c_in = c_init
-            elif i + 1 == num_layers and gene_type == "tail":
-                c_out = c_init
-            elif i == 0 and gene_type == "tail":
-                c_in = c_init
-
+            elif gene_type == "tail":
+                if (i + 1) == num_layers:
+                    c_out = c_init
+                if i == 0:
+                    c_in = c_init
             elif gene_type == "upsample":
                 c_in = c_fixed
                 c_out = 3 * (scale ** 2)

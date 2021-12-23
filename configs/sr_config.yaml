@@ -16,12 +16,12 @@ arch:
       head: 2
       skip: 1
       tail: 2
-      body: 3
+      body: 2
       upsample: 1
-  body_cells: 2
+  body_cells: 3
 
 env:
-  run_name: 'cuda_debug'
+  run_name: 'RELU_FIRST'
   gpu: 2
   log_dir: /home/dev/data_main/LOGS/SR/
   im_dir: 'arch_images'  
@@ -31,17 +31,17 @@ env:
 
 search:
   warm_up: 0
-  checkpoint: "/home/dev/data_main/LOGS/SR/SEARCH_Pretrain_checkpoint-2021-11-28-21/best.pth.tar"
+  checkpoint: #/home/dev/data_main/LOGS/SR/SEARCH_checkpoint_2x3-2021-12-10-12/best.pth.tar
 
-  penalty: 0.0 
+  penalty: 0.0
   use_adjuster: false
   unrolled: false
   sparse_type: entropy # l1_softmax # l1 # entropy # none
-  sparse_coef: 1e-4 # 0.01 for entropy, 0.0001 for l1
+  sparse_coef: 1e-3 # 0.01 for entropy, 0.0001 for l1
   use_soft_edge: false
   alpha_selector: softmax #softmax #gumbel
   lr_scheduler: cosine
-  optimizer: "adam" # sgd
+  optimizer: "adam" # sgd # adam
   w_lr: 1e-3 # lr for weights
   w_lr_min: 0.001 # minimum lr for weights
   w_momentum: 0.9 # momentum for weights
@@ -60,7 +60,7 @@ search:
     max_iter: 100
     verbose: true
     gamma: 1e-6
-  
+
 train:
   lr_scheduler: linear
   batch_size : 16 # batch size
@@ -68,4 +68,6 @@ train:
   weight_decay : 3e-7 # weight decay
   print_freq : 200 # print frequency
   epochs : 30 # # of training epochs
-  genotype_path: "./genotype_example_sr.gen"
+  plus_bicubic: False
+  checkpoint: #"/home/dev/data_main/LOGS/SR/entropy_1.2_2x3/trail_1/TUNE_batch_experiment_penalty_0.0001_trail_1-2021-12-09-06/best.pth.tar" #
+  genotype_path: "./genotype_example_sr.gen" # "/home/dev/data_main/LOGS/SR/entropy_1.2_2x3/trail_1/SEARCH_batch_experiment_penalty_0.0001_trail_1-2021-12-08-20/best_arch.gen" 

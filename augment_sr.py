@@ -108,6 +108,7 @@ def run_train(cfg, writer, logger, log_handler, arch_type="genotype"):
             cfg.arch.scale,
             genotype,
             blocks=cfg.arch.body_cells,
+            plus_bicubic=cfg.train.plus_bicubic
         )
     elif arch_type == "LongSRCNN":
         model = LongSRCNN(cfg.arch.channels, cfg.arch.scale, blocks=cfg.train.blocks)

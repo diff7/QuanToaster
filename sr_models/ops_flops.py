@@ -190,7 +190,7 @@ class SimpleConv(BaseConv):
             # nn.BatchNorm2d(C_out, affine=True),
         ]
         if with_relu:
-            modules += [nn.ReLU()]
+            modules = [nn.ReLU()] + modules
         self.net = nn.Sequential(*modules)
 
     def forward(self, x):
@@ -215,6 +215,7 @@ class GrowthConv(BaseConv):
     ):
         super().__init__()
         self.net = nn.Sequential(
+            nn.ReLU(),
             self.conv_func(
                 C_in,
                 C_fixed * growth,
@@ -236,7 +237,6 @@ class GrowthConv(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.ReLU(),
             # nn.BatchNorm2d(C_out, affine=True),
         )
 
@@ -262,6 +262,7 @@ class DecEnc(BaseConv):
     ):
         super().__init__()
         self.net = nn.Sequential(
+            nn.ReLU(),
             self.conv_func(
                 C_in,
                 C_fixed // reduce,
@@ -294,7 +295,6 @@ class DecEnc(BaseConv):
                 groups,
                 bias=affine,
             ),
-            nn.ReLU(),
             # nn.BatchNorm2d(C_out, affine=True),
         )
 
@@ -310,13 +310,13 @@ class DWS(BaseConv):
 
         self.net = nn.Sequential(
             # nn.BatchNorm2d(C_out, affine=affine),
+            nn.ReLU(),
             self.conv_func(C_in, C_in * 4, 1, 1, 0, bias=False,),
             nn.ReLU(),
             self.conv_func(
                 C_in * 4, C_in, kernel_size, 1, padding, bias=False, groups=C_in,
             ),
             # nn.BatchNorm2d(C_out, affine=True),
-            nn.ReLU(),
         )
 
     def forward(self, x):
@@ -342,6 +342,7 @@ class FacConv(BaseConv):
         super().__init__()
         self.net = nn.Sequential(
             # nn.BatchNorm2d(C_out, affine=affine),
+            nn.ReLU(),
             self.conv_func(
                 C_in,
                 C_fixed * growth,
@@ -359,7 +360,6 @@ class FacConv(BaseConv):
                 (0, padding),
                 bias=False,
             ),
-            nn.ReLU(),
             # nn.BatchNorm2d(C_out, affine=True),
         )
 
@@ -462,8 +462,8 @@ if __name__ == "__main__":
         "decenc_3x3_4_g3",
         "decenc_3x3_2_g3",
         "decenc_5x5_2_g3",
-        "decenc_5x5_8_g3",
-        "decenc_3x3_8_g3",
+        # "decenc_5x5_8_g3",
+        # "decenc_3x3_8_g3",
         # "growth4_3x3",
         # "none",
     ]
@@ -477,7 +477,8 @@ if __name__ == "__main__":
         x = conv(random_image)
         flops.append(conv.fetch_info()[0])
         names.append(primitive)
-        print(i + 1, primitive, f"FLOPS: {conv.fetch_info()[0]:.2e}")
+        pytorch_total_params = sum(p.numel() for p in conv.parameters())
+        print(f"['{primitive}', {pytorch_total_params/100}],")
 
     max_flops = max(flops)
     flops_normalized = [f / max_flops for f in flops]

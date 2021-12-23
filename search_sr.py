@@ -604,7 +604,7 @@ def grad_norm(model, tb_logger, epoch):
             else:
                 print(f"NONE GRAD in {name}")
     for k in norms:
-        norms[k] = np.mean(norms[k])
+        norms[k] = np.mean(norms[k]) if norms[k] != [] else 0
     tb_logger.add_scalars(f"search/grad_norms", norms, epoch)
     return norms
 

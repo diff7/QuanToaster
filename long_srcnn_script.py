@@ -13,8 +13,8 @@ import utils
 import traceback
 
 
-BLOCK_START = 0
-BLOCK_STOP = 5
+BLOCK_START = 3
+BLOCK_STOP = 6
 
 if __name__ == "__main__":
     VAL_CFG_PATH = "./sr_models/valsets4x.yaml"
