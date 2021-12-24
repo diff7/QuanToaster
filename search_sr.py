@@ -445,14 +445,9 @@ def get_data_loaders(cfg):
     indices = list(range(len(train_data)))
     random.shuffle(indices)
     if cfg.dataset.debug_mode:
-        cfg.dataset.train_portion = 0.001
+        cfg.dataset.searh_subsample = 0.0001
 
-    split = int(np.floor(cfg.dataset.train_portion * n_train))
-    leftover = int(
-        np.floor(
-            (1 - cfg.dataset.train_portion) * n_train * cfg.dataset.val_portion
-        )
-    )
+    split = int(cfg.dataset.searh_subsample * n_train * 0.5)
 
     train_sampler = torch.utils.data.sampler.SubsetRandomSampler(
         indices[:split]
@@ -466,10 +461,10 @@ def get_data_loaders(cfg):
         )
     else:
         train_sampler_alpha = torch.utils.data.sampler.SubsetRandomSampler(
-            indices[split : split + leftover]
+            indices[split : split * 2]
         )
         valid_sampler_selection = torch.utils.data.sampler.SubsetRandomSampler(
-            indices[split + leftover : split + leftover * 2]
+            indices[split * 2 : split * 3] if (split * 3) <= n_train else indices[split : split * 2]
         )
 
     loaders = []
@@ -580,28 +575,31 @@ def log_weigths_hist(model, tb_logger, epoch, log_alpha=False):
                 )
 
 
-def grad_norm(model):
+def grad_norm(model, tb_logger, epoch):
     norms = {}
-    norms["body"] = 0
-    norms["head"] = 0
-    norms["tail"] = 0
+    norms["body"] = []
+    norms["head"] = []
+    norms["tail"] = []
     for name, p in model.named_parameters():
         if ("body" in name) or ("head" in name) or ("tail" in name):
             if p.grad is not None:
-                param_norm = p.grad.detach().data.norm(2)
+                param_norm = p.grad.detach().data.norm(1)
                 if "body" in name:
-                    norms["body"] += param_norm.item() ** 2
-                    print("body", param_norm.item())
+                    norms["body"] += [param_norm.item()]
+                    # print("body", param_norm.item())
 
                 if "head" in name:
-                    norms["head"] += param_norm.item() ** 2
-                    print("head", param_norm.item())
+                    norms["head"] += [param_norm.item()]
+                    # print("head", param_norm.item())
 
                 if "tail" in name:
-                    norms["tail"] += param_norm.item() ** 2
-                    print("tail", param_norm.item())
+                    norms["tail"] += [param_norm.item()]
+                    # print("tail", param_norm.item())
             else:
                 print(f"NONE GRAD in {name}")
+    for k in norms:
+        norms[k] = np.mean(norms[k]) if norms[k] != [] else 0
+    tb_logger.add_scalars(f"search/grad_norms", norms, epoch)
     return norms
 
 

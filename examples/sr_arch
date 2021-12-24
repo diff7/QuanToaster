@@ -1,22 +1,41 @@
 digraph {
-	node [align=center fontname=times fontsize=20 height=0.5 penwidth=2 shape=rect style=filled width=0.5]
-	edge [fontname=times fontsize=20]
+	node [align=center color=black fillcolor=gold1 fontname=helvetica fontsize=20 height=0.5 penwidth=2 shape=doublecircle style=filled width=0.5]
+	edge [arrowhead=vee arrowsize=1.0 fontname=helvetica fontsize=20 penwidth=1.5]
 rankdir=LR
-	Input [fillcolor=darkseagreen2]
+	Input [fillcolor=chartreuse1]
 	Input -> 1 [label="HEAD
-simple_5x5/bit:8" fillcolor=lightblue]
-	1 -> 2 [label="BODY
-skip_connect/bit:2" fillcolor=lightblue]
-	2 -> 3 [label="BODY
-skip_connect/bit:2" fillcolor=lightblue]
-	3 -> 4 [label="UPSAMPLE
-simple_3x3/bit:4+PS" fillcolor=darkseagreen2]
-	4 -> 5 [label="TAIL
-simple_3x3/bit:4" fillcolor=lightblue]
-	5 -> 6 [label="TAIL
-simple_3x3/bit:4" fillcolor=lightblue]
-	1 -> 4 [label="skip
-skip_connect/bit:4" fillcolor=gray]
-	1 -> 4 [label=plain_skip fillcolor=gray]
-	4 -> 6 [label=skip fillcolor=gray]
+simple_3x3_grouped_3
+bit:8" fillcolor=lightblue]
+	1 -> 2 [label="HEAD
+simple_5x5_grouped_3
+bit:8" fillcolor=lightblue]
+	2 [fillcolor=gray fixedsize=True fontsize=18 orientation=90 shape=triangle width=0.6]
+	2 -> 3 [arrowhead=none]
+	3 -> 4 [label="BODY
+simple_3x3
+bit:8" fillcolor=lightblue]
+	4 -> 5 [label="BODY
+simple_3x3
+bit:8" fillcolor=lightblue]
+	5 -> 6 [label="BODY
+simple_3x3
+bit:8" fillcolor=lightblue]
+	7 [fillcolor=gray fixedsize=True fontsize=18 orientation=270 shape=triangle width=0.6]
+	6 -> 7 [arrowhead=none]
+	8 [fillcolor=deepskyblue fixedsize=True width=1.0]
+	7 -> 8 [label="UPSAMPLE
+simple_5x5_grouped_3
+bit:8+PS" fillcolor=darkseagreen2]
+	8 -> 9 [label="TAIL
+simple_3x3_grouped_3
+bit:8" fillcolor=lightblue]
+	9 -> 10 [label="TAIL
+simple_5x5_grouped_3
+bit:8" fillcolor=lightblue]
+	3 -> 6 [label="skip
+simple_3x3
+bit:8" fillcolor=gray]
+	3 -> 6 [label=plain_skip fillcolor=gray style=dashed]
+	2 -> 7 [label=skip fillcolor=gray style=dashed]
+	8 -> 10 [label=skip fillcolor=gray style=dashed]
 }
