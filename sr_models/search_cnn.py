@@ -6,11 +6,6 @@ from sr_models.search_cells import SearchArch
 import genotypes as gt
 import logging
 
-# Weighted Soft Edge in forward
-# Gumbel Final flops are not correct
-
-from sr_models.gumbel_top2 import gumbel_top2k
-
 
 class SearchCNNController(nn.Module):
     """SearchCNN controller supporting multi-gpu"""
