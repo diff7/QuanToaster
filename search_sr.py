@@ -445,9 +445,9 @@ def get_data_loaders(cfg):
     indices = list(range(len(train_data)))
     random.shuffle(indices)
     if cfg.dataset.debug_mode:
-        cfg.dataset.searh_subsample = 0.0001
+        cfg.dataset.search_subsample = 0.0001
 
-    split = int(cfg.dataset.searh_subsample * n_train * 0.5)
+    split = int(cfg.dataset.search_subsample * n_train * 0.5)
 
     train_sampler = torch.utils.data.sampler.SubsetRandomSampler(
         indices[:split]

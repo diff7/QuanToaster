@@ -1,7 +1,6 @@
 dataset:
   scale: 4
-  workers: 10
-  searh_subsample: 0.125
+  search_subsample: 0.125
   batch_size: 32
   crop_size: 35 # small image,  40x4=160, pathces are 200x200
   files_list:  /home/dev/data_main/SR/DIV2K/processed_200_st70/HR
@@ -30,11 +29,11 @@ env:
   print_freq: 60 # print frequency
  
 search:
-  load_path: #/home/dev/data_main/LOGS/QUANT/SEARCH_PRETRAIN_V2-2021-12-10-17/best.pth.tar
-  penalty: 0.0
-  l1_lambda: 1
-  alpha_selector: softmax #softmax #gumbel
   warm_up: 0
+  load_path: #/home/dev/data_main/LOGS/QUANT/SEARCH_PRETRAIN_V2-2021-12-10-17/best.pth.tar
+  
+  penalty: 0.0
+  alpha_selector: softmax #softmax #gumbel
   sparse_type: entropy # l1_softmax # l1 # entropy # none
   sparse_coef: 1e-4 # 0.01 for entropy, 0.0001 for l1
   optimizer: adam
