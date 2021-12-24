@@ -538,11 +538,9 @@ class SparseCrit(nn.Module):
             return loss1 + l1_regularization
         elif self.type == "l1_softmax":
             loss1 = self.loss(pred, target)
-            flat_alphas = torch.cat(
-                [F.softmax(x, dim=-1).view(-1) for x in alpha]
-            )
+            flat_alphas = torch.cat([torch.exp(x).view(-1) for x in alpha])
             l1_regularization = self.coef * torch.norm(flat_alphas, 1)
-            return loss1 + l1_regularization
+            return loss1 + l1_regularization 
 
     def update(self, epoch):
         warm_up = self.epochs // 4
