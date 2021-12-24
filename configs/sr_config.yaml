@@ -1,8 +1,7 @@
 dataset:
   scale: 4
   workers: 10
-  val_portion: 0.3
-  train_portion: 0.3
+  searh_subsample: 0.125
   batch_size: 32
   crop_size: 35 # small image,  40x4=160, pathces are 200x200
   files_list:  /home/dev/data_main/SR/DIV2K/processed_200_st70/HR
@@ -51,12 +50,10 @@ search:
   temp_red: 0.6
   alpha_lr:  3e-3 #3e-4 #lr for alpha
   alpha_weight_decay: 0 #1e-3 #weight decay for alpha
-  train_portion: 0.5  # portion of training data
   
 train:
   warm_up: 0
   lr_scheduler: cosine
-  batch_size : 16 # batch size
   lr : 1e-4 # lr for weights
   weight_decay : 0 # weight decay
   print_freq : 200 # print frequency
