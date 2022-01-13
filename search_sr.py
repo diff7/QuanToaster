@@ -555,10 +555,10 @@ class SparseCrit(nn.Module):
             return res if not get_initial else (res, loss1)
 
     def update(self, epoch):
-        warm_up = self.epochs // 4
+        warm_up = self.epochs // 3
         self.weight1 = 1 / (self.epochs - 1) * (epoch)
         self.weight2 = (
-            0 if epoch < warm_up else math.log(epoch - warm_up + 2, self.epochs - 1)
+            0 if epoch < warm_up else math.log(epoch - warm_up + 2, self.epochs - warm_up + 1)
         )
 
 

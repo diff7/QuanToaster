@@ -15,7 +15,7 @@ arch:
   arch_pattern: 
       head: 2
       skip: 1
-      tail: 2
+      tail: 0
       body: 2
       upsample: 1
   body_cells: 3
@@ -23,12 +23,12 @@ arch:
 env:
   run_name: 'RELU_FIRST'
   gpu: 2
-  log_dir: /home/dev/data_main/LOGS/SR/
+  log_dir: /home/dev/data_main/LOGS/SR/0_tail/
   im_dir: 'arch_images'  
   workers: 4 
   seed : 777 
   print_freq: 60 # print frequency
-
+  
 search:
   warm_up: 0
   checkpoint: #/home/dev/data_main/LOGS/SR/SEARCH_checkpoint_2x3-2021-12-10-12/best.pth.tar
@@ -37,7 +37,7 @@ search:
   use_adjuster: false
   unrolled: false
   sparse_type: entropy # l1_softmax # l1 # entropy # none
-  sparse_coef: 1e-3 # 0.01 for entropy, 0.0001 for l1
+  sparse_coef: 1 # 0.01 for entropy, 0.0001 for l1
   use_soft_edge: false
   alpha_selector: softmax #softmax #gumbel
   lr_scheduler: cosine
