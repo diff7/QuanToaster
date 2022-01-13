@@ -337,8 +337,6 @@ class SimpleConv(BaseConv):
             )
         )
 
-        #nn.BatchNorm2d(C_out, affine=False),
-
     def forward(self, x):
         return self.net(x)
 

@@ -235,6 +235,48 @@ class QAConv2d(nn.Module):
         return f * self.bit, m * self.bit
 
 
+class SepQAConv2d(nn.Module):
+    def __init__(self, **kwargs):
+        super(SepQAConv2d, self).__init__()
+        self.bits = kwargs.pop("bits")
+        self.conv = nn.ModuleList()
+        print('Using SepQA')
+        for _ in range(len(self.bits)):
+            self.conv.append(QuantConv(**kwargs))
+
+        self.acts = [HWGQ(bit) for bit in self.bits]
+        self.q_fn = []
+        for bit in self.bits:
+            self.q_fn.append(
+                LsqQuan(
+                    bit, all_positive=False, symmetric=False, per_channel=True
+                )
+            )
+            self.q_fn[-1].init_from(self.conv[-1].weight)
+
+        self.alphas = [1] * len(self.bits)
+
+    def forward(self, input_x):
+        out = []
+        for alpha, act, conv, q_fn in zip(self.alphas, self.acts, self.conv, self.q_fn):
+            weights = q_fn(conv.weight)
+            acts = act(input_x)
+            out.append(alpha*conv(acts, weights))
+        return sum(out)
+
+    def _fetch_info(self):
+        bit_ops, mem = 0, 0
+        b, m = self.conv[-1]._fetch_info()
+
+        for bit, alpha in zip(self.bits, self.alphas):
+            bit_ops += alpha * b * bit
+            mem += alpha * m * bit
+        return bit_ops, mem
+
+    def set_alphas(self, alphas):
+        self.alphas = alphas
+
+
 class SharedQAConv2d(nn.Module):
     def __init__(self, **kwargs):
         super(SharedQAConv2d, self).__init__()
@@ -280,8 +322,10 @@ class BaseConv(nn.Module):
         super(BaseConv, self).__init__()
         if shared:
             self.conv_func = SharedQAConv2d
-        else:
+        elif shared is False:
             self.conv_func = QAConv2d
+        else:
+            self.conv_func = SepQAConv2d
 
     def set_alphas(self, alphas):
         for m in self.modules():

@@ -8,14 +8,14 @@ dataset:
   debug_mode: False # run on a small porion of data
   
 arch:
-  bits: [8,4,2]
+  bits: [8,4]
   channels: 3
   c_fixed: 36
   scale: 4
   arch_pattern: 
       head: 2
       skip: 1
-      tail: 0
+      tail: 2
       body: 2
       upsample: 1
   body_cells: 3
