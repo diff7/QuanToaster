@@ -10,6 +10,7 @@ import logging
 class SearchCNNController(nn.Module):
     """
     Stores and handles usage of alphas.
+    Uses SearchArch from 'search_cells.py' as supernet and exapnds it with alphas for operations importance.
     """
     def __init__(
         self,
