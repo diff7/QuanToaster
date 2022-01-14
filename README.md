@@ -13,7 +13,7 @@ Examples:  <br>
 <br>
 
 ## Batch experiments: <br>
-To run experiment with different penalty and seed, use "batch_exp.py" and edit **"./configs/sr_config.yaml"**.
+To run experiment with different penalty and seed use "batch_exp.py" and edit **"./configs/sr_config.yaml"**.
 
 Example:
 ```
@@ -26,13 +26,15 @@ python batch_exp.py -v 0 0.001 0.005 -d gumbel -r 3 -g 3
 ```
 <br>
 
-## If you want to run architecture search or train selected model separately, you can run "search_sr.py" and "augment_sr.py" manually.
+## If you want to run architecture search or train selected model separately you can run "search_sr.py" and "augment_sr.py" manually.
 
 #### 1. **search_sr.py**. - to run architecture search without final training. 
 
 Usage example: ```python search_sr.py```
 
 Don't forget to edit **"./configs/sr_config.yaml"**. "train" field can be skipped.
+
+Afetr script execution best architechture will be saved in best_arch.gen and you can pass it to augment_sr.py to train found architechture from scratch.
 
 #### 2. **augment_sr.py** - to train final architecture.
 
@@ -61,6 +63,7 @@ General sceme looks like this:
 <img src="examples/supernet.png" width=800/>
 
 Example of a scheme above with B body type:
+*tail can be set as 0, other parts can not be skipped.
 
 ```
 arch:
