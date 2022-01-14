@@ -27,7 +27,7 @@ class Residual(nn.Module):
 
 
 class AugmentCNN(nn.Module):
-    """Augmented CNN model"""
+    """Searched CNN model for final training"""
 
     def __init__(self, c_in, c_fixed, scale, genotype, blocks=4, rf=1):
 

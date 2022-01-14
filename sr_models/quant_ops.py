@@ -579,7 +579,7 @@ class Zero(BaseConv):
 
 
 class MixedOp(nn.Module):
-    """Mixed operation"""
+    """Creates mixed operation of specific block type."""
 
     def __init__(self, C_in, C_out, bits, C_fixed, gene_type, stride=1):
         super().__init__()
@@ -620,6 +620,8 @@ class MixedOp(nn.Module):
 
 
 if __name__ == "__main__":
+    # TEST FLOPS TRACKING
+    
     print("Get blocks weights for 4 bits")
     random_image = torch.randn(3, 36, 256, 256)
 

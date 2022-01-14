@@ -8,8 +8,9 @@ import logging
 
 
 class SearchCNNController(nn.Module):
-    """SearchCNN controller supporting multi-gpu"""
-
+    """
+    Stores and handles usage of alphas.
+    """
     def __init__(
         self,
         c_init,

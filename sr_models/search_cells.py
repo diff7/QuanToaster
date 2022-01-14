@@ -31,6 +31,9 @@ class CommonBlock(nn.Module):
     def __init__(
         self, c_fixed, c_init, bits, num_layers, gene_type="head", scale=4
     ):
+        """
+        Creates list of blocks of specific gene_type.
+        """
         super(CommonBlock, self).__init__()
 
         self.net = nn.ModuleList()
@@ -74,6 +77,8 @@ class CommonBlock(nn.Module):
 class SearchArch(nn.Module):
     def __init__(self, c_init, c_fixed, bits, scale, arch_pattern, body_cells):
         """
+        SuperNet.
+
         Args:
             body_cells: # of intermediate body blocks
             c_fixed: # of channels to work with
