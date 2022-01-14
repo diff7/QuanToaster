@@ -34,7 +34,7 @@ Usage example: ```python search_sr.py```
 
 Don't forget to edit **"./configs/sr_config.yaml"**. "train" field can be skipped.
 
-Afetr script execution best architechture will be saved in best_arch.gen and you can pass it to augment_sr.py to train found architechture from scratch.
+After script execution best architechture will be saved in best_arch.gen and you can pass it to augment_sr.py to train found architechture from scratch.
 
 #### 2. **augment_sr.py** - to train final architecture.
 
