@@ -73,16 +73,6 @@ PRIMITIVES_SR = {
 }
 
 
-PRIMITIVES_SR = {
-    "head": head,
-    "body": body,
-    "skip": skip,
-    "tail": tail,
-    "upsample": upsample,
-}
-
-
-
 def from_str(s):
     genotype = eval(s)
     return genotype

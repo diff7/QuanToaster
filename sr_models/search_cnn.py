@@ -162,6 +162,3 @@ class alphaSelector:
 
         if self.name == "softmax":
             return F.softmax(vector, dim)
-
-        if self.name == "gumbel2k":
-            return gumbel_top2k(vector, temperature, dim)
