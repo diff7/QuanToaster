@@ -1,13 +1,13 @@
 dataset:
   scale: 4
-  search_subsample: 0.125
+  search_subsample: 0.5
   batch_size: 32
   crop_size: 35 # small image,  40x4=160, pathces are 200x200
   files_list:  /home/dev/data_main/SR/DIV2K/processed_200_st70/HR
   debug_mode: False # run on a small porion of data
   
 arch:
-  bits: [8,4]
+  bits: [4,8]
   channels: 3
   c_fixed: 36
   scale: 4
@@ -44,7 +44,7 @@ search:
   w_momentum: 0.9 # momentum for weights
   w_weight_decay: 3e-8 # weight decay for weights
   w_grad_clip: 5 # gradient clipping for weights
-  epochs: 20 # n of training epochs
+  epochs: 30 # n of training epochs
   temperature_start: 1e1
   temp_red: 0.6
   alpha_lr:  3e-3 #3e-4 #lr for alpha

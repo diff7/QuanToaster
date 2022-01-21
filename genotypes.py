@@ -64,14 +64,6 @@ skip = [
     "simple_5x5",
 ]
 
-PRIMITIVES_SR = {
-    "head": head,
-    "body": body,
-    "skip": skip,
-    "tail": tail,
-    "upsample": upsample,
-}
-
 
 PRIMITIVES_SR = {
     "head": head,

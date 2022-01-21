@@ -13,12 +13,11 @@ import genotypes
 import utils
 
 """
-EXAMPLE: python batch_exp.py -v 0 0.001 0.005 -d gumbel -r 3 -g 3
+EXAMPLE: python batch_exp.py -v 0 0.001 0.005 -d gumbel -r 3 -g 3 c -quant_config.yaml
 """
 
 VAL_CFG_PATH = "./sr_models/valsets4x.yaml"
 
-config = "./configs/sr_config.yaml"
 
 parser = argparse.ArgumentParser()
 
@@ -31,6 +30,7 @@ parser.add_argument(
 )
 
 parser.add_argument("-d", "--dir", type=str, default="batch", help="log dir")
+parser.add_argument("-c", "--conf", type=str, default="quant_config.yaml", help="log dir")
 parser.add_argument(
     "-n", "--name", type=str, default="batch experiment", help="experiment name"
 )
@@ -51,7 +51,7 @@ def run_batch():
     key = 'penalty'
     values = args.values
     base_run_name = args.name
-
+    config = f"./configs/{args.conf}"
     cfg = omg.load(config)
 
     log_dir = cfg.env.log_dir
