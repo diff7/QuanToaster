@@ -8,8 +8,10 @@ import logging
 
 
 class SearchCNNController(nn.Module):
-    """SearchCNN controller supporting multi-gpu"""
-
+    """
+    Stores and handles usage of alphas.
+    Uses SearchArch from 'search_cells.py' as supernet and exapnds it with alphas for operations importance.
+    """
     def __init__(
         self,
         c_init,
@@ -162,6 +164,3 @@ class alphaSelector:
 
         if self.name == "softmax":
             return F.softmax(vector, dim)
-
-        if self.name == "gumbel2k":
-            return gumbel_top2k(vector, temperature, dim)
