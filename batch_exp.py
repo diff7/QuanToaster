@@ -13,7 +13,7 @@ import genotypes
 import utils
 
 """
-EXAMPLE: python batch_exp.py -v 0 0.001 0.005 -d gumbel -r 3 -g 3 c -quant_config.yaml
+EXAMPLE: python batch_exp.py -v 0 0.001 0.005 -d gumbel -r 3 -g 3 -c quant_config.yaml
 """
 
 VAL_CFG_PATH = "./sr_models/valsets4x.yaml"

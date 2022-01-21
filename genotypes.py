@@ -64,6 +64,14 @@ skip = [
     "simple_5x5",
 ]
 
+PRIMITIVES_SR = {
+    "head": head,
+    "body": body,
+    "skip": skip,
+    "tail": tail,
+    "upsample": upsample,
+}
+
 
 def from_str(s):
     genotype = eval(s)

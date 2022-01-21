@@ -8,7 +8,6 @@ import copy
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from omegaconf import OmegaConf as omg
-from sr_models.custom_arch import ESPCN, SRESPCN, SRResNet
 
 from sr_models.augment_cnn import AugmentCNN
 import utils
@@ -304,6 +303,6 @@ def validate(
 
 
 if __name__ == "__main__":
-    CFG_PATH = "./configs/sr_config.yaml"
+    CFG_PATH = "./configs/quant_config.yaml"
     cfg = omg.load(CFG_PATH)
     run_train(cfg)

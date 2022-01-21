@@ -1,10 +1,10 @@
 dataset:
   scale: 4
-  search_subsample: 0.5
+  search_subsample: 0.7
   batch_size: 32
   crop_size: 35 # small image,  40x4=160, pathces are 200x200
   files_list:  /home/dev/data_main/SR/DIV2K/processed_200_st70/HR
-  debug_mode: False # run on a small porion of data
+  debug_mode: True # run on a small porion of data
   
 arch:
   bits: [4,8]

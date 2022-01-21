@@ -1,7 +1,7 @@
 # QuanTOAStER - Quantization Optimal Architechture Searcher
 
 ### Full precision NAS VS Joint quantization:
-To search with different bit-widths set desired bit-widths in "configs/sr_config.yaml" <br>
+To search with different bit-widths set desired bit-widths in "configs/fp_config.yaml" <br>
 <br>
 Examples:  <br>
 1. arch.bits = [8,4,2] will perform mixed precision search for all specified bit-widths. <br>
@@ -13,11 +13,11 @@ Examples:  <br>
 <br>
 
 ## Batch experiments: <br>
-To run experiment with different penalty and seed use "batch_exp.py" and edit **"./configs/sr_config.yaml"**.
+To run experiment with different penalty and seed use "batch_exp.py" and edit **"./configs/fp_config.yaml or quant_config.yaml"**.
 
 Example:
 ```
-python batch_exp.py -v 0 0.001 0.005 -d gumbel -r 3 -g 3
+python batch_exp.py -v 0 0.001 0.005 -d gumbel -r 3 -g 3 -c  quant_config.yaml
  
 -d Experiment name 
 -r Number of runs 
@@ -32,7 +32,7 @@ python batch_exp.py -v 0 0.001 0.005 -d gumbel -r 3 -g 3
 
 Usage example: ```python search_sr.py```
 
-Don't forget to edit **"./configs/sr_config.yaml"**. "train" field can be skipped.
+Don't forget to edit **"./configs/fp_config.yaml"**. "train" field can be skipped.
 
 After script execution best architechture will be saved in best_arch.gen and you can pass it to augment_sr.py to train found architechture from scratch.
 
@@ -40,7 +40,7 @@ After script execution best architechture will be saved in best_arch.gen and you
 
 Usage example: ```python augment_sr.py```
 
-Don't forget to edit **"./configs/sr_config.yaml"**. "search" field can be skipped.
+Don't forget to edit **"./configs/fp_config.yaml"**. "search" field can be skipped.
 Specify **train.genotype_path** to pass architectures genotype. Genotype example: 
 ```
 Genotype_SR(
