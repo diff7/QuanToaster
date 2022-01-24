@@ -1,7 +1,5 @@
 """ CNN for network augmentation """
 import torch.nn as nn
-import torch.nn.functional as F
-from sr_models import ops_flops as ops
 import genotypes as gt
 from sr_models.flops import ConvFlops
 
@@ -29,11 +27,9 @@ class Residual(nn.Module):
 
 
 class AugmentCNN(nn.Module):
-    """Augmented CNN model"""
+    """Searched CNN model for final training"""
 
-    def __init__(
-        self, c_in, c_fixed, scale, genotype, blocks=4, rf=1, plus_bicubic=False
-    ):
+    def __init__(self, c_in, c_fixed, scale, genotype, blocks=4, rf=1):
 
         """
         Args:
@@ -43,7 +39,7 @@ class AugmentCNN(nn.Module):
         """
         super().__init__()
         self.rf = rf
-        self.c_fixed = c_fixed  # c_init * repeat_factor
+        self.c_fixed = c_fixed
         self.repeat_factor = c_in * (scale ** 2)
 
         self.head = gt.to_dag_sr(self.c_fixed, genotype.head, gene_type="head")
@@ -59,25 +55,14 @@ class AugmentCNN(nn.Module):
         self.upsample = nn.Sequential(upsample, nn.PixelShuffle(scale))
         self.tail = gt.to_dag_sr(self.c_fixed, genotype.tail, gene_type="tail")
 
-        self.plus_bicubic = plus_bicubic
-        if plus_bicubic:
-            self.bicubic = nn.Upsample(scale_factor=scale, mode="bicubic")
-            self.tail[-1].net = (
-                self.tail[-1].net[:-1]
-                if isinstance(self.tail[-1].net[-1], nn.ReLU)
-                else self.tail[-1].net
-            )
-            print("MODEL OUTPUT: ", self.tail[-1].net[-1])
 
     def forward(self, x):
-        bicub = self.bicubic(x) if self.plus_bicubic else 0
         init = self.head(x)
         x = init
         for cell in self.body:
             x = cell(x)
-        # CURRENT CHANGE
         x = self.upsample(x * self.rf + init)
-        return self.tail(x) + x + bicub
+        return self.tail(x) + x
 
     def fetch_info(self):
         sum_flops = 0

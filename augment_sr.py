@@ -8,7 +8,6 @@ import copy
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from omegaconf import OmegaConf as omg
-from sr_models.test_arch import ESPCN, SRESPCN, SRResNet, LongSRCNN
 
 from sr_models.augment_cnn import AugmentCNN
 import utils
@@ -22,7 +21,10 @@ from validate_sr import get_model, dataset_loop
 def train_setup(cfg):
 
     # INIT FOLDERS & cfg
-    cfg.env.save_path = utils.get_run_path(cfg.env.log_dir, "TUNE_" + cfg.env.run_name)
+    cfg.env.save_path = utils.get_run_path(
+        cfg.env.log_dir, "TUNE_" + cfg.env.run_name
+    )
+    utils.save_scripts(cfg.env.save_path)
     log_handler = utils.LogHandler(cfg.env.save_path + "/log.txt")
     logger = log_handler.create()
     # FIX SEED
@@ -34,7 +36,9 @@ def train_setup(cfg):
     torch.cuda.manual_seed_all(cfg.env.seed)
     torch.backends.cudnn.benchmark = True
 
-    writer = SummaryWriter(log_dir=os.path.join(cfg.env.save_path, "board_train"))
+    writer = SummaryWriter(
+        log_dir=os.path.join(cfg.env.save_path, "board_train")
+    )
 
     writer.add_hparams(
         hparam_dict={str(k): str(cfg[k]) for k in cfg},
@@ -48,7 +52,7 @@ def train_setup(cfg):
     return cfg, writer, logger, log_handler
 
 
-def run_train(cfg, writer, logger, log_handler, arch_type="genotype"):
+def run_train(cfg, writer, logger, log_handler):
     # cfg, writer, logger, log_handler = train_setup(cfg)
     logger.info("Logger is set - training start")
 
@@ -65,7 +69,9 @@ def run_train(cfg, writer, logger, log_handler, arch_type="genotype"):
     if cfg.dataset.debug_mode:
         indices = list(range(300))
         random.shuffle(indices)
-        sampler_train = torch.utils.data.sampler.SubsetRandomSampler(indices[:150])
+        sampler_train = torch.utils.data.sampler.SubsetRandomSampler(
+            indices[:150]
+        )
     else:
         sampler_train = torch.utils.data.sampler.SubsetRandomSampler(
             list(range(len(train_data)))
@@ -75,7 +81,6 @@ def run_train(cfg, writer, logger, log_handler, arch_type="genotype"):
         train_data,
         batch_size=cfg.dataset.batch_size,
         sampler=sampler_train,
-        # shuffle=True,
         num_workers=cfg.env.workers,
         pin_memory=False,
     )
@@ -83,7 +88,6 @@ def run_train(cfg, writer, logger, log_handler, arch_type="genotype"):
     val_loader = torch.utils.data.DataLoader(
         val_data,
         batch_size=1,
-        # sampler=sampler_val,
         shuffle=True,
         num_workers=cfg.env.workers,
         pin_memory=False,
@@ -97,22 +101,14 @@ def run_train(cfg, writer, logger, log_handler, arch_type="genotype"):
     writer.add_text(tag="tune/arch/", text_string=str(genotype))
     print(genotype)
 
-    # model = ManualCNN(cfg.channels, cfg.repeat_factor)
-    # model = SRResNet(4)
-    # model = ESPCN(4)
-
-    if arch_type == "genotype":
-        model = AugmentCNN(
-            cfg.arch.channels,
-            cfg.arch.c_fixed,
-            cfg.arch.scale,
-            genotype,
-            blocks=cfg.arch.body_cells,
-            plus_bicubic=cfg.train.plus_bicubic
-        )
-    elif arch_type == "LongSRCNN":
-        model = LongSRCNN(cfg.arch.channels, cfg.arch.scale, blocks=cfg.train.blocks)
-
+    model = AugmentCNN(
+        cfg.arch.channels,
+        cfg.arch.c_fixed,
+        cfg.arch.scale,
+        genotype,
+        blocks=cfg.arch.body_cells,
+    )
+   
     if not cfg.train.checkpoint is None:
         model.load_state_dict(torch.load(cfg.train.checkpoint))
         model.eval()
@@ -124,18 +120,23 @@ def run_train(cfg, writer, logger, log_handler, arch_type="genotype"):
     mb_params = utils.param_size(model)
     logger.info("Model size = {:.3f} MB".format(mb_params))
     writer.add_text(
-        tag="ModelParams", text_string=str("Model size = {:.3f} MB".format(mb_params)),
+        tag="ModelParams", 
+        text_string=str("Model size = {:.3f} MB".format(mb_params)),
     )
 
     # weights optimizer
     optimizer = torch.optim.Adam(
-        model.parameters(), lr=cfg.train.lr, weight_decay=cfg.train.weight_decay,
+        model.parameters(), 
+        lr=cfg.train.lr, 
+        weight_decay=cfg.train.weight_decay,
     )
     scheduler = {
         "cosine": torch.optim.lr_scheduler.CosineAnnealingLR(
             optimizer, cfg.train.epochs
         ),
-        "linear": torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.7),
+        "linear": torch.optim.lr_scheduler.StepLR(
+            optimizer, step_size=3, gamma=0.7
+        ),
     }
 
     lr_scheduler = scheduler[cfg.train.lr_scheduler]
@@ -159,7 +160,15 @@ def run_train(cfg, writer, logger, log_handler, arch_type="genotype"):
         # validation
         cur_step = (epoch + 1) * len(train_loader)
         score_val = validate(
-            val_loader, model, criterion, epoch, cur_step, writer, logger, device, cfg,
+            val_loader, 
+            model, 
+            criterion, 
+            epoch, 
+            cur_step, 
+            writer, 
+            logger, 
+            device, 
+            cfg,
         )
 
         # save
@@ -181,7 +190,15 @@ def run_train(cfg, writer, logger, log_handler, arch_type="genotype"):
 
 
 def train(
-    train_loader, model, optimizer, criterion, epoch, writer, logger, device, cfg,
+    train_loader, 
+    model, 
+    optimizer, 
+    criterion, 
+    epoch, 
+    writer, 
+    logger, 
+    device, 
+    cfg,
 ):
 
     loss_meter = utils.AverageMeter()
@@ -199,7 +216,7 @@ def train(
         loss = criterion(preds, y)
         loss_meter.update(loss.item(), N)
         loss.backward()
-
+        grad_norm = utils.grad_norm(model)
         optimizer.step()
 
         # loss_inter.update(intermediate_l[0].item(), N)
@@ -208,16 +225,18 @@ def train(
             # if step % 3 == 0:
             #     logger.info(f"w skips: {[w.item() for w in model.skip_w]}")
             logger.info(
-                "Train: [{:3d}/{}] Step {:03d}/{:03d} Loss {losses.avg:.4f} ".format(
+                "Train: [{:3d}/{}] Step {:03d}/{:03d} Loss {losses.avg:.4f} Grad norm {grad_norm:3e}".format(
                     epoch + 1,
                     cfg.train.epochs,
                     step,
                     len(train_loader) - 1,
                     losses=loss_meter,
+                    grad_norm=grad_norm,
                 )
             )
 
         writer.add_scalar("tune/train/loss", loss_meter.avg, cur_step)
+        writer.add_scalar("tune/train/grad_norm", grad_norm, cur_step)
 
         cur_step += 1
 
@@ -234,7 +253,9 @@ def validate(
 
     with torch.no_grad():
         for step, (X, y, path_l, path_h) in enumerate(valid_loader):
-            X, y = X.to(device, non_blocking=True), y.to(device, non_blocking=True)
+            X, y = X.to(device, non_blocking=True), y.to(
+                device, non_blocking=True
+            )
             N = 1  # N = X.size(0)
 
             preds = model(X).clamp(0.0, 1.0)
@@ -268,7 +289,12 @@ def validate(
 
     indx = random.randint(0, len(preds) - 1)
     utils.save_images(
-        cfg.env.save_path, path_l[indx], path_h[indx], preds[indx], epoch, writer
+        cfg.env.save_path, 
+        path_l[indx], 
+        path_h[indx], 
+        preds[indx], 
+        epoch, 
+        writer,
     )
 
     return val_psnr_meter.avg

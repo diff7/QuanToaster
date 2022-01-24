@@ -7,6 +7,7 @@ import torch
 import numpy as np
 import time
 
+import shutil
 from PIL import Image
 
 
@@ -15,6 +16,13 @@ def get_run_path(base_dir, run_name):
     run_dir = os.path.join(base_dir, run_dir)
     os.makedirs(run_dir, exist_ok=True)
     return run_dir
+
+
+def save_scripts(run_path):
+    dest = os.path.join(run_path, "code_copy/")
+    if os.path.exists(dest):
+        shutil.rmtree(dest)
+    shutil.copytree("./", dest)
 
 
 class LogHandler:
@@ -58,6 +66,16 @@ def get_logger(file_path):
     logger.setLevel(logging.INFO)
 
     return logger
+
+
+def grad_norm(model):
+    total_norm = 0
+    for p in model.parameters():
+        if p.grad is not None:
+            param_norm = p.grad.detach().data.norm(2)
+            total_norm += param_norm.item() ** 2
+    total_norm = total_norm ** 0.5
+    return total_norm
 
 
 def param_size(model):
@@ -215,3 +233,47 @@ def save_images(
     target.save(f"{results_dir}/taret_step_{cur_iter}.png")
     input_img.save(f"{results_dir}/input_step_{cur_iter}.png")
     out_image.save(f"{results_dir}/out_image_step_{cur_iter}.png")
+
+
+class FlopsScheduler:
+    def __init__(
+        self, start_reg=0, start_after=0, reg_step=0, step=1, max_reg=1e10
+    ):
+        self.start_after = start_after
+        self.cur_reg = start_reg
+        self.step = step
+        self.reg_step = reg_step
+        self.max_reg = max_reg
+        self.cur_epoch = start_after
+        self.register = False
+
+    def __call__(self, epoch):
+        if epoch > self.cur_epoch:
+            self.cur_epoch = epoch + self.step
+            self.set_reg()
+        if self.cur_epoch - 1 == epoch:
+            self.register = True
+        else:
+            self.register = False
+        return self.cur_reg
+
+    def set_reg(self):
+        if self.cur_reg < self.max_reg:
+            self.cur_reg += self.reg_step
+
+
+class FlopsLoss:
+    def __init__(self, n_ops, reduce=4):
+        self.n_ops = n_ops / reduce
+        self.norm = 0
+
+    def set_norm(self, norm):
+        self.norm = norm.detach() * self.n_ops
+        self.min = norm.detach() / self.n_ops
+
+    def set_penalty(self, penalty):
+        self.penalty = float(penalty)
+
+    def __call__(self, weighted_flops):
+        l = (weighted_flops - self.min) / (self.norm - self.min)
+        return l * self.penalty
