@@ -5,7 +5,6 @@ import logging
 from omegaconf import OmegaConf as omg
 from genotypes import from_str
 from sr_models.augment_cnn import AugmentCNN
-from sr_models.test_arch import LongSRCNN
 import utils
 from sr_base.datasets import ValidationSet
 from genotypes import from_str
@@ -20,21 +19,17 @@ def get_model(
     channels=3,
     scale=4,
     body_cells=4,
-    arch_type="genotype"
 ):
-    if arch_type == "genotype":
-        model = AugmentCNN(
-            channels,
-            c_fixed,
-            scale,
-            genotype,
-            blocks=body_cells,
-        )
-    elif arch_type == "LongSRCNN":
-        model = LongSRCNN(channels, scale, blocks=body_cells)
+    model = AugmentCNN(
+        channels,
+        c_fixed,
+        scale,
+        genotype,
+        blocks=body_cells,
+    )
 
     model_ = torch.load(weights_path, map_location="cpu")
-    model.load_state_dict(model_)
+    model.load_state_dict(model_.state_dict())
     model.to(device)
     return model
 
@@ -113,7 +108,7 @@ def dataset_loop(valid_cfg, model, logger, save_dir, device):
         logger.info("Model size = {:.3f} MB".format(mb_params))
         logger.info("Flops = {:.2e} operations 32x32".format(flops_32))
         logger.info("Flops = {:.2e} operations 256x256".format(flops_256))
-        logger.info("PSNR = {:.3}%".format(score_val))
+        logger.info("PSNR = {:.3f}%".format(score_val))
         df.loc[str(dataset)] = [mb_params, flops_32, flops_256, score_val]
     df.to_csv(os.path.join(save_dir, "..", "validation_df.csv"))
 
@@ -122,14 +117,14 @@ if __name__ == "__main__":
     CFG_PATH = "./sr_models/valsets4x.yaml"
     valid_cfg = omg.load(CFG_PATH)
     run_name = "TEST_2"
-    genotype_path = "./genotype_example_sr.gen"
-    weights_path = "/home/dev/data/logs/TUNE_TEST-2021-10-11-18/best.pth.tar"
-    log_dir = "/home/dev/data/logs/VAL_LOGS"
+    genotype_path = "/home/dev/data_main/LOGS/QUANT/bilevel_search_v2/trail_1/SEARCH_batch experiment_penalty_0.1_trail_1-2021-12-18-15/best_arch.gen"
+    weights_path = "/home/dev/data_main/LOGS/QUANT/bilevel_search_v2/trail_1/TUNE_batch experiment_penalty_0.1_trail_1-2021-12-18-21/best.pth.tar"
+    log_dir = "/home/dev/data_main/LOGS/QUANT/"
     save_dir = os.path.join(log_dir, run_name)
     os.makedirs(save_dir, exist_ok=True)
     channels = 3
     repeat_factor = 16
-    device = 0
+    device = 1
 
     with open(genotype_path, "r") as f:
         genotype = from_str(f.read())
@@ -141,9 +136,9 @@ if __name__ == "__main__":
         weights_path,
         device,
         genotype,
-        c_fixed,
+        c_fixed=36,
         channels=3,
-        repeat_factor=4,
-        blocks=2,
+        scale=4,
+        body_cells=3,
     )
     dataset_loop(valid_cfg, model, logger, save_dir, device)

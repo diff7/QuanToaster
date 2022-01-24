@@ -1,3 +1,0 @@
-Genotype_SR(head=["bicubic", "simple_9x9", "simple_5x5"], body=["conv_5x1_1x5", "conv_5x1_1x5"],
-tail=["simple_5x5"],
-skip=["decenc_3x3_2"], upsample=["none"])

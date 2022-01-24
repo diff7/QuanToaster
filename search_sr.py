@@ -1,8 +1,6 @@
 """ Search cell """
 import os
-from types import new_class
 import PIL
-from PIL.Image import Image
 import torch
 import torch.nn as nn
 import random
