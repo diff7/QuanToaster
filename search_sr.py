@@ -11,7 +11,6 @@ from torch.utils.tensorboard import SummaryWriter
 
 import utils
 from sr_models.search_cnn import SearchCNNController
-from architect import Architect, ArchConstrains
 from sr_base.datasets import CropDataset
 from visualize import plot_sr
 import math
@@ -61,32 +60,32 @@ def run_search(cfg, writer, logger, log_handler):
     torch.cuda.set_device(device)
 
     train_loader, train_loader_alpha, val_loader = get_data_loaders(cfg)
-    criterion = nn.L1Loss().to(device)
-    criterion = SparseCrit(
-        criterion,
-        cfg.search.epochs,
-        type=cfg.search.sparse_type,
-        coef=cfg.search.sparse_coef,
-    )
 
     model = SearchCNNController(
         cfg.arch.channels,
         cfg.arch.c_fixed,
+
         cfg.arch.scale,
-        criterion,
         cfg.arch.arch_pattern,
         cfg.arch.body_cells,
         device_ids=cfg.env.gpu,
         alpha_selector=cfg.search.alpha_selector,
     )
 
-    if not cfg.search.checkpoint is None:
-        model.load_state_dict(torch.load(cfg.search.checkpoint))
+    if cfg.search.load_path is not None:
+        model.load_state_dict(torch.load(cfg.search.load_path))
         model.eval()
-        print(f"GOT CHECKPOINT FROM: {cfg.search.checkpoint}")
+        print(f"GOT CHECKPOINT FROM: {cfg.search.load_path}")
 
-    if cfg.search.use_adjuster:
-        ConstrainAdjuster = ArchConstrains(**cfg.search.adjuster, device=device)
+    base_criterion = nn.L1Loss().to(device)
+    criterion = SparseCrit(
+        base_criterion,
+        cfg.search.epochs,
+        type=cfg.search.sparse_type,
+        coef=cfg.search.sparse_coef,
+    )
+
+    criterion.init_alpha(model.alphas_weights)
     model = model.to(device)
 
     flops_loss = FlopsLoss(model.n_ops)
@@ -118,12 +117,12 @@ def run_search(cfg, writer, logger, log_handler):
         "cosine": torch.optim.lr_scheduler.CosineAnnealingLR(
             w_optim, cfg.search.epochs
         ),
-        "linear": torch.optim.lr_scheduler.StepLR(w_optim, step_size=3, gamma=0.8),
+        "linear": torch.optim.lr_scheduler.StepLR(
+            w_optim, step_size=3, gamma=0.8
+            ),
     }
 
     lr_scheduler = scheduler[cfg.search.lr_scheduler]
-
-    architect = Architect(model, cfg.search.w_momentum, cfg.search.w_weight_decay)
 
     # training loop
     best_score = 1e3
@@ -143,7 +142,7 @@ def run_search(cfg, writer, logger, log_handler):
             train_loader,
             train_loader_alpha,
             model,
-            architect,
+            criterion,
             w_optim,
             alpha_optim,
             lr,
@@ -157,14 +156,11 @@ def run_search(cfg, writer, logger, log_handler):
             temperature,
         )
         lr_scheduler.step()
-
-        if cfg.search.use_adjuster:
-            ConstrainAdjuster.adjust(model)
-
         # validation
         score_val = validate(
             val_loader,
             model,
+            criterion,
             epoch,
             logger,
             writer,
@@ -174,28 +170,22 @@ def run_search(cfg, writer, logger, log_handler):
             temperature=temperature,
         )
 
-        score_val_unsummed = validate(
-            val_loader,
-            model,
-            epoch,
-            logger,
-            writer,
-            cfg,
-            device,
-            best=True,
-            temperature=temperature,
-        )
-
         # log genotype
         genotype = model.genotype()
         logger.info("genotype = {}".format(genotype))
 
         # save
-        if best_score >= score_val:
+        if best_score > score_val:
             best_score = score_val
             best_flops = best_current_flops
             best_genotype = genotype
-            with open(os.path.join(cfg.env.save_path, "best_arch.gen"), "w") as f:
+            with open(
+                os.path.join(cfg.env.save_path, "best_arch.gen"), "w"
+            ) as f:
+                f.write(str(genotype))
+            with open(
+                os.path.join(cfg.env.save_path, f"arch_{epoch}.gen"), "w"
+            ) as f:
                 f.write(str(genotype))
 
             writer.add_scalar("search/best_val", best_score, epoch)
@@ -231,9 +221,6 @@ def run_search(cfg, writer, logger, log_handler):
         writer.add_scalars(
             "loss/search", {"val": best_score, "train": score_train}, epoch
         )
-        writer.add_scalars(
-            "loss_val_unsummed/search", {"val": score_val_unsummed}, epoch
-        )
         writer.add_scalar("search/train/temperature", temperature, epoch)
 
         logger.info("Final best LOSS = {:.3f}".format(best_score))
@@ -248,7 +235,7 @@ def run_search(cfg, writer, logger, log_handler):
 def log_genotype(
     genotype, cfg, epoch, cur_step, writer, best_current_flops, psnr, best=False
 ):
-    # genotype as a image
+    # genotype as an image
     plot_path = os.path.join(
         cfg.env.save_path, cfg.env.im_dir, "EP{:02d}".format(epoch + 1)
     )
@@ -270,7 +257,7 @@ def log_genotype(
         dataformats="HWC",
         global_step=cur_step,
     )
-    print(np.array(im_normal).shape)
+
     writer.add_image(
         tag=f"SR_im_normal_CURRENT",
         img_tensor=im_normal,
@@ -283,7 +270,7 @@ def train(
     train_loader,
     train_alpha_loader,
     model,
-    architect,
+    criterion,
     w_optim,
     alpha_optim,
     lr,
@@ -323,20 +310,15 @@ def train(
             flops_loss.set_norm(flops_norm)
             flops_loss.set_penalty(cfg.search.penalty)
 
-        # phase 2. architect step (alpha)
-
         alpha_optim.zero_grad()
 
         if epoch >= cfg.search.warm_up:
             stable = False
-            if cfg.search.unrolled:
-                architect.backward(
-                    trn_X, trn_y, val_X, val_y, lr, alpha_optim, flops_loss, epoch
-                )
-            else:
-                preds, (flops, mem) = model(val_X, temperature)
-                loss = model.criterion(preds, val_y, epoch) + flops_loss(flops)
-                loss.backward()
+
+            preds, (flops, mem) = model(val_X, temperature)
+            loss = criterion(preds, val_y, epoch) + flops_loss(flops)
+            loss.backward()
+
             if step == len(train_loader) - 1:
                 log_weigths_hist(model, writer, epoch, True)
                 grad_norm(model, writer, epoch)
@@ -347,7 +329,7 @@ def train(
         w_optim.zero_grad()
         preds, (flops, mem) = model(trn_X, temperature, stable=stable)
 
-        loss_w, init_loss = model.criterion(preds, trn_y, epoch, get_initial=True)
+        loss_w, init_loss = criterion(preds, trn_y, epoch, get_initial=True)
         loss_w.backward()
         # gradient clipping
         nn.utils.clip_grad_norm_(model.weights(), cfg.search.w_grad_clip)
@@ -400,16 +382,27 @@ def train(
 
 
 def validate(
-    valid_loader, model, epoch, logger, writer, cfg, device, best=False, temperature=1,
+    valid_loader, 
+    model,
+    criterion, 
+    epoch, 
+    logger, 
+    writer, 
+    cfg, 
+    device, 
+    best=False, 
+    temperature=1,
 ):
-    psnr_meter = utils.AverageMeter()
+
     loss_meter = utils.AverageMeter()
 
     model.eval()
 
     with torch.no_grad():
         for step, (X, y, x_path, y_path) in enumerate(valid_loader):
-            X, y = X.to(device, non_blocking=True), y.to(device, non_blocking=True)
+            X, y = X.to(device, non_blocking=True), y.to(
+                device, non_blocking=True
+            )
 
             N = X.size(0)
             if best:
@@ -417,7 +410,7 @@ def validate(
             else:
                 preds, (flops, mem) = model(X, temperature)
 
-            loss = model.criterion.loss(preds, y)
+            loss = criterion.loss(preds, y)
 
             loss_meter.update(loss.item(), N)
             if step % cfg.env.print_freq == 0 or step == len(valid_loader) - 1:
@@ -530,7 +523,9 @@ class SparseCrit(nn.Module):
             loss1 = self.loss(pred, target)
             alpha_prob = [F.softmax(x, dim=-1) for x in alpha]
             ent_loss = torch.sum(
-                torch.stack([torch.sum(torch.mul(i, torch.log(i))) for i in alpha_prob])
+                torch.stack(
+                    [torch.sum(torch.mul(i, torch.log(i))) for i in alpha_prob]
+                )
             )
             loss2 = -ent_loss
             res = loss1 + self.coef * self.weight1 * self.weight2 * loss2
@@ -575,7 +570,9 @@ def log_weigths_hist(model, tb_logger, epoch, log_alpha=False):
         for name in model.alphas:
             for i, alpha in enumerate(model.alphas[name]):
                 tb_logger.add_histogram(
-                    f"weights_alpha_grad/{name}.{i}", alpha.grad.cpu().numpy(), epoch
+                    f"weights_alpha_grad/{name}.{i}", 
+                    alpha.grad.cpu().numpy(), 
+                    epoch,
                 )
 
 
