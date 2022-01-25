@@ -1,7 +1,5 @@
 """ CNN cell for architecture search """
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from sr_models import ops_flops as ops
 
 
@@ -11,7 +9,7 @@ def summer(values, increments):
 
 class Residual(nn.Module):
     def __init__(self, skip, body):
-        super().__init__()
+        super(Residual, self).__init__()
         self.skip = skip
         self.body = body
 
@@ -30,8 +28,13 @@ class Residual(nn.Module):
 
 
 class CommonBlock(nn.Module):
-    def __init__(self, c_fixed, c_init, num_layers, gene_type="head", scale=4):
-        super().__init__()
+    def __init__(
+            self, c_fixed, c_init, num_layers, gene_type="head", scale=4
+        ):
+        """
+        Creates list of blocks of specific gene_type.
+        """
+        super(CommonBlock, self).__init__()
 
         self.net = nn.ModuleList()
         self.name = gene_type
@@ -54,7 +57,6 @@ class CommonBlock(nn.Module):
             else:
                 c_in = c_fixed
                 c_out = c_fixed
-
             self.net.append(ops.MixedOp(c_in, c_out, c_fixed, gene_type))
 
     def forward(self, x, alphas):
@@ -75,6 +77,8 @@ class CommonBlock(nn.Module):
 class SearchArch(nn.Module):
     def __init__(self, c_init, c_fixed, scale, arch_pattern, body_cells):
         """
+        SuperNet.
+
         Args:
             body_cells: # of intermediate body blocks
             c_fixed: # of channels to work with
@@ -105,7 +109,11 @@ class SearchArch(nn.Module):
             self.body.append(Residual(s, b))
 
         self.upsample = CommonBlock(
-            c_fixed, c_init, arch_pattern["upsample"], gene_type="upsample"
+            c_fixed, 
+            c_init, 
+
+            arch_pattern["upsample"], 
+            gene_type="upsample",
         )
         self.pixel_up = nn.PixelShuffle(scale)
 
@@ -124,7 +132,6 @@ class SearchArch(nn.Module):
     def fetch_weighted_flops_and_memory(self, alphas):
         flops = 0
         memory = 0
-
         for func, name in [
             (self.head, "head"),
             (self.tail, "tail"),

@@ -40,20 +40,28 @@ class AugmentCNN(nn.Module):
         super().__init__()
         self.rf = rf
         self.c_fixed = c_fixed
-        self.repeat_factor = c_in * (scale ** 2)
-
-        self.head = gt.to_dag_sr(self.c_fixed, genotype.head, gene_type="head")
+        self.head = gt.to_dag_sr(
+            self.c_fixed, genotype.head, gene_type="head"
+        )
 
         self.body = nn.ModuleList()
         for _ in range(blocks):
-            b = gt.to_dag_sr(self.c_fixed, genotype.body, gene_type="body")
-            s = gt.to_dag_sr(self.c_fixed, genotype.skip, gene_type="skip")
+            b = gt.to_dag_sr(
+                self.c_fixed, genotype.body, gene_type="body"
+            )
+            s = gt.to_dag_sr(
+                self.c_fixed, genotype.skip, gene_type="skip"
+            )
             self.body.append(Residual(s, b, rf=self.rf))
 
-        upsample = gt.to_dag_sr(self.c_fixed, genotype.upsample, gene_type="upsample")
+        upsample = gt.to_dag_sr(
+            self.c_fixed, genotype.upsample, gene_type="upsample"
+        )
 
         self.upsample = nn.Sequential(upsample, nn.PixelShuffle(scale))
-        self.tail = gt.to_dag_sr(self.c_fixed, genotype.tail, gene_type="tail")
+        self.tail = gt.to_dag_sr(
+            self.c_fixed, genotype.tail, gene_type="tail"
+        )
 
 
     def forward(self, x):
@@ -61,7 +69,8 @@ class AugmentCNN(nn.Module):
         x = init
         for cell in self.body:
             x = cell(x)
-        x = self.upsample(x * self.rf + init)
+            
+        x = self.upsample(x + init)
         return self.tail(x) + x
 
     def fetch_info(self):

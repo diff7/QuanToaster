@@ -19,22 +19,13 @@ import traceback
 
 """
 EXAMPLE: 
-python batch_exp.py -k penalty -v 0.0 0.001 0.005 -d l1 -r 1 -g 1
+python batch_exp.py -v 0.0 0.001 0.005 -d gumbel -r 1 -g 3 -c fp_config.yaml
 """
 
 VAL_CFG_PATH = "./sr_models/valsets4x.yaml"
 
-config = "./configs/sr_config.yaml"
 
 parser = argparse.ArgumentParser()
-
-parser.add_argument(
-    "-k",
-    "--key",
-    type=str,
-    default="penalty",
-    help="argument to run different experiments",
-)
 
 parser.add_argument(
     "-v",
@@ -45,6 +36,7 @@ parser.add_argument(
 )
 
 parser.add_argument("-d", "--dir", type=str, default="batch", help="log dir")
+parser.add_argument("-c", "--conf", type=str, default="quant_config.yaml", help="log dir")
 parser.add_argument(
     "-n", "--name", type=str, default="batch_experiment", help="experiment name"
 )
@@ -62,10 +54,10 @@ args = parser.parse_args()
 
 
 def run_batch():
-    key = args.key
+    key = 'penalty'
     values = args.values
     base_run_name = args.name
-
+    config = f"./configs/{args.conf}"
     cfg = omg.load(config)
 
     log_dir = cfg.env.log_dir

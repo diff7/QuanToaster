@@ -101,7 +101,9 @@ def run_search(cfg, writer, logger, log_handler):
         print("USING SGD")
     else:
         w_optim = torch.optim.Adam(
-            model.weights(), cfg.search.w_lr, weight_decay=cfg.search.w_weight_decay,
+            model.weights(), 
+            cfg.search.w_lr, 
+            weight_decay=cfg.search.w_weight_decay,
         )
         print("USING ADAM")
 
@@ -531,9 +533,8 @@ class SparseCrit(nn.Module):
             res = loss1 + self.coef * self.weight1 * self.weight2 * loss2
             return res if not get_initial else (res, loss1)
         elif self.type == "none":
-            loss1 = self.loss(pred, target)
-            res = loss1
-            return res if not get_initial else (res, loss1)
+            res = self.loss(pred, target)
+            return res if not get_initial else (res, res)
         elif self.type == "l1":
             loss1 = self.loss(pred, target)
             flat_alphas = torch.cat([x.view(-1) for x in alpha])
@@ -551,7 +552,9 @@ class SparseCrit(nn.Module):
         warm_up = self.epochs // 3
         self.weight1 = 1 / (self.epochs - 1) * (epoch)
         self.weight2 = (
-            0 if epoch < warm_up else math.log(epoch - warm_up + 2, self.epochs - warm_up + 1)
+            0 
+            if epoch < warm_up 
+            else math.log(epoch - warm_up + 2, self.epochs - warm_up + 1)
         )
 
 
