@@ -75,7 +75,7 @@ def run_search(cfg, writer, logger, log_handler):
     if cfg.search.load_path is not None:
         model.load_state_dict(torch.load(cfg.search.load_path))
         model.eval()
-        print(f"GOT CHECKPOINT FROM: {cfg.search.load_path}")
+        print(f"loaded a model from: {cfg.search.load_path}")
 
     base_criterion = nn.L1Loss().to(device)
     criterion = SparseCrit(

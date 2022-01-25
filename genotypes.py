@@ -1,32 +1,18 @@
-""" Genotypes
-    - Genotype: normal/reduce gene + normal/reduce cell output connection (concat)
-    - gene: discrete ops information (w/o output connection)
-    - dag: real ops (can be mixed or discrete, but Genotype has only discrete information itself)
 """
+Specify detailed search space for the architechture.
+"""
+
 from collections import namedtuple
-import torch
 import torch.nn as nn
 from sr_models import ops_flops as ops_sr
 
 Genotype_SR = namedtuple("Genotype_SR", "head body tail skip upsample")
 
 
-PRIMITIVES = [
-    "max_pool_3x3",
-    "avg_pool_3x3",
-    "skip_connect",  # identity
-    "sep_conv_3x3",
-    "sep_conv_5x5",
-    "dil_conv_3x3",
-    "dil_conv_5x5",
-    "none",
-]
-
-
 body = [
     "skip_connect",
     "conv_5x1_1x5",
-    "conv_3x1_1x3",
+    # "conv_3x1_1x3",
     "simple_3x3",
     "simple_1x1",
     "simple_5x5",
@@ -37,24 +23,24 @@ body = [
     "simple_3x3_grouped_3",
     "simple_5x5_grouped_3",
     "DWS_3x3",
-    "DWS_5x5",
-    "growth2_5x5",
+    # "DWS_5x5",
+    # "growth2_5x5",
     "growth2_3x3",
-    "decenc_3x3_4",
+    # "decenc_3x3_4",
     "decenc_3x3_2",
     "decenc_5x5_2",
-    "decenc_5x5_8",
-    "decenc_3x3_8",
-    "decenc_3x3_4_g3",
+    # "decenc_5x5_8",
+    # "decenc_3x3_8",
+    # "decenc_3x3_4_g3",
     "decenc_3x3_2_g3",
-    "decenc_5x5_2_g3",
+    # "decenc_5x5_2_g3",
 ]
+
 head = [
-    # "skip_connect",
     "conv_5x1_1x5",
     "conv_3x1_1x3",
-    "simple_3x3",
     "simple_1x1",
+    "simple_3x3",
     "simple_5x5",
     "growth2_5x5",
     "growth2_3x3",

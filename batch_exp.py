@@ -120,8 +120,6 @@ def run_batch():
                 raise e
             
 
-
-
             with open(cfg.train.genotype_path, "r") as f:
                 genotype = genotypes.from_str(f.read())
 
