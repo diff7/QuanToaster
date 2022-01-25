@@ -47,7 +47,7 @@ class CommonBlock(nn.Module):
             if i == 0 and gene_type == "head":
                 c_in = c_init
             elif gene_type == "tail":
-                if i + 1 == num_layers:
+                if (i + 1) == num_layers:
                     c_out = c_init
                 if i == 0:
                     c_in = c_init

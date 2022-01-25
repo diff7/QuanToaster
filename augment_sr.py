@@ -14,6 +14,8 @@ import utils
 from sr_base.datasets import CropDataset
 
 from genotypes import from_str
+import genotypes
+from validate_sr import get_model, dataset_loop
 
 
 def train_setup(cfg):
@@ -50,8 +52,8 @@ def train_setup(cfg):
     return cfg, writer, logger, log_handler
 
 
-def run_train(cfg):
-    cfg, writer, logger, log_handler = train_setup(cfg)
+def run_train(cfg, writer, logger, log_handler):
+    # cfg, writer, logger, log_handler = train_setup(cfg)
     logger.info("Logger is set - training start")
 
     # set default gpu device id
@@ -303,6 +305,29 @@ def validate(
 
 
 if __name__ == "__main__":
+    VAL_CFG_PATH = "./sr_models/valsets4x.yaml"
     CFG_PATH = "./configs/quant_config.yaml"
     cfg = omg.load(CFG_PATH)
-    run_train(cfg)
+    cfg, writer, logger, log_handler = train_setup(cfg)
+    run_train(cfg, writer, logger, log_handler)
+
+    # VALIDATE:
+    with open(cfg.train.genotype_path, "r") as f:
+        genotype = genotypes.from_str(f.read())
+    weights_path = os.path.join(cfg.env.save_path, "best.pth.tar")
+    logger = utils.get_logger(cfg.env.save_path + "/validation_log.txt")
+    save_dir = os.path.join(cfg.env.save_path, "FINAL_VAL")
+    os.makedirs(save_dir, exist_ok=True)
+    logger.info(genotype)
+    valid_cfg = omg.load(VAL_CFG_PATH)
+
+    model = get_model(
+        weights_path,
+        cfg.env.gpu,
+        genotype,
+        cfg.arch.c_fixed,
+        cfg.arch.channels,
+        cfg.dataset.scale,
+        body_cells=cfg.arch.body_cells,
+    )
+    dataset_loop(valid_cfg, model, logger, save_dir, cfg.env.gpu)

@@ -51,8 +51,8 @@ def train_setup(cfg):
     return cfg, writer, logger, log_handler
 
 
-def run_search(cfg):
-    cfg, writer, logger, log_handler = train_setup(cfg)
+def run_search(cfg, writer, logger, log_handler):
+    # cfg, writer, logger, log_handler = train_setup(cfg)
     logger.info("Logger is set - training start")
 
     # set default gpu device id
@@ -73,7 +73,8 @@ def run_search(cfg):
     )
 
     if cfg.search.load_path is not None:
-        model = torch.load(cfg.search.load_path)
+        model.load_state_dict(torch.load(cfg.search.load_path))
+        model.eval()
         print(f"loaded a model from: {cfg.search.load_path}")
 
     base_criterion = nn.L1Loss().to(device)
@@ -133,7 +134,7 @@ def run_search(cfg):
         lr = lr_scheduler.get_last_lr()[0]
         print("LR: ", lr)
 
-        model.print_alphas(logger, cfg.search.temperature_start)
+        model.print_alphas(logger, cfg.search.temperature_start, writer, epoch)
 
         if epoch > cfg.search.warm_up:
             temperature *= cfg.search.temp_red
@@ -329,7 +330,7 @@ def train(
         w_optim.zero_grad()
         preds, (flops, mem) = model(trn_X, temperature, stable=stable)
 
-        loss_w = criterion(preds, trn_y, epoch)
+        loss_w, init_loss = criterion(preds, trn_y, epoch, get_initial=True)
         loss_w.backward()
         # gradient clipping
         nn.utils.clip_grad_norm_(model.weights(), cfg.search.w_grad_clip)
@@ -337,7 +338,7 @@ def train(
             log_weigths_hist(model, writer, epoch, False)
         w_optim.step()
 
-        loss_meter.update(loss_w.item(), N)
+        loss_meter.update(init_loss.item(), N)
 
         (
             best_current_flops,
@@ -516,7 +517,7 @@ class SparseCrit(nn.Module):
     def init_alpha(self, alphas):
         self.alphas = alphas
 
-    def forward(self, pred, target, epoch):
+    def forward(self, pred, target, epoch, get_initial=False):
         alpha = self.alphas()
         if self.type == "entropy":
             self.update(epoch)
@@ -528,19 +529,23 @@ class SparseCrit(nn.Module):
                 )
             )
             loss2 = -ent_loss
-            return loss1 + self.coef * self.weight1 * self.weight2 * loss2
+            res = loss1 + self.coef * self.weight1 * self.weight2 * loss2
+            return res if not get_initial else (res, loss1)
         elif self.type == "none":
-            return self.loss(pred, target)
+            res = self.loss(pred, target)
+            return res if not get_initial else (res, res)
         elif self.type == "l1":
             loss1 = self.loss(pred, target)
             flat_alphas = torch.cat([x.view(-1) for x in alpha])
             l1_regularization = self.coef * torch.norm(flat_alphas, 1)
-            return loss1 + l1_regularization
+            res = loss1 + l1_regularization
+            return res if not get_initial else (res, loss1)
         elif self.type == "l1_softmax":
             loss1 = self.loss(pred, target)
             flat_alphas = torch.cat([torch.exp(x).view(-1) for x in alpha])
             l1_regularization = self.coef * torch.norm(flat_alphas, 1)
-            return loss1 + l1_regularization 
+            res = loss1 + l1_regularization
+            return res if not get_initial else (res, loss1)
 
     def update(self, epoch):
         warm_up = self.epochs // 4
@@ -548,7 +553,7 @@ class SparseCrit(nn.Module):
         self.weight2 = (
             0
             if epoch < warm_up
-            else math.log(epoch - warm_up + 2, self.epochs - 1)
+            else math.log(epoch - warm_up + 2, self.epochs - warm_up + 1)
         )
 
 
@@ -604,4 +609,5 @@ def grad_norm(model, tb_logger, epoch):
 if __name__ == "__main__":
     CFG_PATH = "./configs/fp_config.yaml"
     cfg = omg.load(CFG_PATH)
-    run_search(cfg)
+    cfg, writer, logger, log_handler = train_setup(cfg)
+    run_search(cfg, writer, logger, log_handler)

@@ -41,7 +41,7 @@ class SearchCNNController(nn.Module):
             for _ in range(arch_pattern[name]):
                 params.append(
                     nn.Parameter(
-                        torch.ones(len(bits) * len(gt.PRIMITIVES_SR[name]))
+                        torch.zeros(len(bits) * len(gt.PRIMITIVES_SR[name]))
                     )
                 )
             self.alphas[name] = params
@@ -50,10 +50,10 @@ class SearchCNNController(nn.Module):
         self.softmax = alphaSelector(name="softmax")
 
         # setup alphass list
-        self._alphas = []
+        self._alphas = nn.ParameterList()
         for name in self.alphas:
-            for n, p in self.alphas[name].named_parameters():
-                self._alphas.append((n, p))
+            for p in self.alphas[name].parameters():
+                self._alphas.append(p)
 
         self.net = SearchArch(
             c_init, c_fixed, bits, scale, arch_pattern, body_cells
@@ -88,8 +88,7 @@ class SearchCNNController(nn.Module):
         weight_alphass = self.get_alphas(self.get_max)
         return self.net(x, weight_alphass)
 
-    def print_alphas(self, logger, temperature):
-
+    def print_alphas(self, logger, temperature, writer, epoch):
         # remove formats
         org_formatters = []
         for handler in logger.handlers:
@@ -100,8 +99,16 @@ class SearchCNNController(nn.Module):
         weight_alphas = self.get_alphas(self.alphaselector)
         for name in weight_alphas:
             logger.info(f"# alphas - {name}")
-            for alphas in weight_alphas[name]:
+            for i, alphas in enumerate(weight_alphas[name]):
                 logger.info(alphas)
+                writer.add_scalars(f"alphas_softmax/{name}.{i}", dict(zip(gt.PRIMITIVES_SR[name], alphas.detach().cpu().numpy().tolist())), epoch)
+        
+        logger.info("# alphas_original #")
+        for name in self.alphas:
+            logger.info(f"# alphas - {name}")
+            for i, alphas in enumerate(self.alphas[name]):
+                logger.info(alphas)
+                writer.add_scalars(f"alphas_orig/{name}.{i}", dict(zip(gt.PRIMITIVES_SR[name], alphas.detach().cpu().numpy().tolist())), epoch)
 
         # restore formats
         for handler, formatter in zip(logger.handlers, org_formatters):
@@ -120,12 +127,12 @@ class SearchCNNController(nn.Module):
         return self.net.named_parameters()
 
     def alphas_weights(self):
-        for n, p in self._alphas:
+        for p in self._alphas:
             yield p
 
-    def named_alphass(self):
-        for n, p in self._alphass:
-            yield n, p
+    # def named_alphass(self):
+    #     for n, p in self._alphass:
+    #         yield n, p
 
     def fetch_weighted_flops_and_memory(
         self,
