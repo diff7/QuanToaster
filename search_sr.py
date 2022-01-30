@@ -323,8 +323,6 @@ def train(
 
             if step == len(train_loader) - 1:
                 log_weigths_hist(model, writer, epoch, True)
-                grad_norm(model, writer, epoch)
-
             alpha_optim.step()
 
         # phase 1. child network step (w)
