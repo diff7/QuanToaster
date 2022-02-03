@@ -45,9 +45,7 @@ def train_setup(cfg):
         metric_dict={"tune/train/loss": 0},
     )
 
-    with open(os.path.join(cfg.env.save_path, "config.txt"), "w") as f:
-        for k, v in cfg.items():
-            f.write(f"{str(k)}:{str(v)}\n")
+    omg.save(cfg, os.path.join(cfg.env.save_path, "config.yaml"))
 
     return cfg, writer, logger, log_handler
 

@@ -29,7 +29,7 @@ def get_model(
     )
 
     model_ = torch.load(weights_path, map_location="cpu")
-    model.load_state_dict(model_.state_dict())
+    model.load_state_dict(model_)
     model.to(device)
     return model
 

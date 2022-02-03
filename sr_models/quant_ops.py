@@ -337,7 +337,7 @@ class SimpleConv(BaseConv):
         )
 
     def forward(self, x):
-        return self.net(x)
+        return self.net(x) * torch.sum(self.alphas)
 
 
 class GrowthConv(BaseConv):
@@ -388,7 +388,7 @@ class GrowthConv(BaseConv):
         )
 
     def forward(self, x):
-        return self.net(x)
+        return self.net(x) * torch.sum(self.alphas)
 
 
 class DecEnc(BaseConv):
@@ -447,7 +447,7 @@ class DecEnc(BaseConv):
         )
 
     def forward(self, x):
-        return self.net(x)
+        return self.net(x) * torch.sum(self.alphas)
 
 
 class DWS(BaseConv):
@@ -495,7 +495,7 @@ class DWS(BaseConv):
         )
 
     def forward(self, x):
-        return self.net(x)
+        return self.net(x) * torch.sum(self.alphas)
 
 
 class FacConv(BaseConv):
@@ -542,7 +542,7 @@ class FacConv(BaseConv):
         )
 
     def forward(self, x):
-        return self.net(x)
+        return self.net(x) * torch.sum(self.alphas)
 
 
 def drop_path_(x, drop_prob, training):
@@ -560,7 +560,7 @@ class Identity(BaseConv):
         super().__init__(shared=shared)
 
     def forward(self, x):
-        return x
+        return x  * torch.sum(self.alphas)
 
 
 class Zero(BaseConv):
@@ -574,7 +574,7 @@ class Zero(BaseConv):
             return x * self.zero
 
         # re-sizing by stride
-        return x[:, :, :: self.stride, :: self.stride] * self.zero
+        return x[:, :, :: self.stride, :: self.stride] * self.zero  * torch.sum(self.alphas)
 
 
 class MixedOp(nn.Module):
@@ -601,8 +601,9 @@ class MixedOp(nn.Module):
         # print("ALPHA SHAPE:", alpha_vec.shape)
         for alphas, op in zip(alpha_vec.chunk(len(self._ops)), self._ops):
             # print("ALPHA BIT:", alphas.shape)
-            op.set_alphas(alphas)
-            outs.append(op(x))
+            if (alphas != 0).any():
+                op.set_alphas(alphas)
+                outs.append(op(x))
             # print("ALPHA OUTS:", outs[-1].shape)
         return sum(outs)
 

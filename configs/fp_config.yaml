@@ -20,9 +20,9 @@ arch:
   body_cells: 3 # body consists of several repetitions of identical blocks
 
 env:
-  run_name: 'bilevel_v2' # name of the experiment. Ignored when 'batch_exp.py' is used.
-  gpu: 2 # Device. Ignored when 'batch_exp.py' is used. 
-  log_dir: /home/dev/data_main/LOGS/SR/ # Directory for experiments output.
+  run_name: 'gumbel_checkpoint' # name of the experiment. Ignored when 'batch_exp.py' is used.
+  gpu: 0 # Device. Ignored when 'batch_exp.py' is used. 
+  log_dir: /home/dev/data_main/LOGS/SR/reprod/ # Directory for experiments output.
   im_dir: 'arch_images' # Subfolder of the experiment in which images of architectures are saved.
   workers: 4 
   seed : 777 
@@ -32,7 +32,7 @@ search:
   # From what epoch to start alpha updates
   warm_up: 0 
   # Path to pretrained SUPERNET.
-  load_path: #/home/dev/data_main/LOGS/QUANT/SEARCH_PRETRAIN_V2-2021-12-10-17/best.pth.tar 
+  load_path: #/home/dev/data_main/LOGS/SR/SEARCH_gumbel_checkpoint-2022-01-31-21/best.pth.tar
   
   penalty: 0.0 # Flops penalty. Ignored when 'batch_exp.py' is used.
   alpha_selector: softmax # Alpha transformation. 'softmax' recommended. 
@@ -48,8 +48,8 @@ search:
   alpha_lr:  3e-4 #3e-4 #lr for alpha
   alpha_weight_decay: 0 #1e-3 #weight decay for alpha
   epochs: 10 # number of search epochs
-  temperature_start: 1e1 # Only valid for alpha_selector=='gumbel'. 
-  temp_red: 0.6 # Same as above
+  temp_max: 10 # Only valid for alpha_selector=='gumbel'. 
+  temp_min: 0.1 # Same as above
   
 train:
   warm_up: 0 # Number of pretrain epochs in full precision.

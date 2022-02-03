@@ -60,12 +60,12 @@ class SearchCNNController(nn.Module):
         )
 
     def get_alphas(self, func):
-        alphass_projected = dict()
+        alphas_projected = dict()
         for name in self.alphas_names:
-            alphass_projected[name] = [
+            alphas_projected[name] = [
                 func(alphas, self.temp, dim=-1) for alphas in self.alphas[name]
             ]
-        return alphass_projected
+        return alphas_projected
 
     def forward(self, x, temperature=1, stable=False):
         self.temp = temperature
@@ -96,7 +96,7 @@ class SearchCNNController(nn.Module):
             handler.setFormatter(logging.Formatter("%(message)s"))
 
         logger.info("####### alphas #######")
-        weight_alphas = self.get_alphas(self.alphaselector)
+        weight_alphas = self.get_alphas(self.softmax)
         for name in weight_alphas:
             logger.info(f"# alphas - {name}")
             for i, alphas in enumerate(weight_alphas[name]):
@@ -161,13 +161,16 @@ class SearchCNNController(nn.Module):
 
 class alphaSelector:
     def __init__(self, name="softmax"):
-        assert name in ["softmax", "gumbel", "gumbel2k"]
+        assert name in ["softmax", "gumbel", "hard_gumbel"]
         self.name = name
 
     def __call__(self, vector, temperature=1, dim=0):
 
         if self.name == "gumbel":
             return F.gumbel_softmax(vector, temperature, hard=False)
+
+        if self.name == "hard_gumbel":
+            return F.gumbel_softmax(vector, temperature, hard=True)
 
         if self.name == "softmax":
             return F.softmax(vector, dim)
