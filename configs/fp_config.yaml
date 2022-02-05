@@ -1,18 +1,13 @@
 dataset:
-  scale: 4
-  search_subsample: 0.5
   scale: 4 
   search_subsample: 0.125 # Search is too slow. search is too slow. Therefore we use only part of the data.
-  batch_size: 32
-  crop_size: 35 # small image,  40x4=160, pathces are 200x200
+  batch_size: 16
+  crop_size: 45 # small image,  40x4=160, pathces are 200x200
   files_list:  /home/dev/data_main/SR/DIV2K/processed_200_st70/HR
   debug_mode: False # run on a small porion of data
   
 arch:
-  bits: [4,8]
-  channels: 3
-  c_fixed: 36
-  bits: [8,4] #bitwidth options
+  bits: [32] #bitwidth options
   channels: 3 # input channels
   c_fixed: 36 # channels 
   scale: 4
@@ -25,9 +20,9 @@ arch:
   body_cells: 3 # body consists of several repetitions of identical blocks
 
 env:
-  run_name: 'bilevel_v2' # name of the experiment. Ignored when 'batch_exp.py' is used.
-  gpu: 2 # Device. Ignored when 'batch_exp.py' is used. 
-  log_dir: /home/dev/data_main/LOGS/QUANT # Directory for experiments output.
+  run_name: 'gumbel_checkpoint' # name of the experiment. Ignored when 'batch_exp.py' is used.
+  gpu: 0 # Device. Ignored when 'batch_exp.py' is used. 
+  log_dir: /home/dev/data_main/LOGS/SR/reprod/ # Directory for experiments output.
   im_dir: 'arch_images' # Subfolder of the experiment in which images of architectures are saved.
   workers: 4 
   seed : 777 
@@ -37,36 +32,31 @@ search:
   # From what epoch to start alpha updates
   warm_up: 0 
   # Path to pretrained SUPERNET.
-  load_path: #/home/dev/data_main/LOGS/QUANT/SEARCH_PRETRAIN_V2-2021-12-10-17/best.pth.tar 
+  load_path: #/home/dev/data_main/LOGS/SR/SEARCH_gumbel_checkpoint-2022-01-31-21/best.pth.tar
   
   penalty: 0.0 # Flops penalty. Ignored when 'batch_exp.py' is used.
   alpha_selector: softmax # Alpha transformation. 'softmax' recommended. 
   sparse_type: entropy # Sparsity penalty. Available options: 'l1_softmax', 'l1', 'entropy', 'none'.
-  sparse_coef: 1e-4 # Coefficient. Recommend: 0.001 for entropy, 0.0001 for l1.
+  sparse_coef: 1e-3 # Coefficient. Recommend: 0.001 for entropy, 0.0001 for l1.
   optimizer: adam # Weights optimizer. Options: 'sgd', 'adam'
 
   lr_scheduler: cosine # Lr scheduler for weights. 
   w_lr: 1e-3 # lr for weights
   w_momentum: 0.9 # Momentum for weights('sgd' only)
-  w_weight_decay: 3e-8 # Weight decay for weights
+  w_weight_decay: 3e-7 # Weight decay for weights
   w_grad_clip: 5 # gradient clipping for weights
-  epochs: 30 # n of training epochs
-  temperature_start: 1e1
-  temp_red: 0.6
-  alpha_lr:  3e-3 #3e-4 #lr for alpha
+  alpha_lr:  3e-4 #3e-4 #lr for alpha
   alpha_weight_decay: 0 #1e-3 #weight decay for alpha
-  epochs: 20 # number of search epochs
-  temperature_start: 1e1 # Only valid for alpha_selector=='gumbel'. 
-  temp_red: 0.6 # Same as above
-  alpha_lr:  3e-3 #3e-4 # Lr for alpha
-  alpha_weight_decay: 0 # Weight decay for alpha
+  epochs: 10 # number of search epochs
+  temp_max: 10 # Only valid for alpha_selector=='gumbel'. 
+  temp_min: 0.1 # Same as above
   
 train:
   warm_up: 0 # Number of pretrain epochs in full precision.
-  lr_scheduler: cosine # Lr scheduler. 
-  lr : 1e-4 # Lr for weights
-  weight_decay : 0 # Weight decay
+  lr_scheduler: linear # Lr scheduler. 
+  lr : 1e-3 # Lr for weights
+  weight_decay : 3e-7 # Weight decay
   print_freq : 200 # print frequency
   epochs : 30 # Number of training epochs
   # Genotype of selected model. Ignored when 'batch_exp.py' is used. 
-  genotype_path: /home/dev/data_main/LOGS/QUANT/bilevel_search_v2/trail_1/SEARCH_batch experiment_penalty_0.1_trail_1-2021-12-18-15/best_arch.gen
+  genotype_path: #/home/dev/data_main/LOGS/QUANT/bilevel_search_v2/trail_1/SEARCH_batch experiment_penalty_0.1_trail_1-2021-12-18-15/best_arch.gen

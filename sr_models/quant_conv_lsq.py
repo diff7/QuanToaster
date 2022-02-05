@@ -29,7 +29,7 @@ class HWGQ(nn.Module):
 
     def forward(self, x):
         if self.bit >= 32:
-            return x.clamp(min=0.0)
+            return nn.functional.relu(x)
         lvls = float(2 ** self.bit - 1)
         clip_thr = self.step * lvls
         y = x.clamp(min=0.0, max=clip_thr)
@@ -297,7 +297,8 @@ class SharedQAConv2d(nn.Module):
     def forward(self, input_x):
         weights = torch.zeros_like(self.conv.weight)
         acts = torch.zeros_like(input_x)
-        for alpha, act, q_fn in zip(self.alphas, self.acts, self.q_fn):
+        alphas = self.alphas / self.alphas.sum()
+        for alpha, act, q_fn in zip(alphas, self.acts, self.q_fn):
             weights += alpha * q_fn(self.conv.weight)
             acts += alpha * act(input_x)
 
@@ -326,11 +327,13 @@ class BaseConv(nn.Module):
             self.conv_func = QAConv2d
         else:
             self.conv_func = SepQAConv2d
+        self.alphas = 1
 
     def set_alphas(self, alphas):
         for m in self.modules():
             if isinstance(m, self.conv_func):
                 m.set_alphas(alphas)
+        self.alphas = alphas
 
     def fetch_info(self):
         sum_flops = 0

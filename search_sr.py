@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 
 import utils
+import genotypes as gt
 from sr_models.search_cnn import SearchCNNController
 from sr_base.datasets import CropDataset
 from visualize import plot_sr
@@ -44,15 +45,13 @@ def train_setup(cfg):
         metric_dict={"search/train/loss": 0},
     )
 
-    with open(os.path.join(cfg.env.save_path, "config.txt"), "w") as f:
-        for k, v in cfg.items():
-            f.write(f"{str(k)}:{str(v)}\n")
+    omg.save(cfg, os.path.join(cfg.env.save_path, "config.yaml"))
 
     return cfg, writer, logger, log_handler
 
 
-def run_search(cfg):
-    cfg, writer, logger, log_handler = train_setup(cfg)
+def run_search(cfg, writer, logger, log_handler):
+    # cfg, writer, logger, log_handler = train_setup(cfg)
     logger.info("Logger is set - training start")
 
     # set default gpu device id
@@ -73,7 +72,8 @@ def run_search(cfg):
     )
 
     if cfg.search.load_path is not None:
-        model = torch.load(cfg.search.load_path)
+        model.load_state_dict(torch.load(cfg.search.load_path))
+        model.eval()
         print(f"loaded a model from: {cfg.search.load_path}")
 
     base_criterion = nn.L1Loss().to(device)
@@ -100,8 +100,8 @@ def run_search(cfg):
         print("USING SGD")
     else:
         w_optim = torch.optim.Adam(
-            model.weights(),
-            cfg.search.w_lr,
+            model.weights(), 
+            cfg.search.w_lr, 
             weight_decay=cfg.search.w_weight_decay,
         )
         print("USING ADAM")
@@ -128,15 +128,17 @@ def run_search(cfg):
     # training loop
     best_score = 1e3
     cur_step = 0
-    temperature = cfg.search.temperature_start
+    temperature = cfg.search.temp_max
     for epoch in range(cfg.search.epochs):
         lr = lr_scheduler.get_last_lr()[0]
         print("LR: ", lr)
 
-        model.print_alphas(logger, cfg.search.temperature_start)
+        model.print_alphas(logger, cfg.search.temp_max, writer, epoch)
 
-        if epoch > cfg.search.warm_up:
-            temperature *= cfg.search.temp_red
+        if epoch >= cfg.search.warm_up:
+            temperature = cfg.search.temp_max - (
+                cfg.search.temp_max - cfg.search.temp_min
+            ) * (epoch - cfg.search.warm_up) / (cfg.search.epochs - 1 - cfg.search.warm_up)
 
         # training
         score_train, cur_step, best_current_flops = train(
@@ -306,7 +308,7 @@ def train(
         )
         N = trn_X.size(0)
         if flops_loss.norm == 0:
-            model(val_X)
+            model(val_X, stable=True)
             flops_norm, _ = model.fetch_weighted_flops_and_memory()
             flops_loss.set_norm(flops_norm)
             flops_loss.set_penalty(cfg.search.penalty)
@@ -315,29 +317,29 @@ def train(
 
         if epoch >= cfg.search.warm_up:
             stable = False
-            
+
             preds, (flops, mem) = model(val_X, temperature)
             loss = criterion(preds, val_y, epoch) + flops_loss(flops)
             loss.backward()
 
             if step == len(train_loader) - 1:
                 log_weigths_hist(model, writer, epoch, True)
-
             alpha_optim.step()
 
         # phase 1. child network step (w)
         w_optim.zero_grad()
         preds, (flops, mem) = model(trn_X, temperature, stable=stable)
 
-        loss_w = criterion(preds, trn_y, epoch)
+        loss_w, init_loss = criterion(preds, trn_y, epoch, get_initial=True)
         loss_w.backward()
         # gradient clipping
         nn.utils.clip_grad_norm_(model.weights(), cfg.search.w_grad_clip)
         if step == len(train_loader) - 1:
             log_weigths_hist(model, writer, epoch, False)
+            grad_norm(model, writer, epoch)
         w_optim.step()
 
-        loss_meter.update(loss_w.item(), N)
+        loss_meter.update(init_loss.item(), N)
 
         (
             best_current_flops,
@@ -464,7 +466,9 @@ def get_data_loaders(cfg):
             indices[split : split * 2]
         )
         valid_sampler_selection = torch.utils.data.sampler.SubsetRandomSampler(
-            indices[split * 2 : split * 3] if (split * 3) <= n_train else indices[split : split * 2]
+            indices[split * 2 : split * 3]
+            if (split * 3) <= n_train
+            else indices[split : split * 2]
         )
 
     loaders = []
@@ -516,7 +520,7 @@ class SparseCrit(nn.Module):
     def init_alpha(self, alphas):
         self.alphas = alphas
 
-    def forward(self, pred, target, epoch):
+    def forward(self, pred, target, epoch, get_initial=False):
         alpha = self.alphas()
         if self.type == "entropy":
             self.update(epoch)
@@ -528,19 +532,23 @@ class SparseCrit(nn.Module):
                 )
             )
             loss2 = -ent_loss
-            return loss1 + self.coef * self.weight1 * self.weight2 * loss2
+            res = loss1 + self.coef * self.weight1 * self.weight2 * loss2
+            return res if not get_initial else (res, loss1)
         elif self.type == "none":
-            return self.loss(pred, target)
+            res = self.loss(pred, target)
+            return res if not get_initial else (res, res)
         elif self.type == "l1":
             loss1 = self.loss(pred, target)
             flat_alphas = torch.cat([x.view(-1) for x in alpha])
             l1_regularization = self.coef * torch.norm(flat_alphas, 1)
-            return loss1 + l1_regularization
+            res = loss1 + l1_regularization
+            return res if not get_initial else (res, loss1)
         elif self.type == "l1_softmax":
             loss1 = self.loss(pred, target)
             flat_alphas = torch.cat([torch.exp(x).view(-1) for x in alpha])
             l1_regularization = self.coef * torch.norm(flat_alphas, 1)
-            return loss1 + l1_regularization 
+            res = loss1 + l1_regularization
+            return res if not get_initial else (res, loss1)
 
     def update(self, epoch):
         warm_up = self.epochs // 4
@@ -548,7 +556,7 @@ class SparseCrit(nn.Module):
         self.weight2 = (
             0
             if epoch < warm_up
-            else math.log(epoch - warm_up + 2, self.epochs - 1)
+            else math.log(epoch - warm_up + 2, self.epochs - warm_up + 1)
         )
 
 
@@ -567,8 +575,8 @@ def log_weigths_hist(model, tb_logger, epoch, log_alpha=False):
         for name in model.alphas:
             for i, alpha in enumerate(model.alphas[name]):
                 tb_logger.add_histogram(
-                    f"weights_alpha_grad/{name}.{i}",
-                    alpha.grad.cpu().numpy(),
+                    f"weights_alpha_grad/{name}.{i}", 
+                    alpha.grad.cpu().numpy(), 
                     epoch,
                 )
 
@@ -584,24 +592,50 @@ def grad_norm(model, tb_logger, epoch):
                 param_norm = p.grad.detach().data.norm(1)
                 if "body" in name:
                     norms["body"] += [param_norm.item()]
-                    # print("body", param_norm.item())
 
                 if "head" in name:
                     norms["head"] += [param_norm.item()]
-                    # print("head", param_norm.item())
 
                 if "tail" in name:
                     norms["tail"] += [param_norm.item()]
-                    # print("tail", param_norm.item())
             else:
                 print(f"NONE GRAD in {name}")
     for k in norms:
         norms[k] = np.mean(norms[k]) if norms[k] != [] else 0
     tb_logger.add_scalars(f"search/grad_norms", norms, epoch)
-    return norms
+
+    def grad_per_op(module):
+        grad_ops = []
+        for op in module._ops:
+            grad_op = []
+            for p in op.parameters():
+                grad_op += [p.grad.detach().data.norm(1).item()]
+            grad_op = np.mean(grad_op)
+            grad_ops += [grad_op]
+        return grad_ops
+
+    net = model.net
+    blocks = {
+        "head": net.head,
+        "upsample": net.upsample,
+        "tail": net.tail,
+    }
+    for i, body in enumerate(net.body):
+        blocks[f"body.{i}"] = body.body
+        blocks[f"skip.{i}"] = body.skip
+    for name in blocks:
+        for i, mixop in enumerate(blocks[name].net):
+            mixop = grad_per_op(mixop)
+            tb_logger.add_scalars(
+                f"grad/{name}.{i}",
+                dict(zip(gt.PRIMITIVES_SR[name.split(".")[0]], mixop)),
+                epoch,
+            )
+    return
 
 
 if __name__ == "__main__":
     CFG_PATH = "./configs/quant_config.yaml"
     cfg = omg.load(CFG_PATH)
-    run_search(cfg)
+    cfg, writer, logger, log_handler = train_setup(cfg)
+    run_search(cfg, writer, logger, log_handler)

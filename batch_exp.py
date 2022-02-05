@@ -6,11 +6,16 @@ import argparse
 from search_sr import run_search
 from augment_sr import run_train
 
+from search_sr import train_setup as search_setup
+from augment_sr import train_setup as augment_setup
+
 from omegaconf import OmegaConf as omg
 
 from validate_sr import get_model, dataset_loop
 import genotypes
 import utils
+import traceback
+
 
 """
 EXAMPLE: python batch_exp.py -v 0 0.001 0.005 -d gumbel -r 3 -g 3 -c quant_config.yaml
@@ -32,7 +37,7 @@ parser.add_argument(
 parser.add_argument("-d", "--dir", type=str, default="batch", help="log dir")
 parser.add_argument("-c", "--conf", type=str, default="quant_config.yaml", help="log dir")
 parser.add_argument(
-    "-n", "--name", type=str, default="batch experiment", help="experiment name"
+    "-n", "--name", type=str, default="batch_experiment", help="experiment name"
 )
 
 parser.add_argument(
@@ -93,9 +98,26 @@ def run_batch():
             )
 
             print(f"SEARCHING: {str(key).upper()}:{str(val).upper()}")
-            run_search(cfg)
+            cfg_search, writer, logger, log_handler = search_setup(cfg)
+            try:
+                run_search(cfg_search, writer, logger, log_handler)
+            except Exception as e:
+                with open(os.path.join(cfg_search.env.save_path, "ERROR.txt"), "a") as f:
+                    f.write(traceback.format_exc())
+                    print(traceback.format_exc())
+                raise e
+
+
             print(f"TRAINING: {str(key).upper()}:{str(val).upper()}")
-            run_train(cfg)
+            cfg_train, writer, logger, log_handler = augment_setup(cfg)
+            try:
+                run_train(cfg_train, writer, logger, log_handler)
+            except Exception as e:
+                with open(os.path.join(cfg_train.env.save_path, "ERROR.txt"), "a") as f:
+                    f.write(traceback.format_exc())
+                    print(traceback.format_exc())
+                raise e
+
 
             with open(cfg.train.genotype_path, "r") as f:
                 genotype = genotypes.from_str(f.read())
