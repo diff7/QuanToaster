@@ -1,4 +1,5 @@
 """ CNN for network augmentation """
+import torch
 import torch.nn as nn
 import genotypes as gt
 from sr_models.quant_conv_lsq import QAConv2d
@@ -8,6 +9,25 @@ def summer(values, increments):
     return (v + i for v, i in zip(values, increments))
 
 
+ 
+class ADM(nn.Module):
+    def __init__(self, filters):
+        super().__init__()
+
+        self.bn = nn.BatchNorm2d(filters)
+        self.phi = nn.Conv2d(1, 1, 1, 1, 0, bias=True)
+        self.phi.weight.data.fill_(1/4)
+        self.phi.bias.data.fill_(0)
+
+    def forward(self, x, func,skip):
+        s = torch.std(skip, dim=[1,2,3], keepdim=True)
+        self.s = self.phi(s)
+
+        x_nm = self.bn(x)
+        x_nm = func(x_nm)
+
+        return x_nm*self.s + skip
+
 class Residual(nn.Module):
     def __init__(self, skip, body, rf):
         super().__init__()
@@ -15,8 +35,13 @@ class Residual(nn.Module):
         self.body = body
         self.rf = rf
 
+        self.adaskip = ADM(36)
+
     def forward(self, x):
-        return (self.skip(x) + self.body(x)) * self.rf + x
+        def func(x):
+            return (self.skip(x) + self.body(x))
+
+        return self.adaskip(x, func, x)
 
     def fetch_weighted_info(self):
         flops = 0
@@ -64,14 +89,52 @@ class AugmentCNN(nn.Module):
         )
         self.quant_mode = True
 
+        self.adaskip_one = ADM(36)
+        self.adaskip_two = ADM(3)
+
     def forward(self, x):
+
+        self.stats = dict()
+        self.stats['std'] = dict()
+        self.stats['learnable'] = dict()
+        self.stats['learnable']['mean'] = dict()
+        self.stats['learnable']['std'] = dict()
+        self.stats['learnable']['eps'] = dict()
+
         init = self.head(x)
         x = init
-        for cell in self.body:
-            x = cell(x)
+        self.stats['std']["head"] = torch.std(
+            init, dim=[1, 2, 3], keepdim=True
+        ).flatten()[0]
 
-        x = self.upsample(x + init)
-        return self.tail(x) + x
+        def func(x):
+            for cell in self.body:
+                x = cell(x)
+            return x
+
+        x = self.upsample(self.adaskip_one(x, func,init))
+
+        
+        self.stats['learnable']['std']["body_out"] = torch.mean(self.adaskip_one.s)
+
+
+        self.stats['std']["body"] = torch.std(
+            x, dim=[1, 2, 3], keepdim=True
+        ).flatten()[0]
+
+
+        tail = self.adaskip_two(x, self.tail, x)
+
+        self.stats['std']["tail"] = torch.std(
+            tail, dim=[1, 2, 3], keepdim=True
+        ).flatten()[0]
+
+        self.stats['learnable']['std']["tail"] = torch.mean(self.adaskip_two.s)
+
+        
+
+
+        return tail
 
     def set_fp(self):
         if self.quant_mode == True:

@@ -323,6 +323,7 @@ class SimpleConv(BaseConv):
     ):
         super().__init__(shared=shared)
         self.net = nn.Sequential(
+            #nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_in,
                 out_channels=C_out,
@@ -360,6 +361,7 @@ class GrowthConv(BaseConv):
     ):
         super().__init__(shared=shared)
         self.net = nn.Sequential(
+            #nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_in,
                 out_channels=C_fixed * growth,
@@ -371,7 +373,7 @@ class GrowthConv(BaseConv):
                 groups=groups,
                 bias=affine,
             ),
-            # nn.ReLU(),
+            #nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_fixed * growth,
                 out_channels=C_out,
@@ -411,6 +413,7 @@ class DecEnc(BaseConv):
     ):
         super().__init__(shared=shared)
         self.net = nn.Sequential(
+            #nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_in,
                 out_channels=C_fixed // reduce,
@@ -422,6 +425,7 @@ class DecEnc(BaseConv):
                 groups=groups,
                 bias=affine,
             ),
+            #nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_in // reduce,
                 out_channels=C_fixed // reduce,
@@ -433,6 +437,7 @@ class DecEnc(BaseConv):
                 groups=groups,
                 bias=affine,
             ),
+            #nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_fixed // reduce,
                 out_channels=C_out,
@@ -467,7 +472,7 @@ class DWS(BaseConv):
         super().__init__(shared=shared)
 
         self.net = nn.Sequential(
-            # nn.BatchNorm2d(C_out,  affine=affine, shared=shared),
+            #nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_in,
                 out_channels=C_in * 4,
@@ -479,6 +484,7 @@ class DWS(BaseConv):
                 groups=1,
                 bias=False,
             ),
+            #nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_in * 4,
                 out_channels=C_in,
@@ -518,7 +524,7 @@ class FacConv(BaseConv):
     ):
         super().__init__(shared=shared)
         self.net = nn.Sequential(
-            # nn.BatchNorm2d(C_out,  affine=affine, shared=shared),
+            #nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_in,
                 out_channels=C_fixed * growth,
@@ -586,7 +592,7 @@ class MixedOp(nn.Module):
         self.bits = bits
         for primitive in gt.PRIMITIVES_SR[gene_type]:
             func = OPS[primitive](
-                C_in, C_out, bits, C_fixed, stride, affine=False, shared=True
+                C_in, C_out, bits, C_fixed, stride, affine=True, shared=True
             )
             self._ops.append(func)
 

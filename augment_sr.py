@@ -93,6 +93,7 @@ def run_train(cfg):
 
     criterion = nn.L1Loss().to(device)
 
+
     with open(cfg.train.genotype_path, "r") as f:
         genotype = from_str(f.read())
 
@@ -215,7 +216,7 @@ def train(
         optimizer.zero_grad()
         # torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
         preds = model(X)
-        loss = criterion(preds, y)
+        loss = criterion(preds, y) 
         loss_meter.update(loss.item(), N)
         loss.backward()
         grad_norm = utils.grad_norm(model)
@@ -236,7 +237,11 @@ def train(
                     grad_norm=grad_norm,
                 )
             )
-
+        
+        writer.add_scalars("tune/std_stats", model.stats['std'],cur_step)
+        writer.add_scalars("tune/adaskip_mean", model.stats['learnable']['mean'],cur_step)
+        writer.add_scalars("tune/adaskip_std", model.stats['learnable']['std'],cur_step)
+    
         writer.add_scalar("tune/train/loss", loss_meter.avg, cur_step)
         writer.add_scalar("tune/train/grad_norm", grad_norm, cur_step)
 

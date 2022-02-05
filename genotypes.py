@@ -16,8 +16,10 @@ body = [
     "simple_5x5_grouped_3",
     "decenc_3x3_2",
     "decenc_5x5_2",
-    'simple_1x1_grouped_3',
-    'simple_1x1', 
+    "growth2_5x5",
+    "growth2_3x3",
+    #'simple_1x1_grouped_3',
+    #'simple_1x1', 
 ]
 
 head = [
@@ -27,8 +29,8 @@ head = [
     "growth2_3x3",
     "simple_3x3_grouped_3",
     "simple_5x5_grouped_3",
-    'simple_1x1_grouped_3',
-    'simple_1x1', 
+    #'simple_1x1_grouped_3',
+    #'simple_1x1', 
 ]
 
 tail = [
@@ -47,14 +49,14 @@ upsample = [
     "conv_3x1_1x3",
     "simple_3x3",
     "simple_5x5",
-    "growth2_5x5",
-    "growth2_3x3",
-    "decenc_3x3_2",
-    "decenc_5x5_2",
+    # "growth2_5x5",
+    # "growth2_3x3",
+    # "decenc_3x3_2",
+    # "decenc_5x5_2",
     "simple_3x3_grouped_3",
     "simple_5x5_grouped_3",
-    'simple_1x1_grouped_3',
-    'simple_1x1', 
+    # 'simple_1x1_grouped_3',
+    # 'simple_1x1', 
  ]
 
 skip = [
@@ -102,7 +104,7 @@ def to_dag_sr(C_fixed, gene, gene_type, c_in=3, c_out=3, scale=4):
 
         print(gene_type, op_name, C_in, C_out, C_fixed, bit)
         op = ops_sr.OPS[op_name](
-            C_in, C_out, [bit], C_fixed, 1, affine=False, shared=False
+            C_in, C_out, [bit], C_fixed, 1, affine=True, shared=False
         )
         dag.append(op)
     return nn.Sequential(*dag)

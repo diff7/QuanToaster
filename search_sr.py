@@ -602,6 +602,6 @@ def grad_norm(model, tb_logger, epoch):
 
 
 if __name__ == "__main__":
-    CFG_PATH = "./configs/fp_config.yaml"
+    CFG_PATH = "./configs/quant_config.yaml"
     cfg = omg.load(CFG_PATH)
     run_search(cfg)

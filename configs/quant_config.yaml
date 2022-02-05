@@ -2,12 +2,12 @@ dataset:
   scale: 4
   search_subsample: 0.7
   batch_size: 32
-  crop_size: 35 # small image,  40x4=160, pathces are 200x200
+  crop_size: 45 # small image,  40x4=160, pathces are 200x200
   files_list:  /home/dev/data_main/SR/DIV2K/processed_200_st70/HR
-  debug_mode: True # run on a small porion of data
+  debug_mode: False # run on a small porion of data
   
 arch:
-  bits: [4,8]
+  bits: [8,4]
   channels: 3
   c_fixed: 36
   scale: 4
@@ -20,8 +20,8 @@ arch:
   body_cells: 3
 
 env:
-  run_name: 'bilevel_v2'
-  gpu: 2
+  run_name: 'BEST_28_ADM_init_0.25'
+  gpu: 0
   log_dir: /home/dev/data_main/LOGS/QUANT
   im_dir: 'arch_images'  
   workers: 4 
@@ -57,4 +57,6 @@ train:
   weight_decay : 0 # weight decay
   print_freq : 200 # print frequency
   epochs : 30 # # of training epochs
-  genotype_path: /home/dev/data_main/LOGS/QUANT/bilevel_search_v2/trail_1/SEARCH_batch experiment_penalty_0.1_trail_1-2021-12-18-15/best_arch.gen
+  genotype_path:  /home/dev/data_main/LOGS/QUANT/adam_entropy_s_two/trail_1/SEARCH_batch experiment_penalty_0_trail_1-2021-12-10-13/best_arch.gen
+
+
