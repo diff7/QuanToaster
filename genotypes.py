@@ -1,9 +1,8 @@
 """
 Specify detailed search space for the architechture.
 """
-
-from collections import namedtuple
 import torch.nn as nn
+from collections import namedtuple
 from sr_models import quant_ops as ops_sr
 
 Genotype_SR = namedtuple("Genotype_SR", "head body tail skip upsample")
@@ -104,7 +103,7 @@ def to_dag_sr(C_fixed, gene, gene_type, c_in=3, c_out=3, scale=4):
 
         print(gene_type, op_name, C_in, C_out, C_fixed, bit)
         op = ops_sr.OPS[op_name](
-            C_in, C_out, [bit], C_fixed, 1, affine=True, shared=False
+            C_in, C_out, [bit], C_fixed, 1, affine=False, shared=False
         )
         dag.append(op)
     return nn.Sequential(*dag)

@@ -332,11 +332,14 @@ def train(
 
         loss_w, init_loss = criterion(preds, trn_y, epoch, get_initial=True)
         loss_w.backward()
-        # gradient clipping
-        nn.utils.clip_grad_norm_(model.weights(), cfg.search.w_grad_clip)
+    
+    
         if step == len(train_loader) - 1:
             log_weigths_hist(model, writer, epoch, False)
             grad_norm(model, writer, epoch)
+
+        # gradient clipping
+        nn.utils.clip_grad_norm_(model.weights(), cfg.search.w_grad_clip)
         w_optim.step()
 
         loss_meter.update(init_loss.item(), N)
@@ -568,9 +571,9 @@ def log_weigths_hist(model, tb_logger, epoch, log_alpha=False):
                     tb_logger.add_histogram(
                         f"weights/{name}", weight.detach().cpu().numpy(), epoch
                     )
-                    tb_logger.add_histogram(
-                        f"weights_grad/{name}", weight.grad.cpu().numpy(), epoch
-                    )
+                    # tb_logger.add_histogram(
+                    #     f"weights_grad/{name}", weight.grad.cpu().numpy(), epoch
+                    # )
     else:
         for name in model.alphas:
             for i, alpha in enumerate(model.alphas[name]):

@@ -327,7 +327,7 @@ class BaseConv(nn.Module):
             self.conv_func = QAConv2d
         else:
             self.conv_func = SepQAConv2d
-        self.alphas = 1
+        self.alphas = torch.ones(1)
 
     def set_alphas(self, alphas):
         for m in self.modules():

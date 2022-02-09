@@ -592,7 +592,7 @@ class MixedOp(nn.Module):
         self.bits = bits
         for primitive in gt.PRIMITIVES_SR[gene_type]:
             func = OPS[primitive](
-                C_in, C_out, bits, C_fixed, stride, affine=True, shared=True
+                C_in, C_out, bits, C_fixed, stride, affine=False, shared=True
             )
             self._ops.append(func)
 
