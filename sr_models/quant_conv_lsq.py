@@ -206,6 +206,7 @@ class QAConv2d(nn.Module):
     def __init__(self, *args, **kwargs):
         super(QAConv2d, self).__init__()
         self.bit = kwargs.pop("bits")[0]
+        kwargs.pop("aux_fp", None)
         self.bit_orig = self.bit
         self.conv = QuantConv(**kwargs)
         self._set_q_fucntions(self.bit)
@@ -239,6 +240,7 @@ class SepQAConv2d(nn.Module):
     def __init__(self, **kwargs):
         super(SepQAConv2d, self).__init__()
         self.bits = kwargs.pop("bits")
+        kwargs.pop("aux_fp", None)
         self.conv = nn.ModuleList()
         print('Using SepQA')
         for _ in range(len(self.bits)):
@@ -281,6 +283,12 @@ class SharedQAConv2d(nn.Module):
     def __init__(self, **kwargs):
         super(SharedQAConv2d, self).__init__()
         self.bits = kwargs.pop("bits")
+        self.aux_fp = kwargs.pop("aux_fp")
+        if self.aux_fp and (32 in self.bits):
+            print("Auxiliary Full precision WILL NOT be used because 32 bit option is already present")
+            self.aux_fp = False
+        if self.aux_fp:
+            self.bits += [32]
         self.conv = QuantConv(**kwargs)
         self.acts = [HWGQ(bit) for bit in self.bits]
         self.q_fn = []
@@ -298,6 +306,8 @@ class SharedQAConv2d(nn.Module):
         weights = torch.zeros_like(self.conv.weight)
         acts = torch.zeros_like(input_x)
         alphas = self.alphas / self.alphas.sum()
+        if self.aux_fp:
+            alphas = torch.cat((alphas, (torch.ones(1) / len(self.bits)).to(alphas.device)))
         for alpha, act, q_fn in zip(alphas, self.acts, self.q_fn):
             weights += alpha * q_fn(self.conv.weight)
             acts += alpha * act(input_x)

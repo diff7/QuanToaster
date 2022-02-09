@@ -328,7 +328,7 @@ def train(
 
         # phase 1. child network step (w)
         w_optim.zero_grad()
-        preds, (flops, mem) = model(trn_X, temperature, stable=stable)
+        preds, (flops, mem) = model(trn_X, temperature, stable=False)
 
         loss_w, init_loss = criterion(preds, trn_y, epoch, get_initial=True)
         loss_w.backward()

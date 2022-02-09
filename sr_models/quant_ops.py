@@ -6,13 +6,13 @@ import genotypes as gt
 
 
 OPS = {
-    "zero": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: Zero(
+    "zero": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: Zero(
         stride, zero=0
     ),
-    "skip_connect": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: Identity(
+    "skip_connect": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: Identity(
         shared
     ),
-    "conv_5x1_1x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: FacConv(
+    "conv_5x1_1x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: FacConv(
         C_in,
         C_out,
         bits,
@@ -22,23 +22,24 @@ OPS = {
         2,
         affine=affine,
         shared=shared,
+        aux_fp=aux_fp,
     ),
-    "conv_3x1_1x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: FacConv(
-        C_in, C_out, bits, C_fixed, 3, stride, 1, affine=affine, shared=shared
+    "conv_3x1_1x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: FacConv(
+        C_in, C_out, bits, C_fixed, 3, stride, 1, affine=affine, shared=shared, aux_fp=aux_fp,
     ),
-    "simple_3x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: SimpleConv(
-        C_in, C_out, bits, C_fixed, 3, stride, 1, affine=affine, shared=shared
+    "simple_3x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
+        C_in, C_out, bits, C_fixed, 3, stride, 1, affine=affine, shared=shared, aux_fp=aux_fp,
     ),
-    "simple_9x9": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: SimpleConv(
-        C_in, C_out, bits, C_fixed, 9, stride, 4, affine=affine, shared=shared
+    "simple_9x9": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
+        C_in, C_out, bits, C_fixed, 9, stride, 4, affine=affine, shared=shared, aux_fp=aux_fp,
     ),
-    "simple_1x1": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: SimpleConv(
-        C_in, C_out, bits, C_fixed, 1, stride, 0, affine=affine, shared=shared
+    "simple_1x1": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
+        C_in, C_out, bits, C_fixed, 1, stride, 0, affine=affine, shared=shared, aux_fp=aux_fp,
     ),
-    "simple_5x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: SimpleConv(
-        C_in, C_out, bits, C_fixed, 5, stride, 2, affine=affine, shared=shared
+    "simple_5x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
+        C_in, C_out, bits, C_fixed, 5, stride, 2, affine=affine, shared=shared, aux_fp=aux_fp,
     ),
-    "simple_1x1_grouped_full": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: SimpleConv(
+    "simple_1x1_grouped_full": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
         C_in,
         C_out,
         bits,
@@ -48,9 +49,10 @@ OPS = {
         0,
         groups=C_in,
         affine=affine,
-        shared=shared,
+        shared=shared, 
+        aux_fp=aux_fp,
     ),
-    "simple_3x3_grouped_full": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: SimpleConv(
+    "simple_3x3_grouped_full": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
         C_in,
         C_out,
         bits,
@@ -61,8 +63,9 @@ OPS = {
         groups=C_in,
         affine=affine,
         shared=shared,
+        aux_fp=aux_fp,
     ),
-    "simple_5x5_grouped_full": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: SimpleConv(
+    "simple_5x5_grouped_full": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
         C_in,
         C_out,
         bits,
@@ -72,9 +75,10 @@ OPS = {
         2,
         groups=C_in,
         affine=affine,
-        shared=shared,
+        shared=shared, 
+        aux_fp=aux_fp,
     ),
-    "simple_1x1_grouped_3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: SimpleConv(
+    "simple_1x1_grouped_3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
         C_in,
         C_out,
         bits,
@@ -85,8 +89,9 @@ OPS = {
         groups=3,
         affine=affine,
         shared=shared,
+        aux_fp=aux_fp,
     ),
-    "simple_3x3_grouped_3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: SimpleConv(
+    "simple_3x3_grouped_3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
         C_in,
         C_out,
         bits,
@@ -97,8 +102,9 @@ OPS = {
         groups=3,
         affine=affine,
         shared=shared,
+        aux_fp=aux_fp,
     ),
-    "simple_5x5_grouped_3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: SimpleConv(
+    "simple_5x5_grouped_3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
         C_in,
         C_out,
         bits,
@@ -109,14 +115,15 @@ OPS = {
         groups=3,
         affine=affine,
         shared=shared,
+        aux_fp=aux_fp,
     ),
-    "DWS_3x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: DWS(
-        C_in, C_out, bits, C_fixed, 3, stride, 1, affine=affine, shared=shared
+    "DWS_3x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DWS(
+        C_in, C_out, bits, C_fixed, 3, stride, 1, affine=affine, shared=shared, aux_fp=aux_fp,
     ),
-    "DWS_5x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: DWS(
-        C_in, C_out, bits, C_fixed, 5, stride, 2, affine=affine, shared=shared
+    "DWS_5x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DWS(
+        C_in, C_out, bits, C_fixed, 5, stride, 2, affine=affine, shared=shared, aux_fp=aux_fp,
     ),
-    "growth2_3x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: GrowthConv(
+    "growth2_3x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: GrowthConv(
         C_in,
         C_out,
         bits,
@@ -128,8 +135,9 @@ OPS = {
         affine=affine,
         shared=shared,
         growth=2,
+        aux_fp=aux_fp,
     ),
-    "growth2_5x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: GrowthConv(
+    "growth2_5x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: GrowthConv(
         C_in,
         C_out,
         bits,
@@ -141,8 +149,9 @@ OPS = {
         affine=affine,
         shared=shared,
         growth=2,
+        aux_fp=aux_fp,
     ),
-    "decenc_3x3_4": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: DecEnc(
+    "decenc_3x3_4": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -154,8 +163,9 @@ OPS = {
         reduce=4,
         affine=affine,
         shared=shared,
+        aux_fp=aux_fp,
     ),
-    "decenc_3x3_2": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: DecEnc(
+    "decenc_3x3_2": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -167,8 +177,9 @@ OPS = {
         reduce=2,
         affine=affine,
         shared=shared,
+        aux_fp=aux_fp,
     ),
-    "decenc_5x5_2": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: DecEnc(
+    "decenc_5x5_2": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -180,8 +191,9 @@ OPS = {
         reduce=2,
         affine=affine,
         shared=shared,
+        aux_fp=aux_fp,
     ),
-    "decenc_5x5_4": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: DecEnc(
+    "decenc_5x5_4": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -193,8 +205,9 @@ OPS = {
         reduce=4,
         affine=affine,
         shared=shared,
+        aux_fp=aux_fp,
     ),
-    "decenc_3x3_8": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: DecEnc(
+    "decenc_3x3_8": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -206,8 +219,9 @@ OPS = {
         reduce=8,
         affine=affine,
         shared=shared,
+        aux_fp=aux_fp,
     ),
-    "decenc_5x5_8": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: DecEnc(
+    "decenc_5x5_8": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -219,8 +233,9 @@ OPS = {
         reduce=8,
         affine=affine,
         shared=shared,
+        aux_fp=aux_fp,
     ),
-    "decenc_3x3_4_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: DecEnc(
+    "decenc_3x3_4_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -232,8 +247,9 @@ OPS = {
         reduce=4,
         affine=affine,
         shared=shared,
+        aux_fp=aux_fp,
     ),
-    "decenc_3x3_2_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: DecEnc(
+    "decenc_3x3_2_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -245,8 +261,9 @@ OPS = {
         reduce=2,
         affine=affine,
         shared=shared,
+        aux_fp=aux_fp,
     ),
-    "decenc_5x5_2_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: DecEnc(
+    "decenc_5x5_2_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -258,8 +275,9 @@ OPS = {
         reduce=2,
         affine=affine,
         shared=shared,
+        aux_fp=aux_fp,
     ),
-    "decenc_5x5_4_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: DecEnc(
+    "decenc_5x5_4_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -271,8 +289,9 @@ OPS = {
         reduce=4,
         affine=affine,
         shared=shared,
+        aux_fp=aux_fp,
     ),
-    "decenc_3x3_8_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: DecEnc(
+    "decenc_3x3_8_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -284,8 +303,9 @@ OPS = {
         reduce=8,
         affine=affine,
         shared=shared,
+        aux_fp=aux_fp,
     ),
-    "decenc_5x5_8_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared: DecEnc(
+    "decenc_5x5_8_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -297,6 +317,7 @@ OPS = {
         reduce=8,
         affine=affine,
         shared=shared,
+        aux_fp=aux_fp,
     ),
 }
 
@@ -320,6 +341,7 @@ class SimpleConv(BaseConv):
         groups=1,
         affine=False,
         shared=False,
+        aux_fp=False,
     ):
         super().__init__(shared=shared)
         self.net = nn.Sequential(
@@ -333,6 +355,7 @@ class SimpleConv(BaseConv):
                 dilation=dilation,
                 groups=groups,
                 bias=affine,
+                aux_fp=aux_fp,
             )
         )
 
@@ -357,6 +380,7 @@ class GrowthConv(BaseConv):
         affine=False,
         growth=2,
         shared=False,
+        aux_fp=False,
     ):
         super().__init__(shared=shared)
         self.net = nn.Sequential(
@@ -370,6 +394,7 @@ class GrowthConv(BaseConv):
                 dilation=dilation,
                 groups=groups,
                 bias=affine,
+                aux_fp=aux_fp,
             ),
             # nn.ReLU(),
             self.conv_func(
@@ -382,6 +407,7 @@ class GrowthConv(BaseConv):
                 dilation=dilation,
                 groups=groups,
                 bias=affine,
+                aux_fp=aux_fp,
             ),
             # nn.ReLU(),
             # nn.BatchNorm2d(C_out, affine=True),
@@ -408,6 +434,7 @@ class DecEnc(BaseConv):
         affine=False,
         reduce=4,
         shared=False,
+        aux_fp=False,
     ):
         super().__init__(shared=shared)
         self.net = nn.Sequential(
@@ -421,6 +448,7 @@ class DecEnc(BaseConv):
                 dilation=dilation,
                 groups=groups,
                 bias=affine,
+                aux_fp=aux_fp,
             ),
             self.conv_func(
                 in_channels=C_in // reduce,
@@ -432,6 +460,7 @@ class DecEnc(BaseConv):
                 dilation=dilation,
                 groups=groups,
                 bias=affine,
+                aux_fp=aux_fp,
             ),
             self.conv_func(
                 in_channels=C_fixed // reduce,
@@ -443,6 +472,7 @@ class DecEnc(BaseConv):
                 dilation=dilation,
                 groups=groups,
                 bias=affine,
+                aux_fp=aux_fp,
             ),
         )
 
@@ -463,6 +493,7 @@ class DWS(BaseConv):
         affine=True,
         growth=1,
         shared=False,
+        aux_fp=False,
     ):
         super().__init__(shared=shared)
 
@@ -478,6 +509,7 @@ class DWS(BaseConv):
                 dilation=1,
                 groups=1,
                 bias=False,
+                aux_fp=aux_fp,
             ),
             self.conv_func(
                 in_channels=C_in * 4,
@@ -489,6 +521,7 @@ class DWS(BaseConv):
                 dilation=1,
                 groups=C_in,
                 bias=False,
+                aux_fp=aux_fp,
             ),
             # nn.BatchNorm2d(C_out, affine=True),
             # nn.ReLU(),
@@ -515,6 +548,7 @@ class FacConv(BaseConv):
         affine=True,
         growth=1,
         shared=False,
+        aux_fp=False,
     ):
         super().__init__(shared=shared)
         self.net = nn.Sequential(
@@ -528,6 +562,7 @@ class FacConv(BaseConv):
                 padding=(padding, 0),
                 dilation=1,
                 bias=False,
+                aux_fp=aux_fp,
             ),
             self.conv_func(
                 in_channels=C_fixed * growth,
@@ -538,6 +573,7 @@ class FacConv(BaseConv):
                 padding=(0, padding),
                 dilation=1,
                 bias=False,
+                aux_fp=aux_fp,
             ),
         )
 
@@ -586,7 +622,7 @@ class MixedOp(nn.Module):
         self.bits = bits
         for primitive in gt.PRIMITIVES_SR[gene_type]:
             func = OPS[primitive](
-                C_in, C_out, bits, C_fixed, stride, affine=False, shared=True
+                C_in, C_out, bits, C_fixed, stride, affine=False, shared=True, aux_fp=True
             )
             self._ops.append(func)
 
