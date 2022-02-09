@@ -1,11 +1,14 @@
 """ CNN for network augmentation """
+import torch
 import torch.nn as nn
 import genotypes as gt
 from sr_models.quant_conv_lsq import QAConv2d
+from sr_models.ADN import AdaptiveNormalization as ADN
 
 
 def summer(values, increments):
     return (v + i for v, i in zip(values, increments))
+
 
 
 class Residual(nn.Module):
@@ -15,8 +18,13 @@ class Residual(nn.Module):
         self.body = body
         self.rf = rf
 
+        self.adn = ADN(36, skip_mode=True)
+
     def forward(self, x):
-        return (self.skip(x) + self.body(x)) * self.rf + x
+        def func(x):
+            return (self.skip(x) + self.body(x))
+
+        return self.adn(x, func, x)
 
     def fetch_weighted_info(self):
         flops = 0
@@ -64,14 +72,52 @@ class AugmentCNN(nn.Module):
         )
         self.quant_mode = True
 
+        self.adn_one = ADN(36, skip_mode=True)
+        self.adn_two =  ADN(3, skip_mode=True)
+
     def forward(self, x):
+
+        self.stats = dict()
+        self.stats['std'] = dict()
+        self.stats['learnable'] = dict()
+        self.stats['learnable']['mean'] = dict()
+        self.stats['learnable']['std'] = dict()
+        self.stats['learnable']['eps'] = dict()
+
         init = self.head(x)
         x = init
-        for cell in self.body:
-            x = cell(x)
+        self.stats['std']["head"] = torch.std(
+            init, dim=[1, 2, 3], keepdim=True
+        ).flatten()[0]
 
-        x = self.upsample(x + init)
-        return self.tail(x) + x
+        def func(x):
+            for cell in self.body:
+                x = cell(x)
+            return x
+
+        x = self.upsample(self.adn_one(x, func,init))
+
+        
+        self.stats['learnable']['std']["body_out"] = torch.mean(self.adn_one.s)
+
+
+        self.stats['std']["body"] = torch.std(
+            x, dim=[1, 2, 3], keepdim=True
+        ).flatten()[0]
+
+
+        tail = self.adn_two(x, self.tail, x)
+
+        self.stats['std']["tail"] = torch.std(
+            tail, dim=[1, 2, 3], keepdim=True
+        ).flatten()[0]
+
+        self.stats['learnable']['std']["tail"] = torch.mean(self.adn_two.s)
+
+        
+
+
+        return tail
 
     def set_fp(self):
         if self.quant_mode == True:

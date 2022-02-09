@@ -1,9 +1,8 @@
 """
 Specify detailed search space for the architechture.
 """
-
-from collections import namedtuple
 import torch.nn as nn
+from collections import namedtuple
 from sr_models import quant_ops as ops_sr
 
 Genotype_SR = namedtuple("Genotype_SR", "head body tail skip upsample")
@@ -16,8 +15,10 @@ body = [
     "simple_5x5_grouped_3",
     "decenc_3x3_2",
     "decenc_5x5_2",
-    'simple_1x1_grouped_3',
-    'simple_1x1', 
+    "growth2_5x5",
+    "growth2_3x3",
+    #'simple_1x1_grouped_3',
+    #'simple_1x1', 
 ]
 
 head = [
@@ -27,8 +28,8 @@ head = [
     "growth2_3x3",
     "simple_3x3_grouped_3",
     "simple_5x5_grouped_3",
-    'simple_1x1_grouped_3',
-    'simple_1x1', 
+    #'simple_1x1_grouped_3',
+    #'simple_1x1', 
 ]
 
 tail = [
@@ -47,14 +48,14 @@ upsample = [
     "conv_3x1_1x3",
     "simple_3x3",
     "simple_5x5",
-    "growth2_5x5",
-    "growth2_3x3",
-    "decenc_3x3_2",
-    "decenc_5x5_2",
+    # "growth2_5x5",
+    # "growth2_3x3",
+    # "decenc_3x3_2",
+    # "decenc_5x5_2",
     "simple_3x3_grouped_3",
     "simple_5x5_grouped_3",
-    'simple_1x1_grouped_3',
-    'simple_1x1', 
+    # 'simple_1x1_grouped_3',
+    # 'simple_1x1', 
  ]
 
 skip = [

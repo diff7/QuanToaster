@@ -1,6 +1,7 @@
 """ CNN cell for architecture search """
 import torch.nn as nn
 from sr_models import quant_ops as ops
+from sr_models.ADN import AdaptiveNormalization as ADN
 
 
 def summer(values, increments):
@@ -12,9 +13,14 @@ class Residual(nn.Module):
         super(Residual, self).__init__()
         self.skip = skip
         self.body = body
+        self.adn = ADN(36, skip_mode=True)
 
     def forward(self, x, b_weights, s_weights):
-        return (self.skip(x, s_weights) + self.body(x, b_weights)) + x
+        
+        def func(x):
+            return self.skip(x, s_weights) + self.body(x, b_weights)
+        
+        return self.adn(x, func, x)
 
     def fetch_info(self, b_weights, s_weights):
         flops = 0
@@ -121,13 +127,26 @@ class SearchArch(nn.Module):
             c_fixed, c_init, bits, arch_pattern["tail"], gene_type="tail"
         )
 
+        self.adn_one = ADN(36, skip_mode=True)
+        self.adn_two =  ADN(3, skip_mode=True)
+
     def forward(self, x, alphas):
         init = self.head(x, alphas["head"])
         x = init
-        for cell in self.body:
-            x = cell(x, alphas["body"], alphas["skip"])
-        x = self.pixel_up(self.upsample(x + init, alphas["upsample"]))
-        return self.tail(x, alphas["tail"]) + x
+
+        def func_body(x):
+            for cell in self.body:
+                x = cell(x, alphas["body"], alphas["skip"])
+            return x
+
+        x = self.adn_one(x, func_body, init)
+        x = self.pixel_up(self.upsample(x, alphas["upsample"]))
+
+        def func_tail(x):
+            return self.tail(x, alphas["tail"])
+        
+        out = self.adn_two(x, func_tail, x)
+        return  out
 
     def fetch_weighted_flops_and_memory(self, alphas):
         flops = 0

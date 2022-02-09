@@ -41,7 +41,7 @@ class SearchCNNController(nn.Module):
             for _ in range(arch_pattern[name]):
                 params.append(
                     nn.Parameter(
-                        torch.zeros(len(bits) * len(gt.PRIMITIVES_SR[name]))
+                        torch.ones(len(bits) * len(gt.PRIMITIVES_SR[name]))
                     )
                 )
             self.alphas[name] = params

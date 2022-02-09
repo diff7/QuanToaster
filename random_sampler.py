@@ -1,7 +1,6 @@
 import os
 import random
 import argparse
-import genotypes
 import genotypes as gt
 from validate_sr import get_model, dataset_loop
 from augment_sr import run_train
