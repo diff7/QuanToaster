@@ -74,7 +74,6 @@ class SearchCNNController(nn.Module):
             func = self.softmax
         else:
             func = self.alphaselector
-
         weight_alphas = self.get_alphas(func)
 
         out = self.net(x, weight_alphas)
@@ -146,7 +145,7 @@ class SearchCNNController(nn.Module):
         # get ones on the place of max values
         # alphas is 1d vector here
         values = alphas.max()
-        ones = (values == alphas).type(torch.int)
+        ones = (values == alphas).type(torch.float32)
 
         if keep_weight:
             return alphas * ones.detach()
