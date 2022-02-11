@@ -22,6 +22,7 @@ class SearchCNNController(nn.Module):
         body_cells=2,
         device_ids=None,
         alpha_selector="softmax",
+        aux_fp=True
     ):
         super().__init__()
         self.body_cells = body_cells
@@ -41,7 +42,7 @@ class SearchCNNController(nn.Module):
             for _ in range(arch_pattern[name]):
                 params.append(
                     nn.Parameter(
-                        torch.ones(len(bits) * len(gt.PRIMITIVES_SR[name]))
+                        torch.zeros(len(bits) * len(gt.PRIMITIVES_SR[name]))
                     )
                 )
             self.alphas[name] = params
@@ -56,7 +57,7 @@ class SearchCNNController(nn.Module):
                 self._alphas.append(p)
 
         self.net = SearchArch(
-            c_init, c_fixed, bits, scale, arch_pattern, body_cells
+            c_init, c_fixed, bits, scale, arch_pattern, body_cells, aux_fp=aux_fp
         )
 
     def get_alphas(self, func):

@@ -3,6 +3,7 @@
 
 import torch
 import torch.nn as nn
+import warnings
 
 """ HWGQ """
 
@@ -285,7 +286,7 @@ class SharedQAConv2d(nn.Module):
         self.bits = kwargs.pop("bits")
         self.aux_fp = kwargs.pop("aux_fp")
         if self.aux_fp and (32 in self.bits):
-            print("Auxiliary Full precision WILL NOT be used because 32 bit option is already present")
+            warnings.warn("Auxiliary Full precision WILL NOT be used because 32 bit option is already present")
             self.aux_fp = False
         if self.aux_fp:
             self.bits += [32]
@@ -300,7 +301,7 @@ class SharedQAConv2d(nn.Module):
             )
             self.q_fn[-1].init_from(self.conv.weight)
 
-        self.alphas = [1] * len(self.bits)
+        self.alphas = torch.ones(len(self.bits))
 
     def forward(self, input_x):
         weights = torch.zeros_like(self.conv.weight)

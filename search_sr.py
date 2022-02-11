@@ -69,6 +69,7 @@ def run_search(cfg, writer, logger, log_handler):
         cfg.arch.body_cells,
         device_ids=cfg.env.gpu,
         alpha_selector=cfg.search.alpha_selector,
+        aux_fp=cfg.search.aux_fp,
     )
 
     if cfg.search.load_path is not None:

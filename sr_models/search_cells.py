@@ -35,7 +35,7 @@ class Residual(nn.Module):
 
 class CommonBlock(nn.Module):
     def __init__(
-        self, c_fixed, c_init, bits, num_layers, gene_type="head", scale=4
+        self, c_fixed, c_init, bits, num_layers, gene_type="head", scale=4, aux_fp=True
     ):
         """
         Creates list of blocks of specific gene_type.
@@ -63,7 +63,7 @@ class CommonBlock(nn.Module):
             else:
                 c_in = c_fixed
                 c_out = c_fixed
-            self.net.append(ops.MixedOp(c_in, c_out, bits, c_fixed, gene_type))
+            self.net.append(ops.MixedOp(c_in, c_out, bits, c_fixed, gene_type, aux_fp=aux_fp))
 
     def forward(self, x, alphas):
         for layer, a_w in zip(self.net, alphas):
@@ -81,7 +81,7 @@ class CommonBlock(nn.Module):
 
 
 class SearchArch(nn.Module):
-    def __init__(self, c_init, c_fixed, bits, scale, arch_pattern, body_cells):
+    def __init__(self, c_init, c_fixed, bits, scale, arch_pattern, body_cells, aux_fp=True):
         """
         SuperNet.
 
@@ -101,16 +101,16 @@ class SearchArch(nn.Module):
 
         # Generate searchable network with shared weights
         self.head = CommonBlock(
-            c_fixed, c_init, bits, arch_pattern["head"], gene_type="head"
+            c_fixed, c_init, bits, arch_pattern["head"], gene_type="head", aux_fp=aux_fp
         )
 
         self.body = nn.ModuleList()
         for _ in range(body_cells):
             b = CommonBlock(
-                c_fixed, c_init, bits, arch_pattern["body"], gene_type="body"
+                c_fixed, c_init, bits, arch_pattern["body"], gene_type="body", aux_fp=aux_fp
             )
             s = CommonBlock(
-                c_fixed, c_init, bits, arch_pattern["skip"], gene_type="skip"
+                c_fixed, c_init, bits, arch_pattern["skip"], gene_type="skip", aux_fp=aux_fp
             )
             self.body.append(Residual(s, b))
 
@@ -120,11 +120,12 @@ class SearchArch(nn.Module):
             bits,
             arch_pattern["upsample"],
             gene_type="upsample",
+            aux_fp=aux_fp
         )
         self.pixel_up = nn.PixelShuffle(scale)
 
         self.tail = CommonBlock(
-            c_fixed, c_init, bits, arch_pattern["tail"], gene_type="tail"
+            c_fixed, c_init, bits, arch_pattern["tail"], gene_type="tail", aux_fp=aux_fp
         )
 
         self.adn_one = ADN(36, skip_mode=True)
