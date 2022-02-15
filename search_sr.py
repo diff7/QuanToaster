@@ -26,7 +26,7 @@ def train_setup(cfg):
     cfg.env.save_path = utils.get_run_path(
         cfg.env.log_dir, "SEARCH_" + cfg.env.run_name
     )
-
+    utils.save_scripts(cfg.env.save_path)
     log_handler = utils.LogHandler(cfg.env.save_path + "/log.txt")
     logger = log_handler.create()
 
@@ -616,7 +616,7 @@ def grad_norm(model, tb_logger, epoch):
                 grad_op += [p.grad.detach().data.norm(1).item()]
             grad_op = np.mean(grad_op)
             grad_ops += [grad_op]
-        return grad_ops
+        return grad_ops, np.mean([op for op in grad_ops if not op is None])
 
     net = model.net
     blocks = {
@@ -627,14 +627,17 @@ def grad_norm(model, tb_logger, epoch):
     for i, body in enumerate(net.body):
         blocks[f"body.{i}"] = body.body
         blocks[f"skip.{i}"] = body.skip
+    mean_grads = {}
     for name in blocks:
         for i, mixop in enumerate(blocks[name].net):
-            mixop = grad_per_op(mixop)
+            mix_grad, mean_grad = grad_per_op(mixop)
+            mean_grads[f"{name}.{i}"] = mean_grad
             tb_logger.add_scalars(
                 f"grad/{name}.{i}",
-                dict(zip(gt.PRIMITIVES_SR[name.split(".")[0]], mixop)),
+                dict(zip(gt.PRIMITIVES_SR[name.split(".")[0]], mix_grad)),
                 epoch,
             )
+    tb_logger.add_scalars("grads_per_block", mean_grads, epoch)
     return
 
 

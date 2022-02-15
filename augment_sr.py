@@ -24,7 +24,7 @@ def train_setup(cfg):
     cfg.env.save_path = utils.get_run_path(
         cfg.env.log_dir, "TUNE_" + cfg.env.run_name
     )
-    utils.save_scripts(cfg.env.save_path)
+
     log_handler = utils.LogHandler(cfg.env.save_path + "/log.txt")
     logger = log_handler.create()
     # FIX SEED

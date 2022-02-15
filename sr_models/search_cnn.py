@@ -101,14 +101,24 @@ class SearchCNNController(nn.Module):
             logger.info(f"# alphas - {name}")
             for i, alphas in enumerate(weight_alphas[name]):
                 logger.info(alphas)
-                writer.add_scalars(f"alphas_softmax/{name}.{i}", dict(zip(gt.PRIMITIVES_SR[name], alphas.detach().cpu().numpy().tolist())), epoch)
+                alpha_names = []
+                for op_name in gt.PRIMITIVES_SR[name]:
+                    for bit in self.bits:
+                        alpha_names += [f"{op_name}_{bit}"]
+                assert len(alpha_names) == len(alphas.detach().cpu().numpy().tolist())
+                writer.add_scalars(f"alphas_softmax/{name}.{i}", dict(zip(alpha_names, alphas.detach().cpu().numpy().tolist())), epoch)
         
         logger.info("# alphas_original #")
         for name in self.alphas:
             logger.info(f"# alphas - {name}")
             for i, alphas in enumerate(self.alphas[name]):
                 logger.info(alphas)
-                writer.add_scalars(f"alphas_orig/{name}.{i}", dict(zip(gt.PRIMITIVES_SR[name], alphas.detach().cpu().numpy().tolist())), epoch)
+                alpha_names = []
+                for op_name in gt.PRIMITIVES_SR[name]:
+                    for bit in self.bits:
+                        alpha_names += [f"{op_name}_{bit}"]
+                assert len(alpha_names) == len(alphas.detach().cpu().numpy().tolist())
+                writer.add_scalars(f"alphas_orig/{name}.{i}", dict(zip(alpha_names, alphas.detach().cpu().numpy().tolist())), epoch)
 
         # restore formats
         for handler, formatter in zip(logger.handlers, org_formatters):

@@ -283,12 +283,13 @@ class SepQAConv2d(nn.Module):
 class SharedQAConv2d(nn.Module):
     def __init__(self, **kwargs):
         super(SharedQAConv2d, self).__init__()
-        self.bits = kwargs.pop("bits")
+        self.bits = kwargs.pop("bits").copy()
         self.aux_fp = kwargs.pop("aux_fp")
         if self.aux_fp and (32 in self.bits):
             warnings.warn("Auxiliary Full precision WILL NOT be used because 32 bit option is already present")
             self.aux_fp = False
         if self.aux_fp:
+            warnings.warn("Using auxiliary Full precision.")
             self.bits += [32]
         self.conv = QuantConv(**kwargs)
         self.acts = [HWGQ(bit) for bit in self.bits]
