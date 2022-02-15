@@ -5,8 +5,27 @@ import torch
 import torch.nn as nn
 import warnings
 
-""" HWGQ """
 
+
+
+""" Quant Noise"""
+
+def quant_noise(x, bit, n_type='gaussian'):
+    tensor = x.clone()
+    flat = tensor.view(-1)
+    scale = flat.max() - flat.min()
+    unit = 1 / (2**bit - 1)
+
+    if n_type == "uniform":
+        noise_source = (torch.rand_like(flat) - 0.5)
+    elif n_type == "gaussian":
+        noise_source = torch.randn_like(flat) / 2
+
+    noise = scale * unit * noise_source
+    noisy = flat + noise
+    return noisy.view_as(tensor).detach()
+
+""" HWGQ """
 
 class _hwgq(torch.autograd.Function):
     @staticmethod
@@ -280,12 +299,51 @@ class SepQAConv2d(nn.Module):
         self.alphas = alphas
 
 
+class QuaNoiseConv2d(nn.Module):
+    def __init__(self, **kwargs):
+        super(QuaNoiseConv2d, self).__init__()
+        self.bits = kwargs.pop("bits").copy()
+        self.aux_fp = kwargs.pop("aux_fp")
+        self.alphas = torch.ones(len(self.bits))
+        self.fp_alpha = 1/(len(self.bits)+1)
+
+        self.conv = QuantConv(**kwargs)
+
+    def forward(self, input_x):
+        
+        weights = self.fp_alpha*self.conv.weight
+        acts = self.fp_alpha*input_x
+        # rescale alphas among each other
+        alphas = self.alphas / (self.alphas.sum() +self.fp_alpha)
+        
+        for alpha, bit in zip(alphas, self.bits):
+            weights += alpha * quant_noise(self.conv.weight, bit)
+            acts += alpha * quant_noise(input_x, bit)
+
+        return self.conv(acts, weights)
+
+    def _fetch_info(self):
+        bit_ops, mem = 0, 0
+        b, m = self.conv._fetch_info()
+
+        for bit, alpha in zip(self.bits, self.alphas):
+            bit_ops += alpha * b * bit
+            mem += alpha * m * bit
+        return bit_ops, mem
+
+    def set_alphas(self, alphas):
+        self.alphas = alphas
+
+
+
 class SharedQAConv2d(nn.Module):
     def __init__(self, **kwargs):
         super(SharedQAConv2d, self).__init__()
-        self.bits = kwargs.pop("bits")
+        self.bits = kwargs.pop("bits").copy()
         self.aux_fp = kwargs.pop("aux_fp")
+        
         if self.aux_fp and (32 in self.bits):
+            print('BITS',self.bits)
             warnings.warn("Auxiliary Full precision WILL NOT be used because 32 bit option is already present")
             self.aux_fp = False
         if self.aux_fp:
@@ -333,7 +391,7 @@ class BaseConv(nn.Module):
         shared = kwargs.pop("shared")
         super(BaseConv, self).__init__()
         if shared:
-            self.conv_func = SharedQAConv2d
+            self.conv_func = QuaNoiseConv2d
         elif shared is False:
             self.conv_func = QAConv2d
         else:
