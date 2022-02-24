@@ -18,6 +18,7 @@ arch:
       body: 2
       upsample: 1
   body_cells: 3 # body consists of several repetitions of identical blocks
+  skip_mode: True # If False -> use ADM
 
 env:
   run_name: 'Recovery_final_model' # name of the experiment. Ignored when 'batch_exp.py' is used.
