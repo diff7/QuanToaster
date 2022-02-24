@@ -12,13 +12,13 @@ def summer(values, increments):
 
 
 class Residual(nn.Module):
-    def __init__(self, skip, body, rf):
+    def __init__(self, skip, body, skip_mode=True):
         super().__init__()
         self.skip = skip
         self.body = body
-        self.rf = rf
+        self.skip_mode = skip_mode
 
-        self.adn = ADN(36, skip_mode=True)
+        self.adn = ADN(36, skip_mode=skip_mode)
 
     def forward(self, x):
         def func(x):
@@ -37,7 +37,7 @@ class Residual(nn.Module):
 class AugmentCNN(nn.Module):
     """Searched CNN model for final training"""
 
-    def __init__(self, c_in, c_fixed, scale, genotype, blocks=4, rf=1):
+    def __init__(self, c_in, c_fixed, scale, genotype, blocks=4, skip_mode=True):
 
         """
         Args:
@@ -46,7 +46,7 @@ class AugmentCNN(nn.Module):
             C: # of starting model channels
         """
         super().__init__()
-        self.rf = rf
+        self.skip_mode = skip_mode
         self.c_fixed = c_fixed
         self.head = gt.to_dag_sr(
             self.c_fixed, genotype.head, gene_type="head", c_in=c_in
@@ -60,7 +60,7 @@ class AugmentCNN(nn.Module):
             s = gt.to_dag_sr(
                 self.c_fixed, genotype.skip, gene_type="skip", c_in=c_in
             )
-            self.body.append(Residual(s, b, rf=self.rf))
+            self.body.append(Residual(s, b, skip_mode=skip_mode))
 
         upsample = gt.to_dag_sr(
             self.c_fixed, genotype.upsample, gene_type="upsample"
@@ -72,8 +72,8 @@ class AugmentCNN(nn.Module):
         )
         self.quant_mode = True
 
-        self.adn_one = ADN(36, skip_mode=True)
-        self.adn_two =  ADN(3, skip_mode=True)
+        self.adn_one = ADN(36, skip_mode=skip_mode)
+        self.adn_two =  ADN(3, skip_mode=skip_mode)
 
     def forward(self, x):
 
@@ -97,8 +97,8 @@ class AugmentCNN(nn.Module):
 
         x = self.upsample(self.adn_one(x, func,init))
 
-        
-        self.stats['learnable']['std']["body_out"] = torch.mean(self.adn_one.s)
+        if not self.adn_one.skip_mode:
+            self.stats['learnable']['std']["body_out"] = torch.mean(self.adn_one.s)
 
 
         self.stats['std']["body"] = torch.std(
@@ -112,7 +112,8 @@ class AugmentCNN(nn.Module):
             tail, dim=[1, 2, 3], keepdim=True
         ).flatten()[0]
 
-        self.stats['learnable']['std']["tail"] = torch.mean(self.adn_two.s)
+        if not self.adn_one.skip_mode:
+            self.stats['learnable']['std']["tail"] = torch.mean(self.adn_two.s)
 
         
 

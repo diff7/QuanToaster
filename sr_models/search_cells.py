@@ -9,11 +9,11 @@ def summer(values, increments):
 
 
 class Residual(nn.Module):
-    def __init__(self, skip, body):
+    def __init__(self, skip, body, skip_mode=True):
         super(Residual, self).__init__()
         self.skip = skip
         self.body = body
-        self.adn = ADN(36, skip_mode=True)
+        self.adn = ADN(36, skip_mode=skip_mode)
 
     def forward(self, x, b_weights, s_weights):
         
@@ -81,7 +81,7 @@ class CommonBlock(nn.Module):
 
 
 class SearchArch(nn.Module):
-    def __init__(self, c_init, c_fixed, bits, scale, arch_pattern, body_cells, aux_fp=True):
+    def __init__(self, c_init, c_fixed, bits, scale, arch_pattern, body_cells, aux_fp=True, skip_mode=True):
         """
         SuperNet.
 
@@ -98,7 +98,7 @@ class SearchArch(nn.Module):
         self.body_cells = body_cells
         self.c_fixed = c_fixed  # 32, 64 etc
         self.c_init = c_init
-
+        self.skip_mode = skip_mode
         # Generate searchable network with shared weights
         self.head = CommonBlock(
             c_fixed, c_init, bits, arch_pattern["head"], gene_type="head", aux_fp=aux_fp
@@ -112,7 +112,7 @@ class SearchArch(nn.Module):
             s = CommonBlock(
                 c_fixed, c_init, bits, arch_pattern["skip"], gene_type="skip", aux_fp=aux_fp
             )
-            self.body.append(Residual(s, b))
+            self.body.append(Residual(s, b, skip_mode=skip_mode))
 
         self.upsample = CommonBlock(
             c_fixed,
@@ -128,8 +128,8 @@ class SearchArch(nn.Module):
             c_fixed, c_init, bits, arch_pattern["tail"], gene_type="tail", aux_fp=aux_fp
         )
 
-        self.adn_one = ADN(36, skip_mode=True)
-        self.adn_two =  ADN(3, skip_mode=True)
+        self.adn_one = ADN(36, skip_mode=skip_mode)
+        self.adn_two =  ADN(3, skip_mode=skip_mode)
 
     def forward(self, x, alphas):
         init = self.head(x, alphas["head"])

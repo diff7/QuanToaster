@@ -19,6 +19,7 @@ def get_model(
     channels=3,
     scale=4,
     body_cells=4,
+    skip_mode=True
 ):
     model = AugmentCNN(
         channels,
@@ -26,6 +27,7 @@ def get_model(
         scale,
         genotype,
         blocks=body_cells,
+        skip_mode=skip_mode,
     )
 
     model_ = torch.load(weights_path, map_location="cpu")
@@ -140,5 +142,6 @@ if __name__ == "__main__":
         channels=3,
         scale=4,
         body_cells=3,
+        skip_mode=True
     )
     dataset_loop(valid_cfg, model, logger, save_dir, device)

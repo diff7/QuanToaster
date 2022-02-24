@@ -98,6 +98,7 @@ def train_loop(cfg):
                 cfg.arch.channels,
                 cfg.dataset.scale,
                 body_cells=cfg.arch.body_cells,
+                skip_mode=cfg.arch.skip_mode,
             )
 
             dataset_loop(valid_cfg, model, logger, save_dir, cfg.env.gpu)
