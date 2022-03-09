@@ -18,6 +18,7 @@ arch:
       body: 2
       upsample: 1
   body_cells: 3 # body consists of several repetitions of identical blocks
+  skip_mode: True # If False -> use ADM
 
 env:
   run_name: 'gumbel_checkpoint' # name of the experiment. Ignored when 'batch_exp.py' is used.
@@ -39,6 +40,7 @@ search:
   sparse_type: entropy # Sparsity penalty. Available options: 'l1_softmax', 'l1', 'entropy', 'none'.
   sparse_coef: 1e-3 # Coefficient. Recommend: 0.001 for entropy, 0.0001 for l1.
   optimizer: adam # Weights optimizer. Options: 'sgd', 'adam'
+  aux_fp: False
 
   lr_scheduler: cosine # Lr scheduler for weights. 
   w_lr: 1e-3 # lr for weights

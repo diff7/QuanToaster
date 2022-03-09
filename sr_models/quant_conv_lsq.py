@@ -310,7 +310,7 @@ class QuaNoiseConv2d(nn.Module):
         self.conv = QuantConv(**kwargs)
 
     def forward(self, input_x):
-        
+        input_x = nn.functional.relu(input_x)
         weights = self.fp_alpha*self.conv.weight
         acts = self.fp_alpha*input_x
         # rescale alphas among each other
@@ -349,6 +349,7 @@ class SharedQAConv2d(nn.Module):
         if self.aux_fp:
             warnings.warn("Using auxiliary Full precision.")
             self.bits += [32]
+            self.fp_alpha = 1 / (len(self.bits))
         self.conv = QuantConv(**kwargs)
         self.acts = [HWGQ(bit) for bit in self.bits]
         self.q_fn = []
@@ -365,9 +366,11 @@ class SharedQAConv2d(nn.Module):
     def forward(self, input_x):
         weights = torch.zeros_like(self.conv.weight)
         acts = torch.zeros_like(input_x)
-        alphas = self.alphas / self.alphas.sum()
         if self.aux_fp:
-            alphas = torch.cat((alphas, (torch.ones(1) / len(self.bits)).to(alphas.device)))
+            alphas = (self.alphas / self.alphas.sum()) * (1 - self.fp_alpha)
+            alphas = torch.cat((alphas, (torch.ones(1) * self.fp_alpha).to(alphas.device)))
+        else:
+        alphas = self.alphas / self.alphas.sum()
         for alpha, act, q_fn in zip(alphas, self.acts, self.q_fn):
             weights += alpha * q_fn(self.conv.weight)
             acts += alpha * act(input_x)
