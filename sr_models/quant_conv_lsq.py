@@ -226,7 +226,6 @@ class QAConv2d(nn.Module):
     def __init__(self, *args, **kwargs):
         super(QAConv2d, self).__init__()
         self.bit = kwargs.pop("bits")[0]
-        kwargs.pop("aux_fp", None)
         self.bit_orig = self.bit
         self.conv = QuantConv(**kwargs)
         self._set_q_fucntions(self.bit)
@@ -260,7 +259,6 @@ class SepQAConv2d(nn.Module):
     def __init__(self, **kwargs):
         super(SepQAConv2d, self).__init__()
         self.bits = kwargs.pop("bits")
-        kwargs.pop("aux_fp", None)
         self.conv = nn.ModuleList()
         print('Using SepQA')
         for _ in range(len(self.bits)):
@@ -303,7 +301,6 @@ class QuaNoiseConv2d(nn.Module):
     def __init__(self, **kwargs):
         super(QuaNoiseConv2d, self).__init__()
         self.bits = kwargs.pop("bits").copy()
-        self.aux_fp = kwargs.pop("aux_fp")
         self.alphas = torch.ones(len(self.bits))
         self.fp_alpha = 1/(len(self.bits)+1)
 
@@ -340,16 +337,6 @@ class SharedQAConv2d(nn.Module):
     def __init__(self, **kwargs):
         super(SharedQAConv2d, self).__init__()
         self.bits = kwargs.pop("bits").copy()
-        self.aux_fp = kwargs.pop("aux_fp")
-        
-        if self.aux_fp and (32 in self.bits):
-            print('BITS',self.bits)
-            warnings.warn("Auxiliary Full precision WILL NOT be used because 32 bit option is already present")
-            self.aux_fp = False
-        if self.aux_fp:
-            warnings.warn("Using auxiliary Full precision.")
-            self.bits += [32]
-            self.fp_alpha = 1 / (len(self.bits))
         self.conv = QuantConv(**kwargs)
         self.acts = [HWGQ(bit) for bit in self.bits]
         self.q_fn = []
@@ -366,10 +353,6 @@ class SharedQAConv2d(nn.Module):
     def forward(self, input_x):
         weights = torch.zeros_like(self.conv.weight)
         acts = torch.zeros_like(input_x)
-        if self.aux_fp:
-            alphas = (self.alphas / self.alphas.sum()) * (1 - self.fp_alpha)
-            alphas = torch.cat((alphas, (torch.ones(1) * self.fp_alpha).to(alphas.device)))
-        else:
         alphas = self.alphas / self.alphas.sum()
         for alpha, act, q_fn in zip(alphas, self.acts, self.q_fn):
             weights += alpha * q_fn(self.conv.weight)
@@ -393,9 +376,15 @@ class SharedQAConv2d(nn.Module):
 class BaseConv(nn.Module):
     def __init__(self, *args, **kwargs):
         shared = kwargs.pop("shared")
+        quant_noise = kwargs.pop("quant_noise")
         super(BaseConv, self).__init__()
         if shared:
-            self.conv_func = QuaNoiseConv2d
+            if quant_noise:
+                self.conv_func = QuaNoiseConv2d
+                warnings.warn("Using quantization noise.")
+            else:
+                self.conv_func = SharedQAConv2d
+                warnings.warn("Using shared weights.")
         elif shared is False:
             self.conv_func = QAConv2d
         else:

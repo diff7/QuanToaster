@@ -22,7 +22,7 @@ class SearchCNNController(nn.Module):
         body_cells=2,
         device_ids=None,
         alpha_selector="softmax",
-        aux_fp=True, 
+        quant_noise=False, 
         skip_mode=True
     ):
         super().__init__()
@@ -58,7 +58,7 @@ class SearchCNNController(nn.Module):
                 self._alphas.append(p)
 
         self.net = SearchArch(
-            c_init, c_fixed, bits, scale, arch_pattern, body_cells, aux_fp=aux_fp, skip_mode=skip_mode
+            c_init, c_fixed, bits, scale, arch_pattern, body_cells, quant_noise=quant_noise, skip_mode=skip_mode
         )
 
     def get_alphas(self, func):

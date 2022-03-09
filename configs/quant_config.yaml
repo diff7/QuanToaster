@@ -40,7 +40,7 @@ search:
   sparse_type: entropy # Sparsity penalty. Available options: 'l1_softmax', 'l1', 'entropy', 'none'.
   sparse_coef: 1e-4 # Coefficient. Recommend: 0.001 for entropy, 0.0001 for l1.
   optimizer: adam # Weights optimizer. Options: 'sgd', 'adam'
-  aux_fp: False
+  quant_noise: False
 
   lr_scheduler: cosine # Lr scheduler for weights. 
   w_lr: 1e-3 # lr for weights

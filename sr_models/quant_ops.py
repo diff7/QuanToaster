@@ -6,13 +6,13 @@ import genotypes as gt
 
 
 OPS = {
-    "zero": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: Zero(
+    "zero": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: Zero(
         stride, zero=0
     ),
-    "skip_connect": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: Identity(
+    "skip_connect": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: Identity(
         shared
     ),
-    "conv_5x1_1x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: FacConv(
+    "conv_5x1_1x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: FacConv(
         C_in,
         C_out,
         bits,
@@ -22,24 +22,24 @@ OPS = {
         2,
         affine=affine,
         shared=shared,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "conv_3x1_1x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: FacConv(
-        C_in, C_out, bits, C_fixed, 3, stride, 1, affine=affine, shared=shared, aux_fp=aux_fp,
+    "conv_3x1_1x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: FacConv(
+        C_in, C_out, bits, C_fixed, 3, stride, 1, affine=affine, shared=shared, quant_noise=quant_noise,
     ),
-    "simple_3x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
-        C_in, C_out, bits, C_fixed, 3, stride, 1, affine=affine, shared=shared, aux_fp=aux_fp,
+    "simple_3x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: SimpleConv(
+        C_in, C_out, bits, C_fixed, 3, stride, 1, affine=affine, shared=shared, quant_noise=quant_noise,
     ),
-    "simple_9x9": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
-        C_in, C_out, bits, C_fixed, 9, stride, 4, affine=affine, shared=shared, aux_fp=aux_fp,
+    "simple_9x9": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: SimpleConv(
+        C_in, C_out, bits, C_fixed, 9, stride, 4, affine=affine, shared=shared, quant_noise=quant_noise,
     ),
-    "simple_1x1": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
-        C_in, C_out, bits, C_fixed, 1, stride, 0, affine=affine, shared=shared, aux_fp=aux_fp,
+    "simple_1x1": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: SimpleConv(
+        C_in, C_out, bits, C_fixed, 1, stride, 0, affine=affine, shared=shared, quant_noise=quant_noise,
     ),
-    "simple_5x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
-        C_in, C_out, bits, C_fixed, 5, stride, 2, affine=affine, shared=shared, aux_fp=aux_fp,
+    "simple_5x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: SimpleConv(
+        C_in, C_out, bits, C_fixed, 5, stride, 2, affine=affine, shared=shared, quant_noise=quant_noise,
     ),
-    "simple_1x1_grouped_full": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
+    "simple_1x1_grouped_full": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: SimpleConv(
         C_in,
         C_out,
         bits,
@@ -50,9 +50,9 @@ OPS = {
         groups=C_in,
         affine=affine,
         shared=shared, 
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "simple_3x3_grouped_full": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
+    "simple_3x3_grouped_full": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: SimpleConv(
         C_in,
         C_out,
         bits,
@@ -63,9 +63,9 @@ OPS = {
         groups=C_in,
         affine=affine,
         shared=shared,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "simple_5x5_grouped_full": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
+    "simple_5x5_grouped_full": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: SimpleConv(
         C_in,
         C_out,
         bits,
@@ -76,9 +76,9 @@ OPS = {
         groups=C_in,
         affine=affine,
         shared=shared, 
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "simple_1x1_grouped_3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
+    "simple_1x1_grouped_3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: SimpleConv(
         C_in,
         C_out,
         bits,
@@ -89,9 +89,9 @@ OPS = {
         groups=3,
         affine=affine,
         shared=shared,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "simple_3x3_grouped_3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
+    "simple_3x3_grouped_3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: SimpleConv(
         C_in,
         C_out,
         bits,
@@ -102,9 +102,9 @@ OPS = {
         groups=3,
         affine=affine,
         shared=shared,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "simple_5x5_grouped_3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: SimpleConv(
+    "simple_5x5_grouped_3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: SimpleConv(
         C_in,
         C_out,
         bits,
@@ -115,15 +115,15 @@ OPS = {
         groups=3,
         affine=affine,
         shared=shared,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "DWS_3x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DWS(
-        C_in, C_out, bits, C_fixed, 3, stride, 1, affine=affine, shared=shared, aux_fp=aux_fp,
+    "DWS_3x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: DWS(
+        C_in, C_out, bits, C_fixed, 3, stride, 1, affine=affine, shared=shared, quant_noise=quant_noise,
     ),
-    "DWS_5x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DWS(
-        C_in, C_out, bits, C_fixed, 5, stride, 2, affine=affine, shared=shared, aux_fp=aux_fp,
+    "DWS_5x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: DWS(
+        C_in, C_out, bits, C_fixed, 5, stride, 2, affine=affine, shared=shared, quant_noise=quant_noise,
     ),
-    "growth2_3x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: GrowthConv(
+    "growth2_3x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: GrowthConv(
         C_in,
         C_out,
         bits,
@@ -135,9 +135,9 @@ OPS = {
         affine=affine,
         shared=shared,
         growth=2,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "growth2_5x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: GrowthConv(
+    "growth2_5x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: GrowthConv(
         C_in,
         C_out,
         bits,
@@ -149,9 +149,9 @@ OPS = {
         affine=affine,
         shared=shared,
         growth=2,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "decenc_3x3_4": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
+    "decenc_3x3_4": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -163,9 +163,9 @@ OPS = {
         reduce=4,
         affine=affine,
         shared=shared,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "decenc_3x3_2": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
+    "decenc_3x3_2": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -177,9 +177,9 @@ OPS = {
         reduce=2,
         affine=affine,
         shared=shared,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "decenc_5x5_2": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
+    "decenc_5x5_2": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -191,9 +191,9 @@ OPS = {
         reduce=2,
         affine=affine,
         shared=shared,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "decenc_5x5_4": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
+    "decenc_5x5_4": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -205,9 +205,9 @@ OPS = {
         reduce=4,
         affine=affine,
         shared=shared,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "decenc_3x3_8": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
+    "decenc_3x3_8": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -219,9 +219,9 @@ OPS = {
         reduce=8,
         affine=affine,
         shared=shared,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "decenc_5x5_8": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
+    "decenc_5x5_8": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -233,9 +233,9 @@ OPS = {
         reduce=8,
         affine=affine,
         shared=shared,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "decenc_3x3_4_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
+    "decenc_3x3_4_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -247,9 +247,9 @@ OPS = {
         reduce=4,
         affine=affine,
         shared=shared,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "decenc_3x3_2_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
+    "decenc_3x3_2_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -261,9 +261,9 @@ OPS = {
         reduce=2,
         affine=affine,
         shared=shared,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "decenc_5x5_2_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
+    "decenc_5x5_2_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -275,9 +275,9 @@ OPS = {
         reduce=2,
         affine=affine,
         shared=shared,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "decenc_5x5_4_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
+    "decenc_5x5_4_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -289,9 +289,9 @@ OPS = {
         reduce=4,
         affine=affine,
         shared=shared,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "decenc_3x3_8_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
+    "decenc_3x3_8_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -303,9 +303,9 @@ OPS = {
         reduce=8,
         affine=affine,
         shared=shared,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
-    "decenc_5x5_8_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, aux_fp=False: DecEnc(
+    "decenc_5x5_8_g3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: DecEnc(
         C_in,
         C_out,
         bits,
@@ -317,7 +317,7 @@ OPS = {
         reduce=8,
         affine=affine,
         shared=shared,
-        aux_fp=aux_fp,
+        quant_noise=quant_noise,
     ),
 }
 
@@ -341,9 +341,9 @@ class SimpleConv(BaseConv):
         groups=1,
         affine=False,
         shared=False,
-        aux_fp=False,
+        quant_noise=False,
     ):
-        super().__init__(shared=shared)
+        super().__init__(shared=shared, quant_noise=quant_noise)
         self.net = nn.Sequential(
             #nn.BatchNorm2d(C_in),
             self.conv_func(
@@ -356,7 +356,6 @@ class SimpleConv(BaseConv):
                 dilation=dilation,
                 groups=groups,
                 bias=affine,
-                aux_fp=aux_fp,
             )
         )
 
@@ -381,9 +380,9 @@ class GrowthConv(BaseConv):
         affine=False,
         growth=2,
         shared=False,
-        aux_fp=False,
+        quant_noise=False,
     ):
-        super().__init__(shared=shared)
+        super().__init__(shared=shared, quant_noise=quant_noise)
         self.net = nn.Sequential(
             #nn.BatchNorm2d(C_in),
             self.conv_func(
@@ -396,7 +395,6 @@ class GrowthConv(BaseConv):
                 dilation=dilation,
                 groups=groups,
                 bias=affine,
-                aux_fp=aux_fp,
             ),
             #nn.BatchNorm2d(C_in),
             self.conv_func(
@@ -409,7 +407,6 @@ class GrowthConv(BaseConv):
                 dilation=dilation,
                 groups=groups,
                 bias=affine,
-                aux_fp=aux_fp,
             ),
             # nn.ReLU(),
             # nn.BatchNorm2d(C_out, affine=True),
@@ -436,9 +433,9 @@ class DecEnc(BaseConv):
         affine=False,
         reduce=4,
         shared=False,
-        aux_fp=False,
+        quant_noise=False,
     ):
-        super().__init__(shared=shared)
+        super().__init__(shared=shared, quant_noise=quant_noise)
         self.net = nn.Sequential(
             #nn.BatchNorm2d(C_in),
             self.conv_func(
@@ -451,7 +448,6 @@ class DecEnc(BaseConv):
                 dilation=dilation,
                 groups=groups,
                 bias=affine,
-                aux_fp=aux_fp,
             ),
             #nn.BatchNorm2d(C_in),
             self.conv_func(
@@ -464,7 +460,6 @@ class DecEnc(BaseConv):
                 dilation=dilation,
                 groups=groups,
                 bias=affine,
-                aux_fp=aux_fp,
             ),
             #nn.BatchNorm2d(C_in),
             self.conv_func(
@@ -477,7 +472,6 @@ class DecEnc(BaseConv):
                 dilation=dilation,
                 groups=groups,
                 bias=affine,
-                aux_fp=aux_fp,
             ),
         )
 
@@ -498,9 +492,9 @@ class DWS(BaseConv):
         affine=True,
         growth=1,
         shared=False,
-        aux_fp=False,
+        quant_noise=False,
     ):
-        super().__init__(shared=shared)
+        super().__init__(shared=shared, quant_noise=quant_noise)
 
         self.net = nn.Sequential(
             #nn.BatchNorm2d(C_in),
@@ -514,7 +508,6 @@ class DWS(BaseConv):
                 dilation=1,
                 groups=1,
                 bias=False,
-                aux_fp=aux_fp,
             ),
             #nn.BatchNorm2d(C_in),
             self.conv_func(
@@ -527,7 +520,6 @@ class DWS(BaseConv):
                 dilation=1,
                 groups=C_in,
                 bias=False,
-                aux_fp=aux_fp,
             ),
             # nn.BatchNorm2d(C_out, affine=True),
             # nn.ReLU(),
@@ -554,9 +546,9 @@ class FacConv(BaseConv):
         affine=True,
         growth=1,
         shared=False,
-        aux_fp=False,
+        quant_noise=False,
     ):
-        super().__init__(shared=shared)
+        super().__init__(shared=shared, quant_noise=quant_noise)
         self.net = nn.Sequential(
             #nn.BatchNorm2d(C_in),
             self.conv_func(
@@ -568,7 +560,6 @@ class FacConv(BaseConv):
                 padding=(padding, 0),
                 dilation=1,
                 bias=False,
-                aux_fp=aux_fp,
             ),
             self.conv_func(
                 in_channels=C_fixed * growth,
@@ -579,7 +570,6 @@ class FacConv(BaseConv):
                 padding=(0, padding),
                 dilation=1,
                 bias=False,
-                aux_fp=aux_fp,
             ),
         )
 
@@ -622,13 +612,13 @@ class Zero(BaseConv):
 class MixedOp(nn.Module):
     """Creates mixed operation of specific block type."""
 
-    def __init__(self, C_in, C_out, bits, C_fixed, gene_type, stride=1, aux_fp=True):
+    def __init__(self, C_in, C_out, bits, C_fixed, gene_type, stride=1, quant_noise=False):
         super().__init__()
         self._ops = nn.ModuleList()
         self.bits = bits
         for primitive in gt.PRIMITIVES_SR[gene_type]:
             func = OPS[primitive](
-                C_in, C_out, bits, C_fixed, stride, affine=False, shared=True, aux_fp=aux_fp
+                C_in, C_out, bits, C_fixed, stride, affine=False, shared=True, quant_noise=quant_noise
             )
             self._ops.append(func)
 

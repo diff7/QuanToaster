@@ -69,7 +69,7 @@ def run_search(cfg, writer, logger, log_handler):
         cfg.arch.body_cells,
         device_ids=cfg.env.gpu,
         alpha_selector=cfg.search.alpha_selector,
-        aux_fp=cfg.search.aux_fp,
+        quant_noise=cfg.search.get("quant_noise", False),
         skip_mode=cfg.arch.skip_mode,
     )
 
