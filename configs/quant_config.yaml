@@ -19,6 +19,12 @@ arch:
       upsample: 1
   body_cells: 3 # body consists of several repetitions of identical blocks
   skip_mode: True # If False -> use ADM
+  primitives:
+    head: ["simple_3x3", "simple_5x5", "simple_3x3_grouped_3", "simple_5x5_grouped_3"]
+    body: ["conv_5x1_1x5", "conv_3x1_1x3", "simple_3x3", "simple_5x5"]
+    skip: ["simple_1x1", "simple_3x3", "simple_5x5"]
+    tail: ["simple_1x1", "simple_3x3", "simple_5x5"]
+    upsample: ["conv_5x1_1x5", "conv_3x1_1x3", "simple_3x3", "simple_5x5"]
 
 env:
   run_name: 'Recovery_final_model' # name of the experiment. Ignored when 'batch_exp.py' is used.

@@ -35,7 +35,7 @@ class Residual(nn.Module):
 
 class CommonBlock(nn.Module):
     def __init__(
-        self, c_fixed, c_init, bits, num_layers, gene_type="head", scale=4, quant_noise=False
+        self, c_fixed, c_init, bits, num_layers, gene_type="head", scale=4, quant_noise=False, primitives=None
     ):
         """
         Creates list of blocks of specific gene_type.
@@ -63,7 +63,7 @@ class CommonBlock(nn.Module):
             else:
                 c_in = c_fixed
                 c_out = c_fixed
-            self.net.append(ops.MixedOp(c_in, c_out, bits, c_fixed, gene_type, quant_noise=quant_noise))
+            self.net.append(ops.MixedOp(c_in, c_out, bits, c_fixed, gene_type, quant_noise=quant_noise, primitives=primitives))
 
     def forward(self, x, alphas):
         for layer, a_w in zip(self.net, alphas):
@@ -81,7 +81,18 @@ class CommonBlock(nn.Module):
 
 
 class SearchArch(nn.Module):
-    def __init__(self, c_init, c_fixed, bits, scale, arch_pattern, body_cells, quant_noise=False, skip_mode=True):
+    def __init__(
+        self,
+        c_init,
+        c_fixed,
+        bits,
+        scale,
+        arch_pattern,
+        body_cells,
+        quant_noise=False,
+        skip_mode=True,
+        primitives=None,
+    ):
         """
         SuperNet.
 
@@ -99,18 +110,37 @@ class SearchArch(nn.Module):
         self.c_fixed = c_fixed  # 32, 64 etc
         self.c_init = c_init
         self.skip_mode = skip_mode
+        self.primitives = primitives
         # Generate searchable network with shared weights
         self.head = CommonBlock(
-            c_fixed, c_init, bits, arch_pattern["head"], gene_type="head", quant_noise=quant_noise
+            c_fixed,
+            c_init,
+            bits,
+            arch_pattern["head"],
+            gene_type="head",
+            quant_noise=quant_noise,
+            primitives=primitives,
         )
 
         self.body = nn.ModuleList()
         for _ in range(body_cells):
             b = CommonBlock(
-                c_fixed, c_init, bits, arch_pattern["body"], gene_type="body", quant_noise=quant_noise
+                c_fixed,
+                c_init,
+                bits,
+                arch_pattern["body"],
+                gene_type="body",
+                quant_noise=quant_noise,
+                primitives=primitives,
             )
             s = CommonBlock(
-                c_fixed, c_init, bits, arch_pattern["skip"], gene_type="skip", quant_noise=quant_noise
+                c_fixed,
+                c_init,
+                bits,
+                arch_pattern["skip"],
+                gene_type="skip",
+                quant_noise=quant_noise,
+                primitives=primitives,
             )
             self.body.append(Residual(s, b, skip_mode=skip_mode))
 
@@ -120,16 +150,23 @@ class SearchArch(nn.Module):
             bits,
             arch_pattern["upsample"],
             gene_type="upsample",
-            quant_noise=quant_noise
+            quant_noise=quant_noise,
+            primitives=primitives,
         )
         self.pixel_up = nn.PixelShuffle(scale)
 
         self.tail = CommonBlock(
-            c_fixed, c_init, bits, arch_pattern["tail"], gene_type="tail", quant_noise=quant_noise
+            c_fixed,
+            c_init,
+            bits,
+            arch_pattern["tail"],
+            gene_type="tail",
+            quant_noise=quant_noise,
+            primitives=primitives,
         )
 
         self.adn_one = ADN(36, skip_mode=skip_mode)
-        self.adn_two =  ADN(3, skip_mode=skip_mode)
+        self.adn_two = ADN(3, skip_mode=skip_mode)
 
     def forward(self, x, alphas):
         init = self.head(x, alphas["head"])
@@ -147,7 +184,7 @@ class SearchArch(nn.Module):
             return self.tail(x, alphas["tail"])
         
         out = self.adn_two(x, func_tail, x)
-        return  out
+        return out
 
     def fetch_weighted_flops_and_memory(self, alphas):
         flops = 0

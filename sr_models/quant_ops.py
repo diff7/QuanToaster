@@ -612,11 +612,12 @@ class Zero(BaseConv):
 class MixedOp(nn.Module):
     """Creates mixed operation of specific block type."""
 
-    def __init__(self, C_in, C_out, bits, C_fixed, gene_type, stride=1, quant_noise=False):
+    def __init__(self, C_in, C_out, bits, C_fixed, gene_type, stride=1, quant_noise=False, primitives=None):
         super().__init__()
         self._ops = nn.ModuleList()
         self.bits = bits
-        for primitive in gt.PRIMITIVES_SR[gene_type]:
+        primitives = gt.PRIMITIVES_SR if primitives is None else primitives
+        for primitive in primitives[gene_type]:
             func = OPS[primitive](
                 C_in, C_out, bits, C_fixed, stride, affine=False, shared=True, quant_noise=quant_noise
             )

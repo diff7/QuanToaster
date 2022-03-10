@@ -70,7 +70,8 @@ def run_search(cfg, writer, logger, log_handler):
         device_ids=cfg.env.gpu,
         alpha_selector=cfg.search.alpha_selector,
         quant_noise=cfg.search.get("quant_noise", False),
-        skip_mode=cfg.arch.skip_mode,
+        skip_mode=cfg.arch.get("skip_mode", True),
+        primitives=cfg.arch.get("primitives", None)
     )
 
     if cfg.search.load_path is not None:
@@ -635,7 +636,7 @@ def grad_norm(model, tb_logger, epoch):
             mean_grads[f"{name}.{i}"] = mean_grad
             tb_logger.add_scalars(
                 f"grad/{name}.{i}",
-                dict(zip(gt.PRIMITIVES_SR[name.split(".")[0]], mix_grad)),
+                dict(zip(model.primitives[name.split(".")[0]], mix_grad)),
                 epoch,
             )
     tb_logger.add_scalars("grads_per_block", mean_grads, epoch)
