@@ -77,7 +77,7 @@ arch:
 
 ```
 
-### 2. Edit **genotypes.py** to define possible operations for each block type. 
+### 2. Edit **genotypes.py** or config files to define possible operations for each block type. 
 ```
 .   .   .
 skip = [
@@ -96,3 +96,11 @@ PRIMITIVES_SR = {
 }
 .   .   .
 ```
+
+## Train datasets
+1. download DIV2K from original website https://data.vision.ee.ethz.ch/cvl/DIV2K/, only original high resolution images are needed.
+2. set path to image folder in ./prep/config.yaml
+3. run ./prep/make_set.py
+
+### Validation sets
+For validation sets download Set14 & Set5 and set according paths in ./sr_models/valsets4x.yaml. Validation will be performed on all the datasets specified in ./sr_models/valsets4x.yaml.

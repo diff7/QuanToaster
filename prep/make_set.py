@@ -24,7 +24,6 @@ def read_file(file, source_folder):
 def get_files(file, cfg, flag):
     hr = read_file(file, cfg.data_hr + flag)
     file_lr = f'{file.split(".")[0]}x{cfg.scale}.png'
-    # lr = read_file(file_lr, cfg.data_lr + flag)
     hr, lr = resize_and_convert(cfg, hr, hr)
     return hr, lr
 

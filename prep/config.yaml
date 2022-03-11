@@ -1,6 +1,5 @@
 data: '/home/dev/data/SR/DIV2K/'
 data_hr:  '/home/dev/data_main/SR/DIV2K/HR'
-data_lr:  '/home/dev/data_main/DIV2K/LR'
 
 data_processed_hr: '/home/dev/data_main/SR/DIV2K/processed_200_st70/HR'
 data_processed_lr: '/home/dev/data_main/SR/DIV2K/processed_200_st70/LR'
