@@ -294,11 +294,11 @@ def train(
     writer.add_scalar("search/train/lr", lr, cur_step)
 
     model.train()
-
     for step, ((trn_X, trn_y, _, _), (val_X, val_y, _, _)) in enumerate(
         zip(train_loader, train_alpha_loader)
     ):
 
+        
         trn_X, trn_y = (
             trn_X.to(device, non_blocking=True),
             trn_y.to(device, non_blocking=True),
@@ -313,7 +313,7 @@ def train(
             flops_norm, _ = model.fetch_weighted_flops_and_memory()
             flops_loss.set_norm(flops_norm)
             flops_loss.set_penalty(cfg.search.penalty)
-
+        
         alpha_optim.zero_grad()
 
         if epoch >= cfg.search.warm_up:

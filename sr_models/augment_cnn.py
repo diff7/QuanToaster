@@ -18,7 +18,7 @@ class Residual(nn.Module):
         self.body = body
         self.rf = rf
 
-        self.adn = ADN(36, skip_mode=True)
+        self.adn = ADN(36, skip_mode=False)
 
     def forward(self, x):
         def func(x):
@@ -72,8 +72,8 @@ class AugmentCNN(nn.Module):
         )
         self.quant_mode = True
 
-        self.adn_one = ADN(36, skip_mode=True)
-        self.adn_two =  ADN(3, skip_mode=True)
+        self.adn_one = ADN(36, skip_mode=False)
+        self.adn_two =  ADN(3, skip_mode=False)
 
     def forward(self, x):
 

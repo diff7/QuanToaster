@@ -310,7 +310,7 @@ class QuaNoiseConv2d(nn.Module):
         self.conv = QuantConv(**kwargs)
 
     def forward(self, input_x):
-        
+        input_x = torch.nn.functional.relu(input_x)
         weights = self.fp_alpha*self.conv.weight
         acts = self.fp_alpha*input_x
         # rescale alphas among each other

@@ -13,7 +13,7 @@ class Residual(nn.Module):
         super(Residual, self).__init__()
         self.skip = skip
         self.body = body
-        self.adn = ADN(36, skip_mode=True)
+        self.adn = ADN(36, skip_mode=False)
 
     def forward(self, x, b_weights, s_weights):
         
@@ -128,8 +128,8 @@ class SearchArch(nn.Module):
             c_fixed, c_init, bits, arch_pattern["tail"], gene_type="tail", aux_fp=aux_fp
         )
 
-        self.adn_one = ADN(36, skip_mode=True)
-        self.adn_two =  ADN(3, skip_mode=True)
+        self.adn_one = ADN(36, skip_mode=False)
+        self.adn_two =  ADN(3, skip_mode=False)
 
     def forward(self, x, alphas):
         init = self.head(x, alphas["head"])
