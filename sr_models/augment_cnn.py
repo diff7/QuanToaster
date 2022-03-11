@@ -10,19 +10,18 @@ def summer(values, increments):
     return (v + i for v, i in zip(values, increments))
 
 
-
 class Residual(nn.Module):
-    def __init__(self, skip, body, rf):
+    def __init__(self, skip, body, skip_mode=True):
         super().__init__()
         self.skip = skip
         self.body = body
-        self.rf = rf
+        self.skip_mode = skip_mode
 
-        self.adn = ADN(36, skip_mode=False)
+        self.adn = ADN(36, skip_mode=skip_mode)
 
     def forward(self, x):
         def func(x):
-            return (self.skip(x) + self.body(x))
+            return self.skip(x) + self.body(x)
 
         return self.adn(x, func, x)
 
@@ -37,7 +36,9 @@ class Residual(nn.Module):
 class AugmentCNN(nn.Module):
     """Searched CNN model for final training"""
 
-    def __init__(self, c_in, c_fixed, scale, genotype, blocks=4, rf=1):
+    def __init__(
+        self, c_in, c_fixed, scale, genotype, blocks=4, skip_mode=True
+    ):
 
         """
         Args:
@@ -46,7 +47,7 @@ class AugmentCNN(nn.Module):
             C: # of starting model channels
         """
         super().__init__()
-        self.rf = rf
+        self.skip_mode = skip_mode
         self.c_fixed = c_fixed
         self.head = gt.to_dag_sr(
             self.c_fixed, genotype.head, gene_type="head", c_in=c_in
@@ -60,7 +61,7 @@ class AugmentCNN(nn.Module):
             s = gt.to_dag_sr(
                 self.c_fixed, genotype.skip, gene_type="skip", c_in=c_in
             )
-            self.body.append(Residual(s, b, rf=self.rf))
+            self.body.append(Residual(s, b, skip_mode=skip_mode))
 
         upsample = gt.to_dag_sr(
             self.c_fixed, genotype.upsample, gene_type="upsample"
@@ -72,21 +73,21 @@ class AugmentCNN(nn.Module):
         )
         self.quant_mode = True
 
-        self.adn_one = ADN(36, skip_mode=False)
-        self.adn_two =  ADN(3, skip_mode=False)
+        self.adn_one = ADN(36, skip_mode=skip_mode)
+        self.adn_two = ADN(3, skip_mode=skip_mode)
 
     def forward(self, x):
 
         self.stats = dict()
-        self.stats['std'] = dict()
-        self.stats['learnable'] = dict()
-        self.stats['learnable']['mean'] = dict()
-        self.stats['learnable']['std'] = dict()
-        self.stats['learnable']['eps'] = dict()
+        self.stats["std"] = dict()
+        self.stats["learnable"] = dict()
+        self.stats["learnable"]["mean"] = dict()
+        self.stats["learnable"]["std"] = dict()
+        self.stats["learnable"]["eps"] = dict()
 
         init = self.head(x)
         x = init
-        self.stats['std']["head"] = torch.std(
+        self.stats["std"]["head"] = torch.std(
             init, dim=[1, 2, 3], keepdim=True
         ).flatten()[0]
 
@@ -95,27 +96,25 @@ class AugmentCNN(nn.Module):
                 x = cell(x)
             return x
 
-        x = self.upsample(self.adn_one(x, func,init))
+        x = self.upsample(self.adn_one(x, func, init))
 
-        
-        self.stats['learnable']['std']["body_out"] = torch.mean(self.adn_one.s)
+        if not self.adn_one.skip_mode:
+            self.stats["learnable"]["std"]["body_out"] = torch.mean(
+                self.adn_one.s
+            )
 
-
-        self.stats['std']["body"] = torch.std(
+        self.stats["std"]["body"] = torch.std(
             x, dim=[1, 2, 3], keepdim=True
         ).flatten()[0]
 
-
         tail = self.adn_two(x, self.tail, x)
 
-        self.stats['std']["tail"] = torch.std(
+        self.stats["std"]["tail"] = torch.std(
             tail, dim=[1, 2, 3], keepdim=True
         ).flatten()[0]
 
-        self.stats['learnable']['std']["tail"] = torch.mean(self.adn_two.s)
-
-        
-
+        if not self.adn_one.skip_mode:
+            self.stats["learnable"]["std"]["tail"] = torch.mean(self.adn_two.s)
 
         return tail
 

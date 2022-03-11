@@ -22,7 +22,9 @@ class SearchCNNController(nn.Module):
         body_cells=2,
         device_ids=None,
         alpha_selector="softmax",
-        aux_fp=True
+        quant_noise=False,
+        skip_mode=True,
+        primitives=None,
     ):
         super().__init__()
         self.body_cells = body_cells
@@ -31,8 +33,9 @@ class SearchCNNController(nn.Module):
         self.device_ids = device_ids
         self.temp = 1
         self.bits = bits
+        self.primitives = primitives if not primitives is None else gt.PRIMITIVES_SR
         # initialize architect parameters: alphass
-        self.n_ops = len(gt.PRIMITIVES_SR)
+        self.n_ops = len(self.primitives)
 
         self.alphas_names = ["head", "body", "skip", "upsample", "tail"]
 
@@ -41,9 +44,7 @@ class SearchCNNController(nn.Module):
             params = nn.ParameterList()
             for _ in range(arch_pattern[name]):
                 params.append(
-                    nn.Parameter(
-                        torch.zeros(len(bits) * len(gt.PRIMITIVES_SR[name]))
-                    )
+                    nn.Parameter(torch.zeros(len(bits) * len(self.primitives[name])))
                 )
             self.alphas[name] = params
 
@@ -57,7 +58,15 @@ class SearchCNNController(nn.Module):
                 self._alphas.append(p)
 
         self.net = SearchArch(
-            c_init, c_fixed, bits, scale, arch_pattern, body_cells, aux_fp=aux_fp
+            c_init,
+            c_fixed,
+            bits,
+            scale,
+            arch_pattern,
+            body_cells,
+            quant_noise=quant_noise,
+            skip_mode=skip_mode,
+            primitives=self.primitives,
         )
 
     def get_alphas(self, func):
@@ -101,14 +110,32 @@ class SearchCNNController(nn.Module):
             logger.info(f"# alphas - {name}")
             for i, alphas in enumerate(weight_alphas[name]):
                 logger.info(alphas)
-                writer.add_scalars(f"alphas_softmax/{name}.{i}", dict(zip(gt.PRIMITIVES_SR[name], alphas.detach().cpu().numpy().tolist())), epoch)
-        
+                alpha_names = []
+                for op_name in self.primitives[name]:
+                    for bit in self.bits:
+                        alpha_names += [f"{op_name}_{bit}"]
+                assert len(alpha_names) == len(alphas.detach().cpu().numpy().tolist())
+                writer.add_scalars(
+                    f"alphas_softmax/{name}.{i}",
+                    dict(zip(alpha_names, alphas.detach().cpu().numpy().tolist())),
+                    epoch,
+                )
+
         logger.info("# alphas_original #")
         for name in self.alphas:
             logger.info(f"# alphas - {name}")
             for i, alphas in enumerate(self.alphas[name]):
                 logger.info(alphas)
-                writer.add_scalars(f"alphas_orig/{name}.{i}", dict(zip(gt.PRIMITIVES_SR[name], alphas.detach().cpu().numpy().tolist())), epoch)
+                alpha_names = []
+                for op_name in self.primitives[name]:
+                    for bit in self.bits:
+                        alpha_names += [f"{op_name}_{bit}"]
+                assert len(alpha_names) == len(alphas.detach().cpu().numpy().tolist())
+                writer.add_scalars(
+                    f"alphas_orig/{name}.{i}",
+                    dict(zip(alpha_names, alphas.detach().cpu().numpy().tolist())),
+                    epoch,
+                )
 
         # restore formats
         for handler, formatter in zip(logger.handlers, org_formatters):
@@ -117,7 +144,9 @@ class SearchCNNController(nn.Module):
     def genotype(self):
         gene = dict()
         for name in self.alphas_names:
-            gene[name] = gt.parse_sr(self.alphas[name], name, self.bits)
+            gene[name] = gt.parse_sr(
+                self.alphas[name], name, self.bits, self.primitives
+            )
         return gt.Genotype_SR(**gene)
 
     def weights(self):

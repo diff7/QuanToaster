@@ -172,8 +172,9 @@ def to_dag_sr(C_fixed, gene, gene_type, c_in=3, c_out=3, scale=4):
     return nn.Sequential(*dag)
 
 
-def parse_sr(alpha, name, bits=[2]):
+def parse_sr(alpha, name, bits=[2], primitives=None):
     gene = []
+    primitives = PRIMITIVES_SR if primitives is None else primitives
     for edges in alpha:
         best_bit = 0
         best_op = 0
@@ -187,6 +188,6 @@ def parse_sr(alpha, name, bits=[2]):
                 best_op = op_idx
                 best_bit = bit_idx.item()
 
-        prim = PRIMITIVES_SR[name][best_op]
+        prim = primitives[name][best_op]
         gene.append((prim, bits[best_bit]))
     return gene

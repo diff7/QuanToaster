@@ -24,7 +24,7 @@ def train_setup(cfg):
     cfg.env.save_path = utils.get_run_path(
         cfg.env.log_dir, "TUNE_" + cfg.env.run_name
     )
-    utils.save_scripts(cfg.env.save_path)
+
     log_handler = utils.LogHandler(cfg.env.save_path + "/log.txt")
     logger = log_handler.create()
     # FIX SEED
@@ -106,6 +106,7 @@ def run_train(cfg, writer, logger, log_handler):
         cfg.arch.scale,
         genotype,
         blocks=cfg.arch.body_cells,
+        skip_mode=cfg.arch.skip_mode,
     )
 
     model.to(device)
@@ -332,5 +333,6 @@ if __name__ == "__main__":
         cfg.arch.channels,
         cfg.dataset.scale,
         body_cells=cfg.arch.body_cells,
+        skip_mode=cfg.arch.skip_mode,
     )
     dataset_loop(valid_cfg, model, logger, save_dir, cfg.env.gpu)

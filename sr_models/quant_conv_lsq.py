@@ -6,18 +6,17 @@ import torch.nn as nn
 import warnings
 
 
-
-
 """ Quant Noise"""
 
-def quant_noise(x, bit, n_type='gaussian'):
+
+def quant_noise(x, bit, n_type="gaussian"):
     tensor = x.clone()
     flat = tensor.view(-1)
     scale = flat.max() - flat.min()
     unit = 1 / (2**bit - 1)
 
     if n_type == "uniform":
-        noise_source = (torch.rand_like(flat) - 0.5)
+        noise_source = torch.rand_like(flat) - 0.5
     elif n_type == "gaussian":
         noise_source = torch.randn_like(flat) / 2
 
@@ -25,7 +24,9 @@ def quant_noise(x, bit, n_type='gaussian'):
     noisy = flat + noise
     return noisy.view_as(tensor).detach()
 
+
 """ HWGQ """
+
 
 class _hwgq(torch.autograd.Function):
     @staticmethod
@@ -50,7 +51,7 @@ class HWGQ(nn.Module):
     def forward(self, x):
         if self.bit >= 32:
             return nn.functional.relu(x)
-        lvls = float(2 ** self.bit - 1)
+        lvls = float(2**self.bit - 1)
         clip_thr = self.step * lvls
         y = x.clamp(min=0.0, max=clip_thr)
         return _hwgq.apply(y, self.step)
@@ -91,7 +92,7 @@ class LsqQuan(nn.Module):
             assert not symmetric, "Positive quantization cannot be symmetric"
             # unsigned activation is quantized to [0, 2^b-1]
             self.thd_neg = 0
-            self.thd_pos = 2 ** bit - 1
+            self.thd_pos = 2**bit - 1
         else:
             if symmetric:
                 # signed weight/activation is quantized to [-2^(b-1)+1, 2^(b-1)-1]
@@ -110,11 +111,11 @@ class LsqQuan(nn.Module):
             self.s = nn.Parameter(
                 x.detach().abs().mean(dim=list(range(1, x.dim())), keepdim=True)
                 * 2
-                / (self.thd_pos ** 0.5)
+                / (self.thd_pos**0.5)
             )
         else:
             self.s = nn.Parameter(
-                x.detach().abs().mean() * 2 / (self.thd_pos ** 0.5)
+                x.detach().abs().mean() * 2 / (self.thd_pos**0.5)
             )
 
     def forward(self, x):
@@ -140,16 +141,11 @@ class QuantConv(nn.Conv2d):
     Flops are computed for square kernel
     FLOPs = 2 x Cin x Cout x k**2 x Wout x Hout / groups
     We use 2 because 1 for multiplocation and 1 for addition
-
     Hout = Hin + 2*padding[0] - dilation[0] x (kernel[0]-1)-1
           --------------------------------------------------- + 1
                                 stride
     Wout same as above
-
-
     NOTE: We do not account for bias term
-
-
     """
 
     def __init__(self, **kwargs):
@@ -180,7 +176,6 @@ class QuantConv(nn.Conv2d):
     def forward(self, input_x, quantized_weight):
         """
         BATCH x C x W x H
-
         """
         # get the same device to avoid errors
         device = input_x.device
@@ -226,7 +221,6 @@ class QAConv2d(nn.Module):
     def __init__(self, *args, **kwargs):
         super(QAConv2d, self).__init__()
         self.bit = kwargs.pop("bits")[0]
-        kwargs.pop("aux_fp", None)
         self.bit_orig = self.bit
         self.conv = QuantConv(**kwargs)
         self._set_q_fucntions(self.bit)
@@ -260,9 +254,8 @@ class SepQAConv2d(nn.Module):
     def __init__(self, **kwargs):
         super(SepQAConv2d, self).__init__()
         self.bits = kwargs.pop("bits")
-        kwargs.pop("aux_fp", None)
         self.conv = nn.ModuleList()
-        print('Using SepQA')
+        print("Using SepQA")
         for _ in range(len(self.bits)):
             self.conv.append(QuantConv(**kwargs))
 
@@ -280,10 +273,12 @@ class SepQAConv2d(nn.Module):
 
     def forward(self, input_x):
         out = []
-        for alpha, act, conv, q_fn in zip(self.alphas, self.acts, self.conv, self.q_fn):
+        for alpha, act, conv, q_fn in zip(
+            self.alphas, self.acts, self.conv, self.q_fn
+        ):
             weights = q_fn(conv.weight)
             acts = act(input_x)
-            out.append(alpha*conv(acts, weights))
+            out.append(alpha * conv(acts, weights))
         return sum(out)
 
     def _fetch_info(self):
@@ -303,19 +298,18 @@ class QuaNoiseConv2d(nn.Module):
     def __init__(self, **kwargs):
         super(QuaNoiseConv2d, self).__init__()
         self.bits = kwargs.pop("bits").copy()
-        self.aux_fp = kwargs.pop("aux_fp")
         self.alphas = torch.ones(len(self.bits))
-        self.fp_alpha = 1/(len(self.bits)+1)
+        self.fp_alpha = 1 / (len(self.bits) + 1)
 
         self.conv = QuantConv(**kwargs)
 
     def forward(self, input_x):
-        input_x = torch.nn.functional.relu(input_x)
-        weights = self.fp_alpha*self.conv.weight
-        acts = self.fp_alpha*input_x
+        input_x = nn.functional.relu(input_x)
+        weights = self.fp_alpha * self.conv.weight
+        acts = self.fp_alpha * input_x
         # rescale alphas among each other
-        alphas = self.alphas / (self.alphas.sum() +self.fp_alpha)
-        
+        alphas = self.alphas / (self.alphas.sum() + self.fp_alpha)
+
         for alpha, bit in zip(alphas, self.bits):
             weights += alpha * quant_noise(self.conv.weight, bit)
             acts += alpha * quant_noise(input_x, bit)
@@ -335,19 +329,10 @@ class QuaNoiseConv2d(nn.Module):
         self.alphas = alphas
 
 
-
 class SharedQAConv2d(nn.Module):
     def __init__(self, **kwargs):
         super(SharedQAConv2d, self).__init__()
         self.bits = kwargs.pop("bits").copy()
-        self.aux_fp = kwargs.pop("aux_fp")
-        
-        if self.aux_fp and (32 in self.bits):
-            print('BITS',self.bits)
-            warnings.warn("Auxiliary Full precision WILL NOT be used because 32 bit option is already present")
-            self.aux_fp = False
-        if self.aux_fp:
-            self.bits += [32]
         self.conv = QuantConv(**kwargs)
         self.acts = [HWGQ(bit) for bit in self.bits]
         self.q_fn = []
@@ -365,8 +350,6 @@ class SharedQAConv2d(nn.Module):
         weights = torch.zeros_like(self.conv.weight)
         acts = torch.zeros_like(input_x)
         alphas = self.alphas / self.alphas.sum()
-        if self.aux_fp:
-            alphas = torch.cat((alphas, (torch.ones(1) / len(self.bits)).to(alphas.device)))
         for alpha, act, q_fn in zip(alphas, self.acts, self.q_fn):
             weights += alpha * q_fn(self.conv.weight)
             acts += alpha * act(input_x)
@@ -389,9 +372,15 @@ class SharedQAConv2d(nn.Module):
 class BaseConv(nn.Module):
     def __init__(self, *args, **kwargs):
         shared = kwargs.pop("shared")
+        quant_noise = kwargs.pop("quant_noise")
         super(BaseConv, self).__init__()
         if shared:
-            self.conv_func = QuaNoiseConv2d
+            if quant_noise:
+                self.conv_func = QuaNoiseConv2d
+                warnings.warn("Using quantization noise.")
+            else:
+                self.conv_func = SharedQAConv2d
+                warnings.warn("Using shared weights.")
         elif shared is False:
             self.conv_func = QAConv2d
         else:

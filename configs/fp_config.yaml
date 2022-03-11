@@ -18,11 +18,12 @@ arch:
       body: 2
       upsample: 1
   body_cells: 3 # body consists of several repetitions of identical blocks
+  skip_mode: True # If False -> use ADM
 
 env:
   run_name: 'gumbel_checkpoint' # name of the experiment. Ignored when 'batch_exp.py' is used.
   gpu: 0 # Device. Ignored when 'batch_exp.py' is used. 
-  log_dir: /home/dev/data_main/LOGS/SR/reprod/ # Directory for experiments output.
+  log_dir: /home/dev/data_main/LOGS/SR/test_skip/ # Directory for experiments output.
   im_dir: 'arch_images' # Subfolder of the experiment in which images of architectures are saved.
   workers: 4 
   seed : 777 
@@ -45,9 +46,9 @@ search:
   w_momentum: 0.9 # Momentum for weights('sgd' only)
   w_weight_decay: 3e-7 # Weight decay for weights
   w_grad_clip: 5 # gradient clipping for weights
-  alpha_lr:  3e-4 #3e-4 #lr for alpha
-  alpha_weight_decay: 0 #1e-3 #weight decay for alpha
   epochs: 10 # number of search epochs
+  alpha_lr:  3e-4 # lr for alpha
+  alpha_weight_decay: 0 #1e-3 #weight decay for alpha
   temp_max: 10 # Only valid for alpha_selector=='gumbel'. 
   temp_min: 0.1 # Same as above
   
