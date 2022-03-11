@@ -1,4 +1,5 @@
-# QuanTOAStER - Quantization Optimal Architechture Searcher
+## code for the paper "QuantNAS for super resolution: searching for efficient quantization-friendly architectures against quantization noise.
+### dev name "QuanTOAStER - Quantization Optimal Architechture Searcher"
 
 ### Full precision NAS VS Joint quantization:
 To search with different bit-widths set desired bit-widths in "configs/fp_config.yaml" <br>
@@ -17,13 +18,16 @@ To run experiment with different penalty and seed use "batch_exp.py" and edit **
 
 Example:
 ```
-python batch_exp.py -v 0 0.001 0.005 -d gumbel -r 3 -g 3 -c  quant_config.yaml
+python3 batch_exp.py -v 0.0001 0.001 0.005 0.01 -d experiment_name -r 1 -g 3 -c quant_config.yaml
  
 -d Experiment name 
 -r Number of runs 
 -g Gpu number 
--v Values for flops penalty
+-v Values for harware penalties
+-c config for quantization or full precision NAS:  quant_config.yaml or fp_config.yaml, some hyperparameters are different.
 ```
+This script will run search, train and validate final models.
+
 <br>
 
 ## If you want to run architecture search or train selected model separately you can run "search_sr.py" and "augment_sr.py" manually.
@@ -97,10 +101,10 @@ PRIMITIVES_SR = {
 .   .   .
 ```
 
-## Train datasets
-1. download DIV2K from original website https://data.vision.ee.ethz.ch/cvl/DIV2K/, only original high resolution images are needed.
+### Train dataset
+1. download DIV2K from the original website https://data.vision.ee.ethz.ch/cvl/DIV2K/, only original high resolution images are needed.
 2. set path to image folder in ./prep/config.yaml
 3. run ./prep/make_set.py
 
-### Validation sets
+### Validation datasets
 For validation sets download Set14 & Set5 and set according paths in ./sr_models/valsets4x.yaml. Validation will be performed on all the datasets specified in ./sr_models/valsets4x.yaml.

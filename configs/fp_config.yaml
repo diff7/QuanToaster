@@ -1,6 +1,6 @@
 dataset:
   scale: 4 
-  search_subsample: 0.125 # Search is too slow. search is too slow. Therefore we use only part of the data.
+  search_subsample: 0.7 
   batch_size: 16
   crop_size: 45 # small image,  40x4=160, pathces are 200x200
   files_list:  /home/dev/data_main/SR/DIV2K/processed_200_st70/HR
@@ -19,6 +19,7 @@ arch:
       upsample: 1
   body_cells: 3 # body consists of several repetitions of identical blocks
   skip_mode: True # If False -> use ADM
+  quant_noise: True
 
 env:
   run_name: 'gumbel_checkpoint' # name of the experiment. Ignored when 'batch_exp.py' is used.
@@ -46,7 +47,7 @@ search:
   w_momentum: 0.9 # Momentum for weights('sgd' only)
   w_weight_decay: 3e-7 # Weight decay for weights
   w_grad_clip: 5 # gradient clipping for weights
-  epochs: 10 # number of search epochs
+  epochs: 20 # number of search epochs
   alpha_lr:  3e-4 # lr for alpha
   alpha_weight_decay: 0 #1e-3 #weight decay for alpha
   temp_max: 10 # Only valid for alpha_selector=='gumbel'. 
