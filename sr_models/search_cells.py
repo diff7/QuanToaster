@@ -70,6 +70,7 @@ class CommonBlock(nn.Module):
             else:
                 c_in = c_fixed
                 c_out = c_fixed
+
             self.net.append(
                 ops.MixedOp(
                     c_in,

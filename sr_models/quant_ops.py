@@ -25,19 +25,64 @@ OPS = {
         quant_noise=quant_noise,
     ),
     "conv_3x1_1x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: FacConv(
-        C_in, C_out, bits, C_fixed, 3, stride, 1, affine=affine, shared=shared, quant_noise=quant_noise,
+        C_in,
+        C_out,
+        bits,
+        C_fixed,
+        3,
+        stride,
+        1,
+        affine=affine,
+        shared=shared,
+        quant_noise=quant_noise,
     ),
     "simple_3x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: SimpleConv(
-        C_in, C_out, bits, C_fixed, 3, stride, 1, affine=affine, shared=shared, quant_noise=quant_noise,
+        C_in,
+        C_out,
+        bits,
+        C_fixed,
+        3,
+        stride,
+        1,
+        affine=affine,
+        shared=shared,
+        quant_noise=quant_noise,
     ),
     "simple_9x9": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: SimpleConv(
-        C_in, C_out, bits, C_fixed, 9, stride, 4, affine=affine, shared=shared, quant_noise=quant_noise,
+        C_in,
+        C_out,
+        bits,
+        C_fixed,
+        9,
+        stride,
+        4,
+        affine=affine,
+        shared=shared,
+        quant_noise=quant_noise,
     ),
     "simple_1x1": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: SimpleConv(
-        C_in, C_out, bits, C_fixed, 1, stride, 0, affine=affine, shared=shared, quant_noise=quant_noise,
+        C_in,
+        C_out,
+        bits,
+        C_fixed,
+        1,
+        stride,
+        0,
+        affine=affine,
+        shared=shared,
+        quant_noise=quant_noise,
     ),
     "simple_5x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: SimpleConv(
-        C_in, C_out, bits, C_fixed, 5, stride, 2, affine=affine, shared=shared, quant_noise=quant_noise,
+        C_in,
+        C_out,
+        bits,
+        C_fixed,
+        5,
+        stride,
+        2,
+        affine=affine,
+        shared=shared,
+        quant_noise=quant_noise,
     ),
     "simple_1x1_grouped_full": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: SimpleConv(
         C_in,
@@ -49,7 +94,7 @@ OPS = {
         0,
         groups=C_in,
         affine=affine,
-        shared=shared, 
+        shared=shared,
         quant_noise=quant_noise,
     ),
     "simple_3x3_grouped_full": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: SimpleConv(
@@ -75,7 +120,7 @@ OPS = {
         2,
         groups=C_in,
         affine=affine,
-        shared=shared, 
+        shared=shared,
         quant_noise=quant_noise,
     ),
     "simple_1x1_grouped_3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: SimpleConv(
@@ -118,10 +163,28 @@ OPS = {
         quant_noise=quant_noise,
     ),
     "DWS_3x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: DWS(
-        C_in, C_out, bits, C_fixed, 3, stride, 1, affine=affine, shared=shared, quant_noise=quant_noise,
+        C_in,
+        C_out,
+        bits,
+        C_fixed,
+        3,
+        stride,
+        1,
+        affine=affine,
+        shared=shared,
+        quant_noise=quant_noise,
     ),
     "DWS_5x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: DWS(
-        C_in, C_out, bits, C_fixed, 5, stride, 2, affine=affine, shared=shared, quant_noise=quant_noise,
+        C_in,
+        C_out,
+        bits,
+        C_fixed,
+        5,
+        stride,
+        2,
+        affine=affine,
+        shared=shared,
+        quant_noise=quant_noise,
     ),
     "growth2_3x3": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: GrowthConv(
         C_in,
@@ -322,7 +385,6 @@ OPS = {
 }
 
 
-
 class SimpleConv(BaseConv):
     """Standard conv
     ReLU - Conv - BN
@@ -345,7 +407,7 @@ class SimpleConv(BaseConv):
     ):
         super().__init__(shared=shared, quant_noise=quant_noise)
         self.net = nn.Sequential(
-            #nn.BatchNorm2d(C_in),
+            # nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_in,
                 out_channels=C_out,
@@ -384,7 +446,7 @@ class GrowthConv(BaseConv):
     ):
         super().__init__(shared=shared, quant_noise=quant_noise)
         self.net = nn.Sequential(
-            #nn.BatchNorm2d(C_in),
+            # nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_in,
                 out_channels=C_fixed * growth,
@@ -396,7 +458,7 @@ class GrowthConv(BaseConv):
                 groups=groups,
                 bias=affine,
             ),
-            #nn.BatchNorm2d(C_in),
+            # nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_fixed * growth,
                 out_channels=C_out,
@@ -437,7 +499,7 @@ class DecEnc(BaseConv):
     ):
         super().__init__(shared=shared, quant_noise=quant_noise)
         self.net = nn.Sequential(
-            #nn.BatchNorm2d(C_in),
+            # nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_in,
                 out_channels=C_fixed // reduce,
@@ -449,7 +511,7 @@ class DecEnc(BaseConv):
                 groups=groups,
                 bias=affine,
             ),
-            #nn.BatchNorm2d(C_in),
+            # nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_in // reduce,
                 out_channels=C_fixed // reduce,
@@ -461,7 +523,7 @@ class DecEnc(BaseConv):
                 groups=groups,
                 bias=affine,
             ),
-            #nn.BatchNorm2d(C_in),
+            # nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_fixed // reduce,
                 out_channels=C_out,
@@ -497,7 +559,7 @@ class DWS(BaseConv):
         super().__init__(shared=shared, quant_noise=quant_noise)
 
         self.net = nn.Sequential(
-            #nn.BatchNorm2d(C_in),
+            # nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_in,
                 out_channels=C_in * 4,
@@ -509,7 +571,7 @@ class DWS(BaseConv):
                 groups=1,
                 bias=False,
             ),
-            #nn.BatchNorm2d(C_in),
+            # nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_in * 4,
                 out_channels=C_in,
@@ -550,7 +612,7 @@ class FacConv(BaseConv):
     ):
         super().__init__(shared=shared, quant_noise=quant_noise)
         self.net = nn.Sequential(
-            #nn.BatchNorm2d(C_in),
+            # nn.BatchNorm2d(C_in),
             self.conv_func(
                 in_channels=C_in,
                 out_channels=C_fixed * growth,
@@ -592,7 +654,7 @@ class Identity(BaseConv):
         super().__init__(shared=shared)
 
     def forward(self, x):
-        return x  * torch.sum(self.alphas)
+        return x * torch.sum(self.alphas)
 
 
 class Zero(BaseConv):
@@ -606,20 +668,41 @@ class Zero(BaseConv):
             return x * self.zero
 
         # re-sizing by stride
-        return x[:, :, :: self.stride, :: self.stride] * self.zero  * torch.sum(self.alphas)
+        return (
+            x[:, :, :: self.stride, :: self.stride]
+            * self.zero
+            * torch.sum(self.alphas)
+        )
 
 
 class MixedOp(nn.Module):
     """Creates mixed operation of specific block type."""
 
-    def __init__(self, C_in, C_out, bits, C_fixed, gene_type, stride=1, quant_noise=False, primitives=None):
+    def __init__(
+        self,
+        C_in,
+        C_out,
+        bits,
+        C_fixed,
+        gene_type,
+        stride=1,
+        quant_noise=False,
+        primitives=None,
+    ):
         super().__init__()
         self._ops = nn.ModuleList()
         self.bits = bits
         primitives = gt.PRIMITIVES_SR if primitives is None else primitives
         for primitive in primitives[gene_type]:
             func = OPS[primitive](
-                C_in, C_out, bits, C_fixed, stride, affine=False, shared=True, quant_noise=quant_noise
+                C_in,
+                C_out,
+                bits,
+                C_fixed,
+                stride,
+                affine=False,
+                shared=True,
+                quant_noise=quant_noise,
             )
             self._ops.append(func)
 
@@ -654,7 +737,7 @@ class MixedOp(nn.Module):
 
 if __name__ == "__main__":
     # TEST FLOPS TRACKING
-    
+
     print("Get blocks weights for 4 bits")
     random_image = torch.randn(3, 36, 256, 256)
 
