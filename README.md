@@ -1,5 +1,5 @@
 ## code for the paper "QuantNAS for super resolution: searching for efficient quantization-friendly architectures against quantization noise.
-### dev name "QuanTOAStER - Quantization Optimal Architechture Searcher"
+
 
 ### Full precision NAS VS Joint quantization:
 To search with different bit-widths set desired bit-widths in "configs/fp_config.yaml" <br>
@@ -61,7 +61,7 @@ Genotype_SR(
 ## Search space can be modified:
 
 
-### 1. First, supernet is build according to **arch_pattern**.
+### 1.Supernet is build according to **arch_pattern**.
 You can specify it by editing "configs/sr_config.yaml".
 General sceme looks like this:
 <img src="examples/supernet.png" width=800/>
