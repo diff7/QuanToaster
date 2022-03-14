@@ -10,7 +10,7 @@ OPS = {
         stride, zero=0
     ),
     "skip_connect": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: Identity(
-        shared
+        shared, quant_noise=quant_noise
     ),
     "conv_5x1_1x5": lambda C_in, C_out, bits, C_fixed, stride, affine, shared, quant_noise=False: FacConv(
         C_in,
@@ -588,8 +588,8 @@ def drop_path_(x, drop_prob, training):
 
 
 class Identity(BaseConv):
-    def __init__(self, shared):
-        super().__init__(shared=shared)
+    def __init__(self, shared, quant_noise):
+        super().__init__(shared=shared, quant_noise=quant_noise)
 
     def forward(self, x):
         return x  * torch.sum(self.alphas)
