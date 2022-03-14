@@ -247,7 +247,7 @@ class QAConv2d(nn.Module):
 
     def _fetch_info(self):
         f, m = self.conv._fetch_info()
-        return f * self.bit, m * self.bit
+        return f * self.bit * self.bit / 2, m * self.bit
 
 
 class SepQAConv2d(nn.Module):

@@ -97,7 +97,7 @@ def validate(valid_loader, model, device, save_dir):
 
 
 def dataset_loop(valid_cfg, model, logger, save_dir, device):
-    df = pd.DataFrame(columns=["Model size", "Flops(32x32)", "Flops(256x256)", "PSNR"])
+    df = pd.DataFrame(columns=["Model size", "BitOps(32x32)", "BitOps(256x256)", "PSNR"])
     for dataset in valid_cfg:
         os.makedirs(os.path.join(save_dir, str(dataset)), exist_ok=True)
         score_val, flops_32, flops_256, mb_params = run_val(
@@ -108,8 +108,8 @@ def dataset_loop(valid_cfg, model, logger, save_dir, device):
         )
         logger.info("\n{}:".format(str(dataset)))
         logger.info("Model size = {:.3f} MB".format(mb_params))
-        logger.info("Flops = {:.2e} operations 32x32".format(flops_32))
-        logger.info("Flops = {:.2e} operations 256x256".format(flops_256))
+        logger.info("BitOps = {:.2e} operations 32x32".format(flops_32))
+        logger.info("BitOps = {:.2e} operations 256x256".format(flops_256))
         logger.info("PSNR = {:.3f}%".format(score_val))
         df.loc[str(dataset)] = [mb_params, flops_32, flops_256, score_val]
     df.to_csv(os.path.join(save_dir, "..", "validation_df.csv"))

@@ -354,7 +354,7 @@ def train(
 
         if step % cfg.env.print_freq == 0 or step == len(train_loader) - 1:
             logger.info(
-                "Train: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} Flops: {flops:.2e}".format(
+                "Train: [{:2d}/{}] Step {:03d}/{:03d} Loss: {losses.avg:.3f} BitOps: {flops:.2e}".format(
                     epoch + 1,
                     cfg.search.epochs,
                     step,

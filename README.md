@@ -2,7 +2,7 @@
 
 
 ### Full precision NAS VS Joint quantization:
-To search with different bit-widths set desired bit-widths in "configs/fp_config.yaml" <br>
+To search with different bit-widths set desired bit-widths in "configs/quant_config.yaml" <br>
 <br>
 Examples:  <br>
 1. arch.bits = [8,4,2] will perform mixed precision search for all specified bit-widths. <br>
@@ -36,7 +36,7 @@ This script will run search, train and validate final models.
 
 Usage example: ```python search_sr.py```
 
-Don't forget to edit **"./configs/fp_config.yaml"**. "train" field can be skipped.
+Don't forget to edit **"./configs/quant_config.yaml"**. "train" field can be skipped.
 
 After script execution best architechture will be saved in best_arch.gen and you can pass it to augment_sr.py to train found architechture from scratch.
 
@@ -44,7 +44,7 @@ After script execution best architechture will be saved in best_arch.gen and you
 
 Usage example: ```python augment_sr.py```
 
-Don't forget to edit **"./configs/fp_config.yaml"**. "search" field can be skipped.
+Don't forget to edit **"./configs/quant_config.yaml"**. "search" field can be skipped.
 Specify **train.genotype_path** to pass architectures genotype. Genotype example: 
 ```
 Genotype_SR(
@@ -62,7 +62,7 @@ Genotype_SR(
 
 
 ### 1.Supernet is build according to **arch_pattern**.
-You can specify it by editing "configs/sr_config.yaml".
+You can specify it by editing "configs/quant_config.yaml".
 General sceme looks like this:
 <img src="examples/supernet.png" width=800/>
 
@@ -81,7 +81,18 @@ arch:
 
 ```
 
-### 2. Edit **genotypes.py** or config files to define possible operations for each block type. 
+### 2. Edit config file to define possible operations for each block type. 
+```
+arch:
+  primitives:
+    head: ["simple_3x3", "simple_5x5", "simple_3x3_grouped_3", "simple_5x5_grouped_3"]
+    body: ["conv_5x1_1x5", "conv_3x1_1x3", "simple_3x3", "simple_5x5"]
+    skip: ["simple_1x1", "simple_3x3", "simple_5x5"]
+    tail: ["simple_1x1", "simple_3x3", "simple_5x5","simple_5x5_grouped_3","simple_3x3_grouped_3"]
+    upsample: ["simple_5x5_grouped_3",simple_3x3_grouped_3, "simple_3x3", "simple_5x5"]
+```
+
+Default operations can be set in **genotypes.py**.
 ```
 .   .   .
 skip = [
@@ -100,6 +111,17 @@ PRIMITIVES_SR = {
 }
 .   .   .
 ```
+### 3. Turn on/off ADM in config:
+```
+arch:
+  skip_mode: False # If False -> use ADM
+```
+### 4. Turn on/off quantization noise in config:
+```
+search:
+  quant_noise: True
+```
+
 
 ### Train dataset
 1. download DIV2K from the original website https://data.vision.ee.ethz.ch/cvl/DIV2K/, only original high resolution images are needed.
