@@ -44,7 +44,7 @@ After script execution best architechture will be saved in best_arch.gen and you
 Usage example: ```python augment_sr.py```
 
 Don't forget to edit **"./configs/quant_config.yaml"**. "search" section can be ignored.
-Specify **train.genotype_path** to pass architectures genotype. Genotype example: 
+Specify **train.genotype_path** to pass architectures genotype. Genotype example (8 and 2 specify bit widths for selected layer): 
 ```
 Genotype_SR(
     head=[('simple_5x5_grouped_3', 8), ('simple_3x3', 8)], 
@@ -54,7 +54,7 @@ Genotype_SR(
     upsample=[('simple_3x3_grouped_3', 8)]
 )
 ```
-
+<img src="examples/supernet.png" width=800/>
  
 
 ## Search space can be modified:
