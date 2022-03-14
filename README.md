@@ -54,7 +54,9 @@ Genotype_SR(
     upsample=[('simple_3x3_grouped_3', 8)]
 )
 ```
-<img src="examples/supernet.png" width=800/>
+Another example of quantized architechture:
+
+<img src="examples/arch_quantized.png" width=800/>
  
 
 ## Search space can be modified:
@@ -129,3 +131,13 @@ search:
 
 ### Validation datasets
 For validation sets download Set14 & Set5 and set according paths in ./sr_models/valsets4x.yaml. Validation will be performed on all the datasets specified in ./sr_models/valsets4x.yaml.
+
+
+# Results
+
+QuantNAS , models found with different hardware penalty values: 0, 1e-4, 1e-3, 5e-5. QuantNAS with AdaDM in blue, SAN with AdaDM in green and original procedure with shared weights in brown.
+
+<img src="examples/pareto_main.png" width=800/>
+
+Importance weights for different operations through epochs for QuantNas search, for 8 (solid) and 4 (dashed) bit widths. Entropy regularisation set to 1e-3.
+<img src="examples/alpha_w_entropy.png" width=1000/>
