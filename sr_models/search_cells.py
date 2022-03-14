@@ -16,10 +16,9 @@ class Residual(nn.Module):
         self.adn = ADN(36, skip_mode=skip_mode)
 
     def forward(self, x, b_weights, s_weights):
-        
         def func(x):
             return self.skip(x, s_weights) + self.body(x, b_weights)
-        
+
         return self.adn(x, func, x)
 
     def fetch_info(self, b_weights, s_weights):
@@ -35,7 +34,15 @@ class Residual(nn.Module):
 
 class CommonBlock(nn.Module):
     def __init__(
-        self, c_fixed, c_init, bits, num_layers, gene_type="head", scale=4, quant_noise=False, primitives=None
+        self,
+        c_fixed,
+        c_init,
+        bits,
+        num_layers,
+        gene_type="head",
+        scale=4,
+        quant_noise=False,
+        primitives=None,
     ):
         """
         Creates list of blocks of specific gene_type.
@@ -59,11 +66,22 @@ class CommonBlock(nn.Module):
                     c_in = c_init
             elif gene_type == "upsample":
                 c_in = c_fixed
-                c_out = 3 * (scale ** 2)
+                c_out = 3 * (scale**2)
             else:
                 c_in = c_fixed
                 c_out = c_fixed
-            self.net.append(ops.MixedOp(c_in, c_out, bits, c_fixed, gene_type, quant_noise=quant_noise, primitives=primitives))
+
+            self.net.append(
+                ops.MixedOp(
+                    c_in,
+                    c_out,
+                    bits,
+                    c_fixed,
+                    gene_type,
+                    quant_noise=quant_noise,
+                    primitives=primitives,
+                )
+            )
 
     def forward(self, x, alphas):
         for layer, a_w in zip(self.net, alphas):
@@ -95,13 +113,11 @@ class SearchArch(nn.Module):
     ):
         """
         SuperNet.
-
         Args:
             body_cells: # of intermediate body blocks
             c_fixed: # of channels to work with
             c_init:  # of initial channels, usually 3
             scale: # downsampling scale
-
             arch_pattern : {'head':2, 'body':4, 'tail':3, 'skip'=1, 'upsample'=1}
         """
 
@@ -182,7 +198,7 @@ class SearchArch(nn.Module):
 
         def func_tail(x):
             return self.tail(x, alphas["tail"])
-        
+
         out = self.adn_two(x, func_tail, x)
         return out
 
